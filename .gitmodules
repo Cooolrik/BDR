@@ -22,3 +22,6 @@
 	path = Dependencies/fast_obj
 	url = https://github.com/thisistherk/fast_obj.git
 	ignore = all
+[submodule "Dependencies/PerlinNoise"]
+	path = Dependencies/PerlinNoise
+	url = https://github.com/Reputeless/PerlinNoise.git

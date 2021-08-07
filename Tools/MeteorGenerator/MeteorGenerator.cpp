@@ -21,7 +21,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include "PerlinNoise.hpp"
+#include <PerlinNoise.hpp>
 
 typedef unsigned int uint;
 using std::vector;
@@ -33,7 +33,7 @@ using std::vector;
 #include <glm/gtx/hash.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-const uint PlaneQuadTesselation = 4; // 16*16*2 = 512 tris
+const uint PlaneQuadTesselation = 16; // 16*16*2 = 512 tris
 const uint MeshTesselation = 8;
 
 
