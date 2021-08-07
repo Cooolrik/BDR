@@ -10,7 +10,7 @@
 #include "Vlk_VertexBuffer.h"
 #include "Vlk_IndexBuffer.h"
 
-#include <tiny_obj_loader.h>
+#include <fast_obj.h>
 
 typedef unsigned int uint;
 using std::vector;
@@ -96,49 +96,54 @@ class MegaMeshAllocator::SourceMesh
 
 		void buildModel( const char* path , uint max_tris , uint max_verts )
 			{
-			tinyobj::attrib_t attrib;
-
-			std::vector<tinyobj::shape_t> shapes;
-			std::vector<tinyobj::material_t> materiallist;
-
 			std::string warn, err;
 
 			std::vector<Vertex> vertices;
 			std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 			std::vector<unsigned int> indices;
 
-			if( !tinyobj::LoadObj( &attrib, &shapes, &materiallist, &warn, &err, path ) )
+			fastObjMesh* m = fast_obj_read( path );
+			if(m == nullptr)
 				{
-				throw std::runtime_error( warn + err );
+				throw std::runtime_error( "Error: Could not read .obj file" );
 				}
-
+			
 			// load all tris of all shapes
-			for( const auto& shape : shapes )
+			for(unsigned int ii = 0; ii < m->group_count; ii++)
 				{
-				uint tri_count = (uint)shape.mesh.material_ids.size();
+				const fastObjGroup& grp = m->groups[ii];
+				uint tri_count = grp.face_count;
 
+				int idx = 0;
 				for( uint t_id = 0; t_id < tri_count; ++t_id )
 					{
+					unsigned int fv = m->face_vertices[grp.face_offset + t_id];
+					if(fv != 3)
+						{
+						throw std::runtime_error( "Error: Can only read triangulated wavefront files" );
+						}
+
 					for( uint c_id = 0 ; c_id < 3 ; ++c_id )
 						{
-						const tinyobj::index_t& index = shape.mesh.indices[t_id * 3 + c_id];
+						fastObjIndex mi = m->indices[grp.index_offset + idx];
 
 						Vertex vertex{};
 
-						vertex.X_Y_Z_U[0] = attrib.vertices[3 * index.vertex_index + 0];
-						vertex.X_Y_Z_U[1] = attrib.vertices[3 * index.vertex_index + 1];
-						vertex.X_Y_Z_U[2] = attrib.vertices[3 * index.vertex_index + 2];
-						vertex.X_Y_Z_U[3] = 0.f;
+						vertex.X_Y_Z_U[0] = m->positions[3 * mi.p + 0];
+						vertex.X_Y_Z_U[1] = m->positions[3 * mi.p + 1];
+						vertex.X_Y_Z_U[2] = m->positions[3 * mi.p + 2];
 
-						vertex.NX_NY_NZ_V[0] = attrib.normals[3 * index.normal_index + 0];
-						vertex.NX_NY_NZ_V[1] = attrib.normals[3 * index.normal_index + 1];
-						vertex.NX_NY_NZ_V[2] = attrib.normals[3 * index.normal_index + 2];
-						vertex.NX_NY_NZ_V[3] = 0.f;
-
-						if( index.texcoord_index >= 0 )
+						if(mi.n)
 							{
-							vertex.X_Y_Z_U[3] = attrib.texcoords[2 * index.texcoord_index + 0];
-							vertex.NX_NY_NZ_V[3] = 1.f - attrib.texcoords[2 * index.texcoord_index + 1];
+							vertex.NX_NY_NZ_V[0] = m->normals[3 * mi.n + 0];
+							vertex.NX_NY_NZ_V[1] = m->normals[3 * mi.n + 1];
+							vertex.NX_NY_NZ_V[2] = m->normals[3 * mi.n + 2];
+							}
+
+						if(mi.t)
+							{
+							vertex.X_Y_Z_U[3] = m->texcoords[2 * mi.t + 0];
+							vertex.NX_NY_NZ_V[3] = 1.f - m->texcoords[2 * mi.t + 1];
 							}
 
 						if( uniqueVertices.count( vertex ) == 0 ) 
@@ -147,6 +152,8 @@ class MegaMeshAllocator::SourceMesh
 							vertices.push_back( vertex );
 							}
 						indices.push_back( uniqueVertices[vertex] );
+
+						++idx;
 						}
 
 					// check if we are at capacity
@@ -166,6 +173,8 @@ class MegaMeshAllocator::SourceMesh
 
 					}
 				}
+
+			fast_obj_destroy( m );
 
 			// save off the last mesh
 			if( indices.size() > 0 )

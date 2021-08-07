@@ -5,7 +5,6 @@
 #include <fstream>
 #include <map>
 
-#include <stb_image.h>
 #include <ddspp.h>
 
 static VkFormat GetDSSVulkanFormat( unsigned int DXGIFormat );

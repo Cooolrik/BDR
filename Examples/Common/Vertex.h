@@ -12,8 +12,8 @@
 class Vertex
 	{
 	public:
-		glm::vec4 X_Y_Z_U;
-		glm::vec4 NX_NY_NZ_V;
+		glm::vec4 X_Y_Z_U = glm::vec4(0);
+		glm::vec4 NX_NY_NZ_V = glm::vec4( 0 );
 
 		static Vlk::VertexBufferDescription GetVertexBufferDescription()
 			{

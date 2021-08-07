@@ -1,8 +1,6 @@
+#pragma warning( disable : 4996 )
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#define FAST_OBJ_IMPLEMENTATION
+#include <fast_obj.h>
 
 #include "Common.h"
