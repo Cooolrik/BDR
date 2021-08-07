@@ -13,3 +13,6 @@
 [submodule "Dependencies/ddspp"]
 	path = Dependencies/ddspp
 	url = https://github.com/redorav/ddspp.git
+[submodule "Dependencies/fast_obj"]
+	path = Dependencies/fast_obj
+	url = https://github.com/thisistherk/fast_obj.git
