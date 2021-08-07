@@ -456,23 +456,17 @@ void SetupScene()
 	// the meshes of the scene
 	std::vector<const char*> source_mesh_names =
 		{
-		//"models/lowpoly/meteor_0.obj",
-		//"models/lowpoly/meteor_1.obj",
-		//"models/lowpoly/meteor_2.obj",
-		//"models/lowpoly/meteor_3.obj",
-		//"models/lowpoly/meteor_4.obj",
-		//"models/lowpoly/meteor_5.obj",
-		"models/meteor_0.obj",
-		"models/meteor_1.obj",
-		"models/meteor_2.obj",
-		"models/meteor_3.obj",
-		"models/meteor_4.obj",
-		"models/meteor_5.obj",
+		"../Assets/meteor_0.obj",
+		"../Assets/meteor_1.obj",
+		"../Assets/meteor_2.obj",
+		"../Assets/meteor_3.obj",
+		"../Assets/meteor_4.obj",
+		"../Assets/meteor_5.obj",
 		};
 
 	std::vector<const char*> source_tex_names =
 		{
-		"textures/image1.dds"
+		"../Assets/image1.dds"
 		};
 				
 	//const uint mega_mesh_max_tris = 512;
@@ -665,27 +659,7 @@ void SetupScene()
 	renderData->depthReducePipeline->SetDescriptorLayout( renderData->depthReduceDescriptorLayout );
 	renderData->depthReducePipeline->SetSinglePushConstantRange( sizeof( DepthReducePushConstants ), VK_SHADER_STAGE_COMPUTE_BIT );
 	renderData->depthReducePipeline->BuildPipeline();
-
 	}
-
-//void SetupDepthSampler()
-//	{
-//	// create a depth samples that will return the minimal 2x2 value instead of average
-//	VkSamplerReductionModeCreateInfoEXT samplerReductionModeCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_REDUCTION_MODE_CREATE_INFO_EXT };
-//	samplerReductionModeCreateInfo.reductionMode = VK_SAMPLER_REDUCTION_MODE_MAX;
-//
-//	VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-//	samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-//	samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-//	samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-//	samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-//	samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-//	samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-//	samplerCreateInfo.minLod = (float)0;
-//	samplerCreateInfo.maxLod = (float)16;
-//	samplerCreateInfo.pNext = &samplerReductionModeCreateInfo;
-//	VLK_CALL( vkCreateSampler( renderData->renderer->GetDevice(), &samplerCreateInfo, 0, &renderData->depthSampler ) );
-//	}
 
 void run()
 	{
