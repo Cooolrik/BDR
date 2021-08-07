@@ -1,18 +1,24 @@
 [submodule "Dependencies/VulkanMemoryAllocator"]
 	path = Dependencies/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+	ignore = dirty
 [submodule "Dependencies/glfw"]
 	path = Dependencies/glfw
 	url = https://github.com/glfw/glfw.git
+	ignore = dirty
 [submodule "Dependencies/stb"]
 	path = Dependencies/stb
 	url = https://github.com/nothings/stb.git
+	ignore = dirty
 [submodule "Dependencies/glm"]
 	path = Dependencies/glm
 	url = https://github.com/g-truc/glm.git
+	ignore = dirty
 [submodule "Dependencies/ddspp"]
 	path = Dependencies/ddspp
 	url = https://github.com/redorav/ddspp.git
+	ignore = dirty
 [submodule "Dependencies/fast_obj"]
 	path = Dependencies/fast_obj
 	url = https://github.com/thisistherk/fast_obj.git
+	ignore = dirty
