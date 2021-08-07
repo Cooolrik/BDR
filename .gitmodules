@@ -25,3 +25,6 @@
 [submodule "Dependencies/PerlinNoise"]
 	path = Dependencies/PerlinNoise
 	url = https://github.com/Reputeless/PerlinNoise.git
+[submodule "Dependencies/common-3d-test-models"]
+	path = Dependencies/common-3d-test-models
+	url = https://github.com/alecjacobson/common-3d-test-models.git
