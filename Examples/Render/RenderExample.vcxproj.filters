@@ -13,7 +13,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="debugging.cpp">

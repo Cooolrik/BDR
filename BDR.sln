@@ -5,7 +5,11 @@ VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BDR", "BDR\BDR.vcxproj", "{E29D4380-E956-4C6E-A38E-BA4D859B4722}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderExample", "Examples\Render\RenderExample.vcxproj", "{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Render", "Examples\Render\RenderExample.vcxproj", "{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Raytrace", "Examples\Raytrace\RaytraceExample.vcxproj", "{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +25,17 @@ Global
 		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Debug|x64.Build.0 = Debug|x64
 		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Release|x64.ActiveCfg = Release|x64
 		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Release|x64.Build.0 = Release|x64
+		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Debug|x64.ActiveCfg = Debug|x64
+		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Debug|x64.Build.0 = Debug|x64
+		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Release|x64.ActiveCfg = Release|x64
+		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637} = {59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}
+		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637} = {59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A2F79FCF-204F-43FF-96F8-2973E54AC755}

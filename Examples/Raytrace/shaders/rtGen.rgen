@@ -1,0 +1,111 @@
+#version 460
+#extension GL_EXT_ray_tracing : require
+#extension GL_GOOGLE_include_directive : enable
+
+#include "rtcommon.glsl"
+
+layout(location = 0) rayPayloadEXT hitPayload payload;
+
+layout(binding = 0, set = 0) uniform accelerationStructureEXT topLevelAS;
+layout(binding = 1, set = 0, rgba32f) uniform image2D image;
+layout(binding = 2, set = 0) uniform UniformBufferObject 
+	{
+	mat4 view;
+	mat4 proj;
+	mat4 viewI;
+	mat4 projI;
+	vec3 lightPosition;
+    uint frameCount;
+    float CameraAperture;
+    float CameraFocusDistance;
+    bool InteractiveRender;
+	} ubo;
+
+const uint MAX_BOUNCES = 16;
+
+void main() 
+    {
+    uint seed = Seed(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, ubo.frameCount);
+
+    // calc d = -1->1 from gl_LaunchIDEXT.xy which are the pixel indices
+    // (add 0.5 to get the center of each pixel, so rounding is correct)
+    const vec2 subpixel_jitter = vec2( Rnd(seed) , Rnd(seed ) );
+    const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + subpixel_jitter;
+    const vec2 inUV = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+    vec2 d = (inUV * 2.0) - 1.0;
+
+    // create ray:
+    // all rays are cast from (0,0,0) in view space, convert to world space
+    // transform target trough screen into projection and then convert to world space
+    const vec2 ray_offset = ubo.CameraAperture / 2.0 * RandomPointInUnitDisc(seed);
+    vec4 origin = ubo.viewI * vec4(ray_offset, 0, 1);
+    vec4 target = ubo.projI * vec4(d.x, d.y, 1, 1);
+    vec4 direction = ubo.viewI * vec4(normalize(target.xyz) * ubo.CameraFocusDistance - vec3(ray_offset,0) , 0);
+    
+    // color attenuations
+    vec4 color = vec4(1);
+    for(int index = 0;; index++ )
+        {
+        // bail out if we are out of bounces
+        if( index >= MAX_BOUNCES )
+            {
+            color = vec4(0,0,0,0); // ray did not receive any light
+            break;
+            }
+
+        // cast the primary ray
+        payload.hitValue.w = 0; // reset the value to "don't continue"
+        uint  rayFlags = gl_RayFlagsOpaqueEXT;
+        float tMin = 0.0001;
+        float tMax = 10000.0;
+        traceRayEXT(topLevelAS,     // acceleration structure
+                    rayFlags,       // rayFlags
+                    0xFF,           // cullMask
+                    0,              // sbtRecordOffset
+                    0,              // sbtRecordStride
+                    0,              // missIndex
+                    origin.xyz,     // ray origin
+                    tMin,           // ray min range
+                    direction.xyz,  // ray direction
+                    tMax,           // ray max range
+                    0               // payload (location = 0)
+            );
+
+        // modulate color with value
+        color.xyz *= payload.hitValue.xyz;
+
+        // should we continue? hit shader will set w to 1 on continue
+        if( payload.hitValue.w < 1 )
+            break;
+
+        // continue bouncing, set up new ray
+        origin.xyz = payload.rayOrigin;
+        direction.xyz = payload.rayDir;
+        }
+
+    // store the value
+    if( ubo.InteractiveRender )
+        {
+        if( ubo.frameCount == 0 )
+            {
+            imageStore(image, ivec2(gl_LaunchIDEXT.xy), color);
+            }
+        else
+            {
+            vec4 total_color = imageLoad(image, ivec2(gl_LaunchIDEXT.xy))*0.95 + color;
+            imageStore(image, ivec2(gl_LaunchIDEXT.xy), total_color);
+            }
+        }
+    else    
+        {
+        if( ubo.frameCount == 0 )
+            {
+            imageStore(image, ivec2(gl_LaunchIDEXT.xy), color);
+            }
+        else
+            {
+            vec4 total_color = imageLoad(image, ivec2(gl_LaunchIDEXT.xy)) + color;
+            imageStore(image, ivec2(gl_LaunchIDEXT.xy), total_color);
+            }
+        }
+    }
