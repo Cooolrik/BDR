@@ -18,7 +18,8 @@
 #include <array>
 #include <chrono>
 #include <unordered_map>
-
+#include <filesystem>
+		
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -114,15 +115,16 @@ class RenderMesh
 		std::vector<Vertex> vertices;
 		std::vector<uint> indices;
 
-		static RenderMesh *LoadMesh( Vlk::Renderer* renderer, const char* path )
+		static RenderMesh *LoadMesh( Vlk::Renderer* renderer, const char* _path )
 			{
 			RenderMesh* m = new RenderMesh();
+			std::filesystem::path path(_path);
 
-			std::string cache_file = std::string( path ) + ".cache";
+			std::string cache_file = path.filename().string() + ".cache";
 			if(!m->loadCache( cache_file.c_str() ))
 				{
 				SourceMesh mesh;
-				mesh.loadModel( path );
+				mesh.loadModel( path.string().c_str() );
 
 				m->vertices.resize( mesh.Vertices.size() );
 				for(size_t v = 0; v < m->vertices.size(); ++v)
