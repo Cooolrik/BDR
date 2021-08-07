@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BDR", "BDR\BDR.vcxproj", "{E29D4380-E956-4C6E-A38E-BA4D859B4722}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderExample", "Examples\Render\RenderExample.vcxproj", "{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E29D4380-E956-4C6E-A38E-BA4D859B4722}.Debug|x64.ActiveCfg = Debug|x64
+		{E29D4380-E956-4C6E-A38E-BA4D859B4722}.Debug|x64.Build.0 = Debug|x64
+		{E29D4380-E956-4C6E-A38E-BA4D859B4722}.Release|x64.ActiveCfg = Release|x64
+		{E29D4380-E956-4C6E-A38E-BA4D859B4722}.Release|x64.Build.0 = Release|x64
+		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Debug|x64.ActiveCfg = Debug|x64
+		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Debug|x64.Build.0 = Debug|x64
+		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Release|x64.ActiveCfg = Release|x64
+		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A2F79FCF-204F-43FF-96F8-2973E54AC755}
+	EndGlobalSection
+EndGlobal

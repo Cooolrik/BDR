@@ -1,0 +1,40 @@
+#version 450
+
+layout(local_size_x = 32, local_size_y = 32) in;
+
+layout(set = 0, binding = 0, rgba32f) uniform image2D dest;
+
+// constants for the culling process
+layout(set = 0, binding = 1) uniform DebugUBO
+	{   
+	mat4 view;
+	mat4 viewI;
+	vec2 imageSize;
+	float mip_level;
+	float Proj00;
+	float Proj11;
+	float znear;
+	float zfar;
+	float pyramidWidth;
+	float pyramidHeight;
+	} ubo;
+
+layout(set = 0, binding = 2) uniform sampler2D depthPyramidSampler;
+
+vec4 sample_depthmap_normalized( vec2 texcoord )
+	{
+	float depth = textureLod( depthPyramidSampler, texcoord, ubo.mip_level ).x;
+	float near = ubo.znear;
+	float far = ubo.zfar;
+	depth = (2.0 * near * far) / (far + near - depth * (far - near));
+	depth -= near;
+	depth /= (far-near);
+	return vec4(depth,depth,depth,1);
+	}
+
+void main()
+	{
+	vec2 texcoord = vec2(gl_GlobalInvocationID.xy) / ubo.imageSize;
+	vec4 value = sample_depthmap_normalized(texcoord);
+	imageStore( dest, ivec2(gl_GlobalInvocationID.xy), value );
+	}

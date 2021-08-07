@@ -1,0 +1,25 @@
+#version 450
+
+layout(local_size_x = 32, local_size_y = 32) in;
+
+layout(set = 0, binding = 0) uniform sampler2D source;
+layout(set = 0, binding = 1, r32f) uniform writeonly image2D dest;
+
+layout(push_constant) uniform block
+	{
+	vec2 destDimensions;
+	};
+
+void main()
+	{
+	// calc texcoord to sample. 
+	vec2 tex_coord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / destDimensions;
+
+	// By placing the sampler at pos+0.5, we will sample
+	// 4 values at the same time, and since they are set to return min value, we
+	// have our conservative depth mipmap
+	float sampled_depth = texture(source, tex_coord).x;
+
+	// store in dest
+	imageStore( dest, ivec2(gl_GlobalInvocationID.xy), vec4(sampled_depth) );
+	}

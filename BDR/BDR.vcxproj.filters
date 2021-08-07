@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Extensions">
+      <UniqueIdentifier>{7d29363d-22ec-4813-8584-36fd67b030fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Buffers">
+      <UniqueIdentifier>{4b0a6b4a-7d21-4c05-93db-9165f73dd46c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\3rdParty">
+      <UniqueIdentifier>{908fffc6-39dd-42b3-9815-01bac395d543}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Vlk_Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_GraphicsPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_ShaderModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_CommandPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_DescriptorLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_DescriptorPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Buffer.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Extension.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingExtension.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_IndexBuffer.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_VertexBuffer.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_UniformBuffer.cpp">
+      <Filter>Source Files\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_vma_implementation.cpp">
+      <Filter>Source Files\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingBLASEntry.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingAccBuffer.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_BufferDeviceAddressExtension.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingTLASEntry.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingPipeline.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingShaderBindingTable.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_DescriptorIndexingExtension.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_ComputePipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Sampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Vlk_CommandPool.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_DescriptorLayout.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_DescriptorPool.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_GraphicsPipeline.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Renderer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_ShaderModule.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Buffer.h">
+      <Filter>Source Files\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Extension.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingExtension.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_IndexBuffer.h">
+      <Filter>Source Files\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_VertexBuffer.h">
+      <Filter>Source Files\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_UniformBuffer.h">
+      <Filter>Source Files\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingBLASEntry.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingAccBuffer.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_BufferDeviceAddressExtension.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingTLASEntry.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingPipeline.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingShaderBindingTable.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_DescriptorIndexingExtension.h">
+      <Filter>Source Files\Extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_ComputePipeline.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Image.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Helpers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Sampler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vlk_Common.inl">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

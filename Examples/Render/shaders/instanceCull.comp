@@ -1,0 +1,163 @@
+#version 450
+#extension GL_GOOGLE_include_directive : enable
+
+#include "common.glsl"
+
+layout (local_size_x = 256) in;
+
+// the draw command layout for the indirect rendering call
+// most of the command is already filled out, we only add to the
+// instance count if an object is deemed visible
+struct DrawCommand
+	{
+	uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int vertexOffset;
+    uint firstInstance;
+	};
+	
+// constants for the culling process
+layout(set = 0, binding = 0) uniform CullingSettingsUBO
+	{   
+	mat4 viewTransform; // view transform
+	vec3 viewPosition; // origin of the view in world space
+	float frustumXx; // frustum culling data X.x
+	float frustumXz; // frustum culling data X.z
+	float frustumYy; // frustum culling data Y.y
+	float frustumYz; // frustum culling data Y.z
+	float nearZ; // near depth
+	float farZ; // far depth
+	bool pyramidCull; // is set, use depth pyramid to cull
+	float Proj00; // projection[0][0]
+	float Proj11; // projection[1][1]
+	float pyramidWidth; // width of the largest mip in the depth pyramid
+	float pyramidHeight; // height of the largest mip in the depth pyramid
+	uint objectsCount; // number of objects to consider in the renderObjectBuffer buffer
+	} cullingSettings;
+
+// the input buffer of objects to consider for rendering. the size is defined in the "objectsCount" constant. Indexed with renderIndex.
+layout(set = 0, binding = 1) readonly buffer RenderObjectsBuffer
+	{   
+	uint objectIDs[];
+	} renderObjectsBuffer;
+
+// buffer containing information on all objects in the scene. Indexed with objectID.
+layout(set = 0, binding = 2) readonly buffer SceneObjectsBuffer 
+	{ 
+	SceneObject objects[]; 
+	} sceneObjectsBuffer;
+
+// the DrawCommand buffer, one command for every possible batch. Indexed with batchID
+layout(set = 0, binding = 3)  buffer FilteredDrawBuffer
+	{   
+	DrawCommand commands[];
+	} filteredDrawBuffer;
+
+// mapping of instanceID (current frame) to objectID (scene global and stable). Indexed with instanceIndex
+layout(set = 0, binding = 4)  buffer InstanceToObjectBuffer
+	{   
+	uint objectIDs[];
+	} instanceToObjectBuffer;
+
+// depth pyramid to read depth from 
+layout(set = 0, binding = 5) uniform sampler2D depthPyramidSampler;
+
+// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
+vec4 projectSphere(vec3 C, float r )
+	{
+	vec2 cx = -C.xz;
+	vec2 vx = vec2(sqrt(dot(cx, cx) - r * r), r);
+	vec2 minx = mat2(vx.x, vx.y, -vx.y, vx.x) * cx;
+	vec2 maxx = mat2(vx.x, -vx.y, vx.y, vx.x) * cx;
+
+	vec2 cy = -C.yz;
+	vec2 vy = vec2(sqrt(dot(cy, cy) - r * r), r);
+	vec2 miny = mat2(vy.x, vy.y, -vy.y, vy.x) * cy;
+	vec2 maxy = mat2(vy.x, -vy.y, vy.y, vy.x) * cy;
+	
+	vec4 aabb = vec4(
+			minx.x / minx.y * cullingSettings.Proj00, 
+			miny.x / miny.y * cullingSettings.Proj11, 
+			maxx.x / maxx.y * cullingSettings.Proj00, 
+			maxy.x / maxy.y * cullingSettings.Proj11
+			);
+
+	if( isnan(aabb.x) || isnan(aabb.y) ||  isnan(aabb.z) ||  isnan(aabb.w) )
+		{
+		return vec4(0,0,1,1);
+		}
+
+	// clip space -> uv sample space, also flip because of right hand coords
+	aabb = (aabb.zyxw * -0.5f) + vec4(0.5f); 
+	return aabb;
+	}
+
+void main() 
+	{		
+	// get the index in the renderObjectBuffer
+	uint renderIndex = gl_GlobalInvocationID.x;
+	if( renderIndex < cullingSettings.objectsCount )
+		{
+		// get the object, check if it is visible
+		uint objectID = renderObjectsBuffer.objectIDs[renderIndex];
+
+		// grab sphere cull data from the object buffer
+		vec4 boundingSphere = sceneObjectsBuffer.objects[objectID].boundingSphere;
+
+		// transform the bounds into view space
+		vec3 center = boundingSphere.xyz;
+		center = (cullingSettings.viewTransform * vec4(center,1.f)).xyz;
+		float radius = boundingSphere.w;
+	
+		// get the direction in world space to the object
+		vec3 object_direction = normalize(sceneObjectsBuffer.objects[objectID].rejectionConeCenter - cullingSettings.viewPosition);
+		vec3 object_rejection_direction = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.xyz;
+		float object_rejection_cutoff = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.w;
+
+		// assume visible
+		bool isVisible = true;
+	
+		// frustrum culling using frustum data and depth values
+		// use mirror symmetry of x&y to test both sides at the same time by using abs value 
+		isVisible = isVisible && center.z * cullingSettings.frustumXz - abs(center.x) * cullingSettings.frustumXx > -radius; // +-x planes
+		isVisible = isVisible && center.z * cullingSettings.frustumYz - abs(center.y) * cullingSettings.frustumYy > -radius; // +-y planes
+		isVisible = isVisible && center.z - radius < -cullingSettings.nearZ && center.z + radius > -cullingSettings.farZ; // depth
+		isVisible = isVisible && dot(object_direction,object_rejection_direction) > object_rejection_cutoff;
+
+		if( isVisible && cullingSettings.pyramidCull ) 
+			{
+			vec4 aabb = projectSphere( center, radius );
+		
+			// get the size of the aabb in texel coords
+			float width = (aabb.z - aabb.x) * cullingSettings.pyramidWidth;
+			float height = (aabb.w - aabb.y) * cullingSettings.pyramidHeight;
+			
+			// sample the pyramid on the right level, convert the depth to a depth value
+			float mip_level = floor(log2(max(width, height)));
+			float sampleDepth = textureLod(depthPyramidSampler, (aabb.xy + aabb.zw)/2, mip_level).x;
+		
+			// calc the depths to compare
+			float near = cullingSettings.nearZ;
+			float far = cullingSettings.farZ;
+			sampleDepth = -(2.0 * near * far) / (far + near - sampleDepth * (far - near));
+			float sphereDepth = center.z + radius;
+		
+			isVisible = sphereDepth > sampleDepth;
+			}
+
+		// if the object is visible, add it to the render batch, and retrieve an instanceID 
+		if( isVisible )
+			{
+			// retrieve the batchID from the scene object
+			uint batchID = sceneObjectsBuffer.objects[objectID].batchID;
+
+			// increase instance count and retrieve instanceID
+			uint instanceIndex = atomicAdd(filteredDrawBuffer.commands[batchID].instanceCount,1);
+			instanceIndex += filteredDrawBuffer.commands[batchID].firstInstance;
+
+			// fill in the instance to objectID back-map
+			instanceToObjectBuffer.objectIDs[instanceIndex] = objectID;
+			}
+		}
+	}

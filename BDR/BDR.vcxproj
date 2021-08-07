@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{e29d4380-e956-4c6e-a38e-ba4d859b4722}</ProjectGuid>
+    <RootNamespace>VulkanRenderer</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>BDR</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;C:\Dev\Dependencies\vma\include</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>Default</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.182.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.182.0\Include;C:\Dev\Dependencies\vma\include</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>Default</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.182.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Vlk_vma_implementation.cpp" />
+    <ClCompile Include="Vlk_Buffer.cpp" />
+    <ClCompile Include="Vlk_BufferDeviceAddressExtension.cpp" />
+    <ClCompile Include="Vlk_CommandPool.cpp" />
+    <ClCompile Include="Vlk_ComputePipeline.cpp" />
+    <ClCompile Include="Vlk_DescriptorIndexingExtension.cpp" />
+    <ClCompile Include="Vlk_DescriptorLayout.cpp" />
+    <ClCompile Include="Vlk_DescriptorPool.cpp" />
+    <ClCompile Include="Vlk_Extension.cpp" />
+    <ClCompile Include="Vlk_GraphicsPipeline.cpp" />
+    <ClCompile Include="Vlk_Helpers.cpp" />
+    <ClCompile Include="Vlk_Image.cpp" />
+    <ClCompile Include="Vlk_IndexBuffer.cpp" />
+    <ClCompile Include="Vlk_RayTracingBLASEntry.cpp" />
+    <ClCompile Include="Vlk_RayTracingAccBuffer.cpp" />
+    <ClCompile Include="Vlk_RayTracingExtension.cpp" />
+    <ClCompile Include="Vlk_RayTracingPipeline.cpp" />
+    <ClCompile Include="Vlk_RayTracingShaderBindingTable.cpp" />
+    <ClCompile Include="Vlk_RayTracingTLASEntry.cpp" />
+    <ClCompile Include="Vlk_Renderer.cpp" />
+    <ClCompile Include="Vlk_Sampler.cpp" />
+    <ClCompile Include="Vlk_ShaderModule.cpp" />
+    <ClCompile Include="Vlk_UniformBuffer.cpp" />
+    <ClCompile Include="Vlk_VertexBuffer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Vlk_Buffer.h" />
+    <ClInclude Include="Vlk_BufferDeviceAddressExtension.h" />
+    <ClInclude Include="Vlk_CommandPool.h" />
+    <ClInclude Include="Vlk_ComputePipeline.h" />
+    <ClInclude Include="Vlk_DescriptorIndexingExtension.h" />
+    <ClInclude Include="Vlk_DescriptorLayout.h" />
+    <ClInclude Include="Vlk_DescriptorPool.h" />
+    <ClInclude Include="Vlk_Extension.h" />
+    <ClInclude Include="Vlk_GraphicsPipeline.h" />
+    <ClInclude Include="Vlk_Helpers.h" />
+    <ClInclude Include="Vlk_Image.h" />
+    <ClInclude Include="Vlk_IndexBuffer.h" />
+    <ClInclude Include="Vlk_RayTracingBLASEntry.h" />
+    <ClInclude Include="Vlk_RayTracingAccBuffer.h" />
+    <ClInclude Include="Vlk_RayTracingExtension.h" />
+    <ClInclude Include="Vlk_RayTracingPipeline.h" />
+    <ClInclude Include="Vlk_RayTracingShaderBindingTable.h" />
+    <ClInclude Include="Vlk_RayTracingTLASEntry.h" />
+    <ClInclude Include="Vlk_Renderer.h" />
+    <ClInclude Include="Vlk_Sampler.h" />
+    <ClInclude Include="Vlk_ShaderModule.h" />
+    <ClInclude Include="Vlk_UniformBuffer.h" />
+    <ClInclude Include="Vlk_VertexBuffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vlk_Common.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
