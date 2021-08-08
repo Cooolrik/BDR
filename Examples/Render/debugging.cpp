@@ -35,7 +35,7 @@
 #include <Vlk_IndexBuffer.h>
 #include <Vlk_DescriptorLayout.h>
 #include <Vlk_DescriptorPool.h>
-#include <Vlk_UniformBuffer.h>
+#include <Vlk_Buffer.h>
 #include <Vlk_Image.h>
 
 #include "RenderData.h"
@@ -66,10 +66,10 @@ class PerFrameDebugData
 		Vlk::DescriptorPool* debugDescriptorPool = nullptr;
 		VkDescriptorSet debugDescriptorSet = nullptr;
 		Vlk::Image* debugImage = nullptr;
-		Vlk::UniformBuffer* debugUBO = nullptr;
+		Vlk::Buffer* debugUBO = nullptr;
 
 		VkDescriptorSet debugRenderDescriptorSet = nullptr;
-		Vlk::UniformBuffer* debugRenderUBO = nullptr;
+		Vlk::Buffer* debugRenderUBO = nullptr;
 
 		~PerFrameDebugData()
 			{
@@ -226,7 +226,13 @@ void debugSetup( RenderData* _renderData )
 			axies_vertices.data() 
 			)
 		);
-	debugData->debugAxiesIndexBuffer = renderData->renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)axies_indices.size(), axies_indices.data() );
+	debugData->debugAxiesIndexBuffer = renderData->renderer->CreateIndexBuffer( 
+		Vlk::IndexBufferTemplate::IndexBuffer(
+			VK_INDEX_TYPE_UINT32, 
+			(uint)axies_indices.size(), 
+			axies_indices.data() 
+			)
+		);
 
 	debugData->stored_image = new float[imageW*imageH*4];
 
@@ -252,8 +258,8 @@ void debugRecreateSwapChain()
 			);
 
 		debugData->perFrameData[i].debugDescriptorPool = renderData->renderer->CreateDescriptorPool( 10 , 10 , 10 );
-		debugData->perFrameData[i].debugUBO = renderData->renderer->CreateUniformBuffer( sizeof( DebugUBO ) );
-		debugData->perFrameData[i].debugRenderUBO = renderData->renderer->CreateUniformBuffer( sizeof( UniformBufferObject ) );
+		debugData->perFrameData[i].debugUBO = renderData->renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( DebugUBO ) ) );
+		debugData->perFrameData[i].debugRenderUBO = renderData->renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( UniformBufferObject ) ) );
 		}
 
 	// debug compute pipeline
@@ -317,14 +323,18 @@ void debugDrawPreFrame( PerFrameData* _currentFrame, PerFrameData* _previousFram
 	debugubo.pyramidWidth = (float)renderData->DepthPyramidImageW;
 	debugubo.pyramidHeight = (float)renderData->DepthPyramidImageH;
 
-	debugCurrentFrame->debugUBO->UpdateBuffer(&debugubo);
+	void *mem = debugCurrentFrame->debugUBO->MapMemory();
+	memcpy( mem , &debugubo , sizeof( debugubo ) );
+	debugCurrentFrame->debugUBO->UnmapMemory();
 	
 	UniformBufferObject ubo{};
 	ubo.view = renderData->camera.view;
 	ubo.proj = renderData->camera.proj;
 	ubo.viewI = renderData->camera.viewI;
 	ubo.projI = renderData->camera.projI;
-	debugCurrentFrame->debugRenderUBO->UpdateBuffer( &ubo );
+	mem = debugCurrentFrame->debugRenderUBO->MapMemory();
+	memcpy( mem, &ubo, sizeof( ubo ) );
+	debugCurrentFrame->debugRenderUBO->UnmapMemory();
 
 	debugCurrentFrame->debugDescriptorPool->ResetDescriptorPool();
 	
@@ -476,7 +486,7 @@ void debugPerFrameLoop()
 			VkDeviceSize bufferSize = imageW * imageH * 4 * sizeof( float );
 
 			Vlk::Buffer* debugBuffer = renderData->renderer->CreateBuffer(
-				Vlk::BufferTemplate::GenericBuffer(
+				Vlk::BufferTemplate::ManualBuffer(
 					VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 					VMA_MEMORY_USAGE_CPU_ONLY,
 					bufferSize

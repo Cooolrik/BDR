@@ -2,10 +2,10 @@
 
 #include "Vlk_DescriptorPool.h"
 #include "Vlk_DescriptorLayout.h"
-#include "Vlk_UniformBuffer.h"
 #include "Vlk_Renderer.h"
 #include "Vlk_Image.h"
 #include "Vlk_RayTracingAccBuffer.h"
+#include "Vlk_Buffer.h"
 
 using namespace std;
 

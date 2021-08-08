@@ -11,7 +11,7 @@
 #include "Vlk_IndexBuffer.h"
 #include "Vlk_DescriptorLayout.h"
 #include "Vlk_DescriptorPool.h"
-#include "Vlk_UniformBuffer.h"
+#include "Vlk_Buffer.h"
 #include "Vlk_Sampler.h"
 
 #include <Camera.h>
@@ -102,8 +102,8 @@ class PerFrameData
 		Vlk::CommandPool* commandPool = nullptr;
 		Vlk::DescriptorPool* descriptorPool = nullptr;
 
-		Vlk::UniformBuffer* uniformBuffer = nullptr; // render uniform buffer 
-		Vlk::UniformBuffer* cullingUBO = nullptr; // culling uniform buffer 
+		Vlk::Buffer* uniformBuffer = nullptr; // render uniform buffer 
+		Vlk::Buffer* cullingUBO = nullptr; // culling uniform buffer 
 		
 		VkDescriptorSet renderDescriptorSet = nullptr; // render descriptor set
 		VkDescriptorSet cullingDescriptorSet = nullptr; // culling shader descriptor set

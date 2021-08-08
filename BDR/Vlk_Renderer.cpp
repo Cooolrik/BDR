@@ -9,7 +9,6 @@
 #include "Vlk_IndexBuffer.h"
 #include "Vlk_DescriptorLayout.h"
 #include "Vlk_DescriptorPool.h"
-#include "Vlk_UniformBuffer.h"
 #include "Vlk_Image.h"
 #include "Vlk_Sampler.h"
 #include "Vlk_RayTracingExtension.h"
@@ -141,6 +140,87 @@ VkBuffer Vlk::Renderer::CreateVulkanBuffer( VkBufferUsageFlags bufferUsageFlags,
 
 	return buffer;
 	}
+
+template<class B, class BT> B* Vlk::Renderer::NewBuffer( const BT& bt )
+	{
+	B* buffer = new B( this );
+
+	// create the buffer using vma and the parameters
+	VLK_CALL( vmaCreateBuffer(
+		this->MemoryAllocator,
+		&bt.BufferCreateInfo,
+		&bt.AllocationCreateInfo,
+		&buffer->BufferHandle,
+		&buffer->Allocation,
+		nullptr
+	) );
+	buffer->BufferSize = bt.BufferCreateInfo.size;
+
+	// optionally upload data to the buffer
+	if(bt.UploadSourcePtr)
+		{
+		// map either a staging buffer or the buffer directly
+		if(bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_ONLY ||
+			bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_TO_GPU)
+			{
+			// we can map the buffer directly, copy the memory manually
+			uint8_t* mem_ptr = (uint8_t*)buffer->MapMemory();
+
+			// copy all regions
+			for(VkBufferCopy bc : bt.UploadBufferCopies)
+				{
+#ifdef _DEBUG
+				VkDeviceSize src_end_index = bc.srcOffset + bc.size;
+				VkDeviceSize dst_end_index = bc.dstOffset + bc.size;
+
+				if(src_end_index > bt.UploadSourceSize ||
+					dst_end_index > bt.UploadSourceSize)
+					{
+					throw runtime_error( "Error: CreateBuffer() copy offset is out of bounds" );
+					}
+#endif
+				uint8_t* cpy_src = (uint8_t*)bt.UploadSourcePtr + bc.srcOffset;
+				uint8_t* cpy_dst = mem_ptr + bc.dstOffset;
+				memcpy( cpy_dst, cpy_src, (size_t)bc.size );
+				}
+
+			// done with the buffer
+			buffer->UnmapMemory();
+			}
+		else
+			{
+			// GPU copy, use a staging buffer
+			VkBuffer stagingBuffer;
+			VmaAllocation stagingBufferMemory;
+
+			// create a host visible staging buffer to copy data to
+			stagingBuffer = this->CreateVulkanBuffer(
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VMA_MEMORY_USAGE_CPU_ONLY,
+				bt.UploadSourceSize,
+				stagingBufferMemory
+			);
+
+			void* dest_ptr;
+			VLK_CALL( vmaMapMemory( this->MemoryAllocator, stagingBufferMemory, &dest_ptr ) );
+			memcpy( dest_ptr, bt.UploadSourcePtr, (size_t)bt.UploadSourceSize );
+			vmaUnmapMemory( this->MemoryAllocator, stagingBufferMemory );
+
+			// now transfer the data to the device local buffer, using a single time command
+			VkCommandBuffer cmd = this->BeginInternalCommandBuffer();
+			vkCmdCopyBuffer( cmd, stagingBuffer, buffer->GetBuffer(), (uint)bt.UploadBufferCopies.size(), bt.UploadBufferCopies.data() );
+			this->EndAndSubmitInternalCommandBuffer( cmd );
+
+			// done with the staging buffer
+			vmaDestroyBuffer( this->MemoryAllocator, stagingBuffer, stagingBufferMemory );
+			}
+		}
+
+	// done, return buffer
+	return buffer;
+	}
+
+
 
 Vlk::Renderer* Vlk::Renderer::Create( const CreateParameters& createParameters )
 	{
@@ -894,18 +974,6 @@ void Vlk::Renderer::DeleteSwapChain()
 
 	this->TargetImages.clear();
 
-	//for (size_t i = 0; i < this->DepthImages.size(); ++i)
-	//	{
-	//	vkDestroyImageView( this->Device, this->DepthImageViews[i], nullptr );
-	//	vmaDestroyImage( this->MemoryAllocator, this->DepthImages[i], this->DepthImageAllocations[i] );
-	//	}
-	//
-	//for(size_t i = 0; i < this->ColorImages.size(); ++i)
-	//	{
-	//	vkDestroyImageView( this->Device, this->ColorImageViews[i], nullptr );
-	//	vmaDestroyImage( this->MemoryAllocator, this->ColorImages[i], this->ColorImageAllocations[i] );
-	//	}
-
 	if( this->SwapChain != nullptr )
 		{
 		vkDestroySwapchainKHR( this->Device, this->SwapChain, nullptr );
@@ -1066,85 +1134,6 @@ VkResult Vlk::Renderer::SubmitRenderCommandBuffersAndPresent( const std::vector<
 	return VK_SUCCESS;
 	}
 
-template<class B, class BT> B* Vlk::Renderer::NewBuffer( const BT& bt )
-	{
-	B* buffer = new B( this );
-
-	// create the buffer using vma and the parameters
-	VLK_CALL( vmaCreateBuffer(
-		this->MemoryAllocator,
-		&bt.BufferCreateInfo,
-		&bt.AllocationCreateInfo,
-		&buffer->BufferHandle,
-		&buffer->Allocation,
-		nullptr
-	) );
-	buffer->BufferSize = bt.BufferCreateInfo.size;
-
-	// optionally upload data to the buffer
-	if(bt.UploadSourcePtr)
-		{
-		// map either a staging buffer or the buffer directly
-		if(bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_ONLY ||
-			bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_TO_GPU)
-			{
-			// we can map the buffer directly, copy the memory manually
-			uint8_t* mem_ptr = (uint8_t*)buffer->MapMemory();
-
-			// copy all regions
-			for(VkBufferCopy bc : bt.UploadBufferCopies)
-				{
-#ifdef _DEBUG
-				VkDeviceSize src_end_index = bc.srcOffset + bc.size;
-				VkDeviceSize dst_end_index = bc.dstOffset + bc.size;
-				
-				if( src_end_index > bt.UploadSourceSize || 
-					dst_end_index > bt.UploadSourceSize )
-					{
-					throw runtime_error( "Error: CreateBuffer() copy offset is out of bounds" );
-					}
-#endif
-				uint8_t* cpy_src = (uint8_t*)bt.UploadSourcePtr + bc.srcOffset;
-				uint8_t* cpy_dst = mem_ptr + bc.dstOffset;
-				memcpy( cpy_dst, cpy_src, (size_t)bc.size );
-				}
-
-			// done with the buffer
-			buffer->UnmapMemory();
-			}
-		else
-			{
-			// GPU copy, use a staging buffer
-			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferMemory;
-
-			// create a host visible staging buffer to copy data to
-			stagingBuffer = this->CreateVulkanBuffer(
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VMA_MEMORY_USAGE_CPU_ONLY,
-				bt.UploadSourceSize,
-				stagingBufferMemory
-			);
-
-			void* dest_ptr;
-			VLK_CALL( vmaMapMemory( this->MemoryAllocator, stagingBufferMemory, &dest_ptr ) );
-			memcpy( dest_ptr, bt.UploadSourcePtr, (size_t)bt.UploadSourceSize );
-			vmaUnmapMemory( this->MemoryAllocator, stagingBufferMemory );
-
-			// now transfer the data to the device local buffer, using a single time command
-			VkCommandBuffer cmd = this->BeginInternalCommandBuffer();
-			vkCmdCopyBuffer( cmd, stagingBuffer, buffer->GetBuffer(), (uint)bt.UploadBufferCopies.size(), bt.UploadBufferCopies.data() );
-			this->EndAndSubmitInternalCommandBuffer( cmd );
-
-			// done with the staging buffer
-			vmaDestroyBuffer( this->MemoryAllocator, stagingBuffer, stagingBufferMemory );
-			}
-		}
-
-	// done, return buffer
-	return buffer;
-	}
-
 Vlk::Buffer* Vlk::Renderer::CreateBuffer( const BufferTemplate& bt )
 	{
 	return NewBuffer<Buffer, BufferTemplate>( bt );
@@ -1157,62 +1146,17 @@ Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferTemplate
 	return vbuffer;
 	}
 
-Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( VkIndexType indexType , uint indexCount, const void* indices )
+Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( const IndexBufferTemplate& bt )
 	{
-	IndexBuffer* ibuffer = new IndexBuffer(this);
-	ibuffer->IndexType = indexType;
-
-	VkDeviceSize bufferSize;
-	if( indexType == VK_INDEX_TYPE_UINT32 )
-		bufferSize = sizeof( uint32_t );
-	else if( indexType == VK_INDEX_TYPE_UINT16 )
-		bufferSize = sizeof( uint16_t );
-	else if( indexType == VK_INDEX_TYPE_UINT8_EXT )
-		bufferSize = sizeof( uint8_t );
-	else
+	if( bt.IndexType != VK_INDEX_TYPE_UINT32 &&
+		bt.IndexType != VK_INDEX_TYPE_UINT16 &&
+		bt.IndexType != VK_INDEX_TYPE_UINT8_EXT )
 		{
 		throw runtime_error( "Error: CreateIndexBuffer() indexType is unrecognized." );
 		}
-	bufferSize *= indexCount;
 
-	VkBuffer stagingBuffer;
-	VmaAllocation stagingBufferMemory;
-
-	// create a host visible staging buffer to copy data to
-	stagingBuffer = this->CreateVulkanBuffer(
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VMA_MEMORY_USAGE_CPU_ONLY,
-		bufferSize,
-		stagingBufferMemory
-		);
-
-	// TODO: need to be able to set these additional flags from the caller
-	// create an optimized device local buffer that will receive the data
-	ibuffer->BufferHandle = this->CreateVulkanBuffer(
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-		VMA_MEMORY_USAGE_GPU_ONLY,
-		bufferSize,
-		ibuffer->Allocation
-		);
-	ibuffer->BufferSize = bufferSize;
-
-	// map and copy the data to the staging buffer
-	void* memoryPtr;
-	VLK_CALL( vmaMapMemory( this->MemoryAllocator, stagingBufferMemory, &memoryPtr ) );
-	memcpy( memoryPtr, indices, (size_t)bufferSize );
-	vmaUnmapMemory( this->MemoryAllocator, stagingBufferMemory );
-
-	// now transfer the data to the device local buffer, using a single time command
-	VkCommandBuffer cmd = this->BeginInternalCommandBuffer();
-	VkBufferCopy copyRegion{};
-	copyRegion.size = bufferSize;
-	vkCmdCopyBuffer( cmd, stagingBuffer, ibuffer->GetBuffer(), 1, &copyRegion );
-	this->EndAndSubmitInternalCommandBuffer( cmd );
-
-	// done with the staging buffer and memeory
-	vmaDestroyBuffer( this->MemoryAllocator, stagingBuffer, stagingBufferMemory );
-
-	// return the created vertex buffer
+	IndexBuffer* ibuffer = NewBuffer<IndexBuffer, IndexBufferTemplate>( bt );
+	ibuffer->IndexType = bt.IndexType;
 	return ibuffer;
 	}
 
@@ -1253,22 +1197,6 @@ Vlk::DescriptorPool* Vlk::Renderer::CreateDescriptorPool( uint descriptorSetCoun
 	VLK_CALL( vkCreateDescriptorPool( this->Device, &descriptorPoolCreateInfo, nullptr, &pool->Pool ) );
 
 	return pool;
-	}
-
-Vlk::UniformBuffer* Vlk::Renderer::CreateUniformBuffer( VkDeviceSize bufferSize )
-	{
-	UniformBuffer* buffer = new UniformBuffer(this);
-
-	// create a uniform buffer that can be mapped 
-	buffer->BufferHandle = this->CreateVulkanBuffer(
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VMA_MEMORY_USAGE_CPU_ONLY,
-		bufferSize,
-		buffer->Allocation
-		);
-	buffer->BufferSize = bufferSize;
-
-	return buffer;
 	}
 
 Vlk::Image* Vlk::Renderer::CreateImage( const ImageTemplate &it ) 

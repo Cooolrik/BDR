@@ -12,10 +12,10 @@ void main()
     float t = 0.5 * (unit_direction.y + 1.0);
 
     // sky
-    payload.hitValue.xyz = mix( vec3(0.7, 1.0, 0.5) , vec3(0.5, 0.7, 1.0) , t );
+    //payload.hitValue.xyz = mix( vec3(0.7, 1.0, 0.5) , vec3(0.5, 0.7, 1.0) , t );
     
     // dusk
-    //payload.hitValue.xyz = mix( vec3(0.0, 0.0, 0.0) , vec3(0.1, 0.1, 0.2) , t );
+    payload.hitValue.xyz = mix( vec3(0.0, 0.0, 0.0) , vec3(0.1, 0.1, 0.2) , t );
     
     // black
     //payload.hitValue.xyz = vec3(0.01, 0.01, 0.01);

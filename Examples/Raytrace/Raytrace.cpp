@@ -34,7 +34,6 @@ using std::vector;
 #include <Vlk_IndexBuffer.h>
 #include <Vlk_DescriptorLayout.h>
 #include <Vlk_DescriptorPool.h>
-#include <Vlk_UniformBuffer.h>
 #include <Vlk_Image.h>
 #include <Vlk_Sampler.h>
 #include <Vlk_RayTracingExtension.h>
@@ -156,7 +155,14 @@ class RenderMesh
 					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 					)
 				);
-			m->indexBuffer = renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)m->indices.size(), m->indices.data() );
+			m->indexBuffer = renderer->CreateIndexBuffer( 
+				Vlk::IndexBufferTemplate::IndexBuffer(
+					VK_INDEX_TYPE_UINT32, 
+					(uint)m->indices.size(), 
+					m->indices.data(),
+					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+					)
+				);
 
 			return m;
 			}
@@ -252,7 +258,7 @@ class VulkanRenderTest
 		std::vector<VkImage> colorTargets;
 		std::vector<VkImage> swapChainImages;
 		std::vector<Vlk::CommandPool*> commandPools{};
-		std::vector<Vlk::UniformBuffer*> uniformBuffers{};
+		std::vector<Vlk::Buffer*> uniformBuffers{};
 		std::vector<VkDescriptorSet> descriptorSets{};
 
 		Vlk::DescriptorPool* RTDescriptorPool = nullptr;
@@ -441,7 +447,9 @@ class VulkanRenderTest
 				}
 
 
-			uniformBuffers[image_index]->UpdateBuffer( &ubo );
+			void *mem = uniformBuffers[image_index]->MapMemory();
+			memcpy(mem, &ubo, sizeof(ubo) );
+			uniformBuffers[image_index]->UnmapMemory();
 
 			PushConstants pc{};
 			pc.model = glm::rotate( glm::mat4( 1.0f ), modelRot.y, glm::vec3( 0.0f, 1.0f, 0.0f ) );
@@ -506,7 +514,7 @@ class VulkanRenderTest
 				render_target_textures[i] = renderer->CreateImage( Vlk::ImageTemplate::General2D( VK_FORMAT_R32G32B32A32_SFLOAT, 2048, 1024, 1 ) );
 
 				commandPools[i] = renderer->CreateCommandPool( 1 );
-				uniformBuffers[i] = renderer->CreateUniformBuffer( sizeof( UniformBufferObject ) );
+				uniformBuffers[i] = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( UniformBufferObject ) ) );
 
 				descriptorSets[i] = descriptorPool->BeginDescriptorSet( descriptorLayout );
 				descriptorPool->SetBuffer( 0, uniformBuffers[i] );
@@ -663,14 +671,14 @@ class VulkanRenderTest
 			instances[0].transform = glm::scale( instances[0].transform , glm::vec3( 1.f ) );
 				
 			instances[1].geometryID = 0;
-			instances[1].materialID = 2;
+			instances[1].materialID = 4;
 			instances[1].transform = glm::mat4( 1 );
 			instances[1].transform = glm::rotate( instances[1].transform, glm::radians( -90.0f ), glm::vec3( 1, 0, 0 ) );
 			instances[1].transform = glm::translate( instances[1].transform, glm::vec3( -1000, 0, 0 ) );
 			instances[1].transform = glm::scale( instances[1].transform, glm::vec3( 1.f ) );
 
 			instances[2].geometryID = 0;
-			instances[2].materialID = 1;
+			instances[2].materialID = 2;
 			instances[2].transform = glm::mat4( 1 );
 			instances[2].transform = glm::rotate( instances[2].transform, glm::radians( -90.0f ), glm::vec3( 1, 0, 0 ) );
 			instances[2].transform = glm::translate( instances[2].transform, glm::vec3( -1500, 0, 0 ) );
@@ -726,7 +734,7 @@ class VulkanRenderTest
 			rayTracing->BuildTLAS( tlas_entries );
 
 			instanceBuffer = renderer->CreateBuffer(
-				Vlk::BufferTemplate::GenericBuffer(
+				Vlk::BufferTemplate::ManualBuffer(
 					VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 					VMA_MEMORY_USAGE_GPU_ONLY,
 					VkDeviceSize( instances.size() * sizeof( Instance ) ),

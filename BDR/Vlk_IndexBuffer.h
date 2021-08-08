@@ -29,4 +29,22 @@ namespace Vlk
 
             BDGetMacro( VkIndexType, IndexType );
         };
+
+    class IndexBufferTemplate : public BufferTemplate
+        {
+        public:
+            // the index type to use for the buffer
+            VkIndexType IndexType = {};
+
+            /////////////////////////////////
+
+            // create a vertex buffer in GPU memory
+            static IndexBufferTemplate IndexBuffer(
+                VkIndexType indexType,
+                uint indexCount,
+                const void* src_data = nullptr,
+                VkBufferUsageFlags additionalBufferUsageFlags = 0 // eg VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            );
+
+        };
     };

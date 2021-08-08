@@ -29,7 +29,7 @@
 #include <Vlk_IndexBuffer.h>
 #include <Vlk_DescriptorLayout.h>
 #include <Vlk_DescriptorPool.h>
-#include <Vlk_UniformBuffer.h>
+#include <Vlk_Buffer.h>
 #include <Vlk_Image.h>
 
 #include "RenderData.h"
@@ -245,34 +245,34 @@ static bool DrawFrame()
 		}
 
 	// update rendering ubo
-	UniformBufferObject ubo{};
-	ubo.view = renderData->camera.view;
-	ubo.proj = renderData->camera.proj;
-	ubo.viewI = renderData->camera.viewI;
-	ubo.projI = renderData->camera.projI;
-	ubo.viewPosition = renderData->camera.cameraPosition;
-	renderData->currentFrame->uniformBuffer->UpdateBuffer( &ubo );
+	UniformBufferObject *ubo = (UniformBufferObject*)renderData->currentFrame->uniformBuffer->MapMemory();
+	ubo->view = renderData->camera.view;
+	ubo->proj = renderData->camera.proj;
+	ubo->viewI = renderData->camera.viewI;
+	ubo->projI = renderData->camera.projI;
+	ubo->viewPosition = renderData->camera.cameraPosition;
+	renderData->currentFrame->uniformBuffer->UnmapMemory();
 
 	// update culling ubo
-	CullingSettingsUBO cubo;
-	cubo.viewTransform = renderData->camera.view;
-	cubo.viewPosition = renderData->camera.cameraPosition;
+	CullingSettingsUBO *cubo = (CullingSettingsUBO*)renderData->currentFrame->cullingUBO->MapMemory();
+	cubo->viewTransform = renderData->camera.view;
+	cubo->viewPosition = renderData->camera.cameraPosition;
 	glm::mat4 projectionT = glm::transpose( renderData->camera.proj );
 	glm::vec4 frustumX = normalizePlane( projectionT[3] + projectionT[0] ); // x + w < 0
 	glm::vec4 frustumY = normalizePlane( projectionT[3] + projectionT[1] ); // y + w < 0
-	cubo.frustumXx = frustumX.x;
-	cubo.frustumXz = frustumX.z;
-	cubo.frustumYy = -frustumY.y;
-	cubo.frustumYz = frustumY.z;
-	cubo.nearZ = renderData->camera.nearZ;
-	cubo.farZ = renderData->camera.farZ;
-	cubo.pyramidCull = renderData->camera.pyramid_cull;
-	cubo.Proj00 = renderData->camera.proj[0][0]; // projection[0][0]
-	cubo.Proj11 = renderData->camera.proj[1][1]; // projection[1][1]
-	cubo.pyramidWidth = (float)renderData->DepthPyramidImageW; // width of the largest mip in the depth pyramid
-	cubo.pyramidHeight = (float)renderData->DepthPyramidImageH; // height of the largest mip in the depth pyramid
-	cubo.objectCount = renderData->scene_objects;
-	renderData->currentFrame->cullingUBO->UpdateBuffer( &cubo );
+	cubo->frustumXx = frustumX.x;
+	cubo->frustumXz = frustumX.z;
+	cubo->frustumYy = -frustumY.y;
+	cubo->frustumYz = frustumY.z;
+	cubo->nearZ = renderData->camera.nearZ;
+	cubo->farZ = renderData->camera.farZ;
+	cubo->pyramidCull = renderData->camera.pyramid_cull;
+	cubo->Proj00 = renderData->camera.proj[0][0]; // projection[0][0]
+	cubo->Proj11 = renderData->camera.proj[1][1]; // projection[1][1]
+	cubo->pyramidWidth = (float)renderData->DepthPyramidImageW; // width of the largest mip in the depth pyramid
+	cubo->pyramidHeight = (float)renderData->DepthPyramidImageH; // height of the largest mip in the depth pyramid
+	cubo->objectCount = renderData->scene_objects;
+	renderData->currentFrame->cullingUBO->UnmapMemory();
 
 	// create the command buffer and send to present 
 	std::vector<VkCommandBuffer> buffers = { createTransientCommandBuffer( image_index ) };
@@ -348,12 +348,12 @@ void createPerFrameData()
 		frame.commandPool = renderer->CreateCommandPool( 1 );
 		frame.descriptorPool = renderer->CreateDescriptorPool( max_stage_count, max_stage_count, max_stage_count );
 
-		frame.uniformBuffer = renderer->CreateUniformBuffer( sizeof( UniformBufferObject ) );
-		frame.cullingUBO = renderer->CreateUniformBuffer( sizeof( CullingSettingsUBO ) );
+		frame.uniformBuffer = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( UniformBufferObject ) ) );
+		frame.cullingUBO = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( CullingSettingsUBO ) ) );
 
 		// create the original batch indirect render array, upload data
 		frame.initialDrawBuffer = renderer->CreateBuffer(
-			Vlk::BufferTemplate::GenericBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 				VMA_MEMORY_USAGE_CPU_TO_GPU,
 				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) ),
@@ -363,7 +363,7 @@ void createPerFrameData()
 
 		// create the filtered array, this will be initialized from the orignal array each frame
 		frame.filteredDrawBuffer = renderer->CreateBuffer(
-			Vlk::BufferTemplate::GenericBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
 				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) )
@@ -372,7 +372,7 @@ void createPerFrameData()
 
 		// create the instance to objectID backmapping buffer
 		frame.instanceToObjectBuffer = renderer->CreateBuffer(
-			Vlk::BufferTemplate::GenericBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
 				VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) )
@@ -381,7 +381,7 @@ void createPerFrameData()
 
 		// create the render object array
 		frame.renderObjectsBuffer = renderer->CreateBuffer(
-			Vlk::BufferTemplate::GenericBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
 				VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) ),
@@ -598,7 +598,7 @@ void SetupScene()
 
 	// create objects array
 	renderData->objectsBuffer = renderData->renderer->CreateBuffer(
-		Vlk::BufferTemplate::GenericBuffer(
+		Vlk::BufferTemplate::ManualBuffer(
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 			VMA_MEMORY_USAGE_GPU_ONLY,
 			VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ),

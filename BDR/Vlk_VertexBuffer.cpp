@@ -32,7 +32,7 @@ Vlk::VertexBufferTemplate Vlk::VertexBufferTemplate::VertexBuffer( const VertexB
 
 	// init the template with the base buffer
 	VertexBufferTemplate ret = {
-		BufferTemplate::GenericBuffer(
+		BufferTemplate::ManualBuffer(
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | additionalBufferUsageFlags,
 			VMA_MEMORY_USAGE_GPU_ONLY,
 			bufferSize,

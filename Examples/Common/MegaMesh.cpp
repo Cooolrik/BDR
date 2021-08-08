@@ -349,8 +349,14 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 			vertices.data() 
 			)
 		);
-	indexBuffer = renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)indices.size(), indices.data() );
-
+	indexBuffer = renderer->CreateIndexBuffer( 
+		Vlk::IndexBufferTemplate::IndexBuffer(
+			VK_INDEX_TYPE_UINT32, 
+			(uint)indices.size(), 
+			indices.data() 
+			)
+		);
+		
 	return ret;
 	}
 

@@ -47,8 +47,6 @@ namespace Vlk
 	class VertexBufferTemplate;
 	class IndexBuffer;
 	class IndexBufferTemplate;
-	class UniformBuffer;
-	class UniformBufferTemplate;
 
 	class GraphicsPipeline;
 	class ComputePipeline;
@@ -223,13 +221,8 @@ namespace Vlk
 			/// create buffers based on templates
 			Buffer* CreateBuffer( const BufferTemplate &bt );
 			VertexBuffer* CreateVertexBuffer( const VertexBufferTemplate& bt );
-
-			/// create index buffer
-			IndexBuffer* CreateIndexBuffer( VkIndexType indexType, uint indexCount, const void* indices );
-
-			/// create uniform buffer
-			UniformBuffer* CreateUniformBuffer( VkDeviceSize bufferSize );
-
+			IndexBuffer* CreateIndexBuffer( const IndexBufferTemplate& bt );
+			
 			/// (temporary) create descriptor layout
 			DescriptorLayout* CreateDescriptorLayout();
 

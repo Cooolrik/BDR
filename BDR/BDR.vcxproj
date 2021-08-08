@@ -115,7 +115,6 @@
     <ClCompile Include="Vlk_Renderer.cpp" />
     <ClCompile Include="Vlk_Sampler.cpp" />
     <ClCompile Include="Vlk_ShaderModule.cpp" />
-    <ClCompile Include="Vlk_UniformBuffer.cpp" />
     <ClCompile Include="Vlk_VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -140,7 +139,6 @@
     <ClInclude Include="Vlk_Renderer.h" />
     <ClInclude Include="Vlk_Sampler.h" />
     <ClInclude Include="Vlk_ShaderModule.h" />
-    <ClInclude Include="Vlk_UniformBuffer.h" />
     <ClInclude Include="Vlk_VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>

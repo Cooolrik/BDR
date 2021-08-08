@@ -49,9 +49,6 @@
     <ClCompile Include="Vlk_VertexBuffer.cpp">
       <Filter>Source Files\Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="Vlk_UniformBuffer.cpp">
-      <Filter>Source Files\Buffers</Filter>
-    </ClCompile>
     <ClCompile Include="Vlk_vma_implementation.cpp">
       <Filter>Source Files\3rdParty</Filter>
     </ClCompile>
@@ -121,9 +118,6 @@
       <Filter>Source Files\Buffers</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_VertexBuffer.h">
-      <Filter>Source Files\Buffers</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_UniformBuffer.h">
       <Filter>Source Files\Buffers</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_RayTracingBLASEntry.h">

@@ -51,7 +51,7 @@ namespace Vlk
                 const VertexBufferDescription& description, 
                 uint vertexCount, 
                 const void* src_data = nullptr,
-                VkBufferUsageFlags additionalBufferUsageFlags = 0
+                VkBufferUsageFlags additionalBufferUsageFlags = 0 // eg VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
             );
 
         };

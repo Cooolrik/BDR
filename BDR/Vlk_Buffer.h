@@ -46,13 +46,20 @@ namespace Vlk
 
             /////////////////////////////////
 
-            // create a generic buffer, and (optionally) copy the whole data size from a memory address
-            static BufferTemplate GenericBuffer(
+            // create a buffer manually, and (optionally) copy the whole data size from a memory address
+            static BufferTemplate ManualBuffer(
                 VkBufferUsageFlags bufferUsageFlags, 
                 VmaMemoryUsage memoryPropertyFlags, 
-                VkDeviceSize deviceSize, 
+                VkDeviceSize bufferSize, 
                 const void* src_data = nullptr
                 );
+
+            // create a uniform buffer, CPU side but GPU readable
+            static BufferTemplate UniformBuffer(
+                VkDeviceSize bufferSize,
+                const void* src_data = nullptr
+            );
+
         };
 
     };
