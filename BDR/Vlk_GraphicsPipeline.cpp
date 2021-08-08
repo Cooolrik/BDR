@@ -38,7 +38,7 @@ void Vlk::GraphicsPipeline::SetVertexDataTemplate( VkVertexInputBindingDescripti
 
 void Vlk::GraphicsPipeline::SetVertexDataTemplateFromVertexBuffer( const VertexBuffer* buffer )
 	{
-	this->SetVertexDataTemplate( buffer->GetVertexBufferBindingDescription(), buffer->GetVertexAttributeDescriptions() );
+	this->SetVertexDataTemplate( buffer->GetDescription().GetVertexInputBindingDescription(), buffer->GetDescription().GetVertexInputAttributeDescriptions() );
 	}
 
 void Vlk::GraphicsPipeline::SetVkDescriptorSetLayout( VkDescriptorSetLayout descriptorSetLayout )

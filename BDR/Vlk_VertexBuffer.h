@@ -18,8 +18,8 @@ namespace Vlk
             void SetVertexInputBindingDescription( uint32_t binding, uint32_t stride, VkVertexInputRate inputRate );
             void AddVertexInputAttributeDescription( uint32_t binding, uint32_t location, VkFormat format , uint32_t offset );
 
-            BDGetMacro( VkVertexInputBindingDescription, VertexInputBindingDescription );
-            BDGetMacro( std::vector<VkVertexInputAttributeDescription>, VertexInputAttributeDescriptions );
+            BDGetConstRefMacro( VkVertexInputBindingDescription, VertexInputBindingDescription );
+            BDGetConstRefMacro( std::vector<VkVertexInputAttributeDescription>, VertexInputAttributeDescriptions );
         };
 
     class VertexBuffer : public Buffer
@@ -32,17 +32,28 @@ namespace Vlk
         public:
             unsigned int GetVertexCount() const
                 {
-                return (unsigned int)( this->BufferSize / this->GetVertexBufferBindingDescription().stride );
+                return (unsigned int)( this->BufferSize / Description.GetVertexInputBindingDescription().stride );
                 }
 
-            VkVertexInputBindingDescription GetVertexBufferBindingDescription() const
-                {
-                return this->Description.GetVertexInputBindingDescription();
-                }
-
-            std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions() const
-                {
-                return this->Description.GetVertexInputAttributeDescriptions();
-                }
+            BDGetConstRefMacro( VertexBufferDescription , Description );
         };
+
+    class VertexBufferTemplate : public BufferTemplate
+        {
+        public:
+            // the vertex description to use for constructing the buffer
+            VertexBufferDescription Description;
+
+            /////////////////////////////////
+
+            // create a vertex buffer in GPU memory
+            static VertexBufferTemplate VertexBuffer(
+                const VertexBufferDescription& description, 
+                uint vertexCount, 
+                const void* src_data = nullptr,
+                VkBufferUsageFlags additionalBufferUsageFlags = 0
+            );
+
+        };
+
     };

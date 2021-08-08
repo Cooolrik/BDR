@@ -148,7 +148,14 @@ class RenderMesh
 				m->saveCache( cache_file.c_str() );
 				}
 
-			m->vertexBuffer = renderer->CreateVertexBuffer( Vertex::GetVertexBufferDescription(), (uint)m->vertices.size(), m->vertices.data() );
+			m->vertexBuffer = renderer->CreateVertexBuffer(
+				Vlk::VertexBufferTemplate::VertexBuffer(
+					Vertex::GetVertexBufferDescription(),
+					(uint)m->vertices.size(),
+					m->vertices.data(),
+					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+					)
+				);
 			m->indexBuffer = renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)m->indices.size(), m->indices.data() );
 
 			return m;
@@ -847,8 +854,14 @@ class VulkanRenderTest
 			this->LoadTexture("../../Dependencies/common-3d-test-models/data/beetle.png");
 			this->LoadTexture("../../Dependencies/common-3d-test-models/data/lucy.png");
 
-			quadBuffer = renderer->CreateVertexBuffer( Vertex::GetVertexBufferDescription(), (uint)quad.size(), quad.data() );
-
+			quadBuffer = renderer->CreateVertexBuffer( 
+				Vlk::VertexBufferTemplate::VertexBuffer(
+					Vertex::GetVertexBufferDescription(), 
+					(uint)quad.size(), 
+					quad.data()  
+					)
+				);
+				
 			linearSampler = renderer->CreateSampler( Vlk::SamplerTemplate::Linear() );
 			
 			// set up graphics pipeline
@@ -912,6 +925,7 @@ class VulkanRenderTest
 				delete i;
 				}
 
+			delete linearSampler;
 			delete instanceBuffer;
 			delete quadBuffer;
 			clearFramePools();

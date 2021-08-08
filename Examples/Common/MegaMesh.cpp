@@ -342,7 +342,13 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 		}
 
 	// setup gpu buffers
-	vertexBuffer = renderer->CreateVertexBuffer( Vertex::GetVertexBufferDescription(), (uint)vertices.size(), vertices.data() );
+	vertexBuffer = renderer->CreateVertexBuffer( 
+		Vlk::VertexBufferTemplate::VertexBuffer(
+			Vertex::GetVertexBufferDescription(), 
+			(uint)vertices.size(), 
+			vertices.data() 
+			)
+		);
 	indexBuffer = renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)indices.size(), indices.data() );
 
 	return ret;

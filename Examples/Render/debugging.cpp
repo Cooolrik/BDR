@@ -219,7 +219,13 @@ void debugSetup( RenderData* _renderData )
 	samplerCreateInfo.maxLod = (float)16;
 	VLK_CALL( vkCreateSampler( renderData->renderer->GetDevice(), &samplerCreateInfo, 0, &debugData->debugSampler ) );
 
-	debugData->debugAxiesVertexBuffer = renderData->renderer->CreateVertexBuffer( Vertex::GetVertexBufferDescription(), (uint)axies_vertices.size(), axies_vertices.data() );
+	debugData->debugAxiesVertexBuffer = renderData->renderer->CreateVertexBuffer(
+		Vlk::VertexBufferTemplate::VertexBuffer(
+			Vertex::GetVertexBufferDescription(), 
+			(uint)axies_vertices.size(), 
+			axies_vertices.data() 
+			)
+		);
 	debugData->debugAxiesIndexBuffer = renderData->renderer->CreateIndexBuffer( VK_INDEX_TYPE_UINT32, (uint)axies_indices.size(), axies_indices.data() );
 
 	debugData->stored_image = new float[imageW*imageH*4];

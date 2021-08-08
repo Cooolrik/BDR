@@ -43,13 +43,16 @@ namespace Vlk
 
 	class Buffer;
 	class BufferTemplate;
+	class VertexBuffer;
+	class VertexBufferTemplate;
+	class IndexBuffer;
+	class IndexBufferTemplate;
+	class UniformBuffer;
+	class UniformBufferTemplate;
+
 	class GraphicsPipeline;
 	class ComputePipeline;
 	class CommandPool;
-	class Vertex;
-	class VertexBuffer;
-	class IndexBuffer;
-	class UniformBuffer;
 	class DescriptorLayout;
 	class DescriptorPool;
 	class VertexBufferDescription;
@@ -217,11 +220,9 @@ namespace Vlk
 			/// create a CommandPool object. set number of buffers to allocate
 			CommandPool* CreateCommandPool( uint bufferCount );
 
-			/// create base vulkan buffer
+			/// create buffers based on templates
 			Buffer* CreateBuffer( const BufferTemplate &bt );
-
-			/// create vertex buffer
-			VertexBuffer* CreateVertexBuffer( const VertexBufferDescription &description , uint vertexCount, const void* data );
+			VertexBuffer* CreateVertexBuffer( const VertexBufferTemplate& bt );
 
 			/// create index buffer
 			IndexBuffer* CreateIndexBuffer( VkIndexType indexType, uint indexCount, const void* indices );

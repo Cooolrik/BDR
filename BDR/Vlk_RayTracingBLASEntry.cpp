@@ -29,8 +29,8 @@ unsigned int Vlk::RayTracingBLASEntry::AddGeometry(
 
 	// setup triangles of geometry
 	accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-	accelerationStructureGeometry.geometry.triangles.vertexFormat = vertexBuffer->GetVertexAttributeDescriptions()[vertexCoordAttributeIndex].format;
-	accelerationStructureGeometry.geometry.triangles.vertexStride = vertexBuffer->GetVertexBufferBindingDescription().stride;
+	accelerationStructureGeometry.geometry.triangles.vertexFormat = vertexBuffer->GetDescription().GetVertexInputAttributeDescriptions()[vertexCoordAttributeIndex].format;
+	accelerationStructureGeometry.geometry.triangles.vertexStride = vertexBuffer->GetDescription().GetVertexInputBindingDescription().stride;
 	accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = vertexAddress;
 	accelerationStructureGeometry.geometry.triangles.maxVertex = vertexBuffer->GetVertexCount();
 	accelerationStructureGeometry.geometry.triangles.indexType = indexBuffer->GetIndexType();

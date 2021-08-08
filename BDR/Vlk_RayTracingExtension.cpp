@@ -327,7 +327,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	// set up a copy on the gpu to copy to
 	Buffer* TLASInstancesBuffer = this->Parent->CreateBuffer(
 		BufferTemplate::GenericBuffer(
-			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 			VMA_MEMORY_USAGE_GPU_ONLY,
 			tlas_buffer_size
 		)
