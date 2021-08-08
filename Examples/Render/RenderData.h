@@ -9,7 +9,7 @@
 #include "Vlk_CommandPool.h"
 #include "Vlk_VertexBuffer.h"
 #include "Vlk_IndexBuffer.h"
-#include "Vlk_DescriptorLayout.h"
+#include "Vlk_DescriptorSetLayout.h"
 #include "Vlk_DescriptorPool.h"
 #include "Vlk_Buffer.h"
 #include "Vlk_Sampler.h"
@@ -144,13 +144,13 @@ class RenderData
 		
 
 		Vlk::GraphicsPipeline* renderPipeline = nullptr;
-		Vlk::DescriptorLayout* renderDescriptorLayout = nullptr;
+		Vlk::DescriptorSetLayout* renderDescriptorLayout = nullptr;
 
 		Vlk::ComputePipeline* cullingPipeline = nullptr;
-		Vlk::DescriptorLayout* cullingDescriptorLayout = nullptr;
+		Vlk::DescriptorSetLayout* cullingDescriptorLayout = nullptr;
 
 		Vlk::ComputePipeline* depthReducePipeline = nullptr;
-		Vlk::DescriptorLayout* depthReduceDescriptorLayout = nullptr;
+		Vlk::DescriptorSetLayout* depthReduceDescriptorLayout = nullptr;
 
 		Vlk::Sampler* depthSampler = nullptr;
 

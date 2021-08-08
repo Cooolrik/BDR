@@ -1,7 +1,7 @@
 #include "Vlk_Common.inl"
 
 #include "Vlk_DescriptorPool.h"
-#include "Vlk_DescriptorLayout.h"
+#include "Vlk_DescriptorSetLayout.h"
 #include "Vlk_Renderer.h"
 #include "Vlk_Image.h"
 #include "Vlk_RayTracingAccBuffer.h"
@@ -10,7 +10,7 @@
 using namespace std;
 
 
-VkDescriptorSet Vlk::DescriptorPool::BeginDescriptorSet( DescriptorLayout *descriptorLayout )
+VkDescriptorSet Vlk::DescriptorPool::BeginDescriptorSet( DescriptorSetLayout *descriptorLayout )
 	{
 	VkDescriptorSet descriptorSet;
 	VkDescriptorSetLayout layouts[1] = { descriptorLayout->GetDescriptorSetLayout() };

@@ -32,7 +32,7 @@ using std::vector;
 #include <Vlk_CommandPool.h>
 #include <Vlk_VertexBuffer.h>
 #include <Vlk_IndexBuffer.h>
-#include <Vlk_DescriptorLayout.h>
+#include <Vlk_DescriptorSetLayout.h>
 #include <Vlk_DescriptorPool.h>
 #include <Vlk_Image.h>
 #include <Vlk_Sampler.h>
@@ -279,9 +279,9 @@ class VulkanRenderTest
 		std::vector<RenderMesh*> RenderMeshes;
 		std::vector<Vlk::Image*> Textures;
 
-		Vlk::DescriptorLayout* descriptorLayout{};
-		Vlk::DescriptorLayout* RTDescriptorLayout{};
-		Vlk::DescriptorLayout* quadrender_descriptorLayout{};
+		Vlk::DescriptorSetLayout* descriptorLayout{};
+		Vlk::DescriptorSetLayout* RTDescriptorLayout{};
+		Vlk::DescriptorSetLayout* quadrender_descriptorLayout{};
 
 		Vlk::RayTracingExtension* rayTracing;
 		Vlk::RayTracingPipeline* raytracing_pipeline{};
@@ -744,48 +744,48 @@ class VulkanRenderTest
 
 			//////////////////
 
-			descriptorLayout = renderer->CreateDescriptorLayout();
-			descriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT ); // 0 - buffer object
-			descriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 1 - texture
-			descriptorLayout->BuildDescriptorSetLayout();
+			Vlk::DescriptorSetLayoutTemplate dslt;
+			dslt.AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT ); // 0 - buffer object
+			dslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 1 - texture
+			descriptorLayout = renderer->CreateDescriptorSetLayout( dslt );
 
 			graphics_pipeline = renderer->CreateGraphicsPipeline();
 			graphics_pipeline->SetVertexDataTemplateFromVertexBuffer( this->RenderMeshes[0]->vertexBuffer );
 			graphics_pipeline->AddShaderModule( vertex_shader );
 			graphics_pipeline->AddShaderModule( fragment_shader );
-			graphics_pipeline->SetDescriptorLayout( descriptorLayout );
+			graphics_pipeline->SetDescriptorSetLayout( descriptorLayout );
 			graphics_pipeline->SetSinglePushConstantRange( sizeof( PushConstants ), VK_SHADER_STAGE_VERTEX_BIT );
 			graphics_pipeline->BuildPipeline();
 
-			RTDescriptorLayout = renderer->CreateDescriptorLayout();
-			RTDescriptorLayout->AddAccelerationStructureBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 0 - TLAS
-			RTDescriptorLayout->AddStoredImageBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR ); // 1 - Destination image
-			RTDescriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 2 - uniform buffer object
-			RTDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR , (uint)this->RenderMeshes.size() ); // 3 - vertices
-			RTDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, (uint)this->RenderMeshes.size() ); // 4 - indices
-			RTDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, (uint)this->Textures.size() ); // 5 - texture sampler
-			RTDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 6 - instances
-			RTDescriptorLayout->BuildDescriptorSetLayout();
+			Vlk::DescriptorSetLayoutTemplate rtdslt;
+			rtdslt.AddAccelerationStructureBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 0 - TLAS
+			rtdslt.AddStoredImageBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR ); // 1 - Destination image
+			rtdslt.AddUniformBufferBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 2 - uniform buffer object
+			rtdslt.AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR , (uint)this->RenderMeshes.size() ); // 3 - vertices
+			rtdslt.AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, (uint)this->RenderMeshes.size() ); // 4 - indices
+			rtdslt.AddSamplerBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, (uint)this->Textures.size() ); // 5 - texture sampler
+			rtdslt.AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 6 - instances
+			RTDescriptorLayout = renderer->CreateDescriptorSetLayout( rtdslt );
 
 			raytracing_pipeline = rayTracing->CreateRayTracingPipeline();
 			raytracing_pipeline->SetRaygenShader( raygen_shader );
 			raytracing_pipeline->AddMissShader( miss_shader );
 			raytracing_pipeline->AddMissShader( shadowmiss_shader );
 			raytracing_pipeline->AddClosestHitShader( chit_shader );
-			raytracing_pipeline->SetDescriptorLayout( RTDescriptorLayout );
+			raytracing_pipeline->SetDescriptorSetLayout( RTDescriptorLayout );
 			raytracing_pipeline->BuildPipeline();
 
 			sbt = raytracing_pipeline->CreateShaderBindingTable();
 
-			quadrender_descriptorLayout = renderer->CreateDescriptorLayout();
-			quadrender_descriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 0 - texture sampler
-			quadrender_descriptorLayout->BuildDescriptorSetLayout();
+			Vlk::DescriptorSetLayoutTemplate qrdslt;
+			qrdslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 0 - texture sampler
+			quadrender_descriptorLayout = renderer->CreateDescriptorSetLayout( qrdslt );
 
 			quadrender_pipeline = renderer->CreateGraphicsPipeline();
 			quadrender_pipeline->SetVertexDataTemplateFromVertexBuffer( quadBuffer );
 			quadrender_pipeline->AddShaderModule( quad_vertex_shader );
 			quadrender_pipeline->AddShaderModule( quad_fragment_shader );
-			quadrender_pipeline->SetDescriptorLayout( quadrender_descriptorLayout );
+			quadrender_pipeline->SetDescriptorSetLayout( quadrender_descriptorLayout );
 			quadrender_pipeline->BuildPipeline();
 			}
 

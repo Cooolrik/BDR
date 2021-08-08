@@ -33,7 +33,7 @@
 #include <Vlk_CommandPool.h>
 #include <Vlk_VertexBuffer.h>
 #include <Vlk_IndexBuffer.h>
-#include <Vlk_DescriptorLayout.h>
+#include <Vlk_DescriptorSetLayout.h>
 #include <Vlk_DescriptorPool.h>
 #include <Vlk_Buffer.h>
 #include <Vlk_Image.h>
@@ -93,11 +93,11 @@ class DebugData
 		Vlk::ShaderModule* debugFragShader = nullptr;
 
 		Vlk::ComputePipeline* debugPipeline = nullptr;
-		Vlk::DescriptorLayout* debugDescriptorLayout = nullptr;
+		Vlk::DescriptorSetLayout* debugDescriptorLayout = nullptr;
 		VkSampler debugSampler = nullptr;
 
 		Vlk::GraphicsPipeline* debugRenderPipeline = nullptr;
-		Vlk::DescriptorLayout* debugRenderDescriptorLayout = nullptr;
+		Vlk::DescriptorSetLayout* debugRenderDescriptorLayout = nullptr;
 
 		Vlk::VertexBuffer* debugAxiesVertexBuffer{};
 		Vlk::IndexBuffer* debugAxiesIndexBuffer{};
@@ -263,29 +263,29 @@ void debugRecreateSwapChain()
 		}
 
 	// debug compute pipeline
-	debugData->debugDescriptorLayout = renderData->renderer->CreateDescriptorLayout();
-	debugData->debugDescriptorLayout->AddStoredImageBinding( VK_SHADER_STAGE_COMPUTE_BIT );		// 0 - destination image
-	debugData->debugDescriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT );	// 1 - ubo
-	debugData->debugDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );			// 2 - sampled image
-	debugData->debugDescriptorLayout->BuildDescriptorSetLayout();
+	Vlk::DescriptorSetLayoutTemplate debugDescriptorLayoutTemplate;
+	debugDescriptorLayoutTemplate.AddStoredImageBinding( VK_SHADER_STAGE_COMPUTE_BIT );		// 0 - destination image
+	debugDescriptorLayoutTemplate.AddUniformBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT );	// 1 - ubo
+	debugDescriptorLayoutTemplate.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );			// 2 - sampled image
+	debugData->debugDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( debugDescriptorLayoutTemplate );
 	
 	debugData->debugPipeline = renderData->renderer->CreateComputePipeline();
 	debugData->debugPipeline->SetShaderModule( debugData->debugShader );
-	debugData->debugPipeline->SetDescriptorLayout( debugData->debugDescriptorLayout );
+	debugData->debugPipeline->SetDescriptorSetLayout( debugData->debugDescriptorLayout );
 	debugData->debugPipeline->BuildPipeline();
 
 	// debug render pipeline
-	debugData->debugRenderDescriptorLayout = renderData->renderer->CreateDescriptorLayout();
-	debugData->debugRenderDescriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT ); // 0 - buffer object
-	//debugData->debugRenderDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 1 - texture
-	//debugData->debugRenderDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );			// 2 - sampled image
-	debugData->debugRenderDescriptorLayout->BuildDescriptorSetLayout();
+	Vlk::DescriptorSetLayoutTemplate debugRenderDescriptorLayoutTemplate;
+	debugRenderDescriptorLayoutTemplate.AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT );	// 0 - buffer object
+	//debugRenderDescriptorLayoutTemplate.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT );									// 1 - texture
+	//debugRenderDescriptorLayoutTemplate.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );										// 2 - sampled image
+	debugData->debugRenderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( debugRenderDescriptorLayoutTemplate );
 
 	debugData->debugRenderPipeline = renderData->renderer->CreateGraphicsPipeline();
 	debugData->debugRenderPipeline->SetVertexDataTemplateFromVertexBuffer( debugData->debugAxiesVertexBuffer );
 	debugData->debugRenderPipeline->AddShaderModule( debugData->debugVertShader );
 	debugData->debugRenderPipeline->AddShaderModule( debugData->debugFragShader );
-	debugData->debugRenderPipeline->SetDescriptorLayout( debugData->debugRenderDescriptorLayout );
+	debugData->debugRenderPipeline->SetDescriptorSetLayout( debugData->debugRenderDescriptorLayout );
 	debugData->debugRenderPipeline->BuildPipeline();
 
 	}

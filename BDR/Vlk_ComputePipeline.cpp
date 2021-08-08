@@ -3,7 +3,7 @@
 #include "Vlk_ComputePipeline.h"
 #include "Vlk_ShaderModule.h"
 #include "Vlk_VertexBuffer.h"
-#include "Vlk_DescriptorLayout.h"
+#include "Vlk_DescriptorSetLayout.h"
 
 using namespace std;
 
@@ -14,12 +14,12 @@ void Vlk::ComputePipeline::SetShaderModule( const Vlk::ShaderModule* shader )
 
 void Vlk::ComputePipeline::SetVkDescriptorSetLayout( VkDescriptorSetLayout descriptorSetLayout )
 	{
-	this->DescriptorSetLayout = descriptorSetLayout;
+	this->DescriptorSetLayoutHandle = descriptorSetLayout;
 	}
 
-void Vlk::ComputePipeline::SetDescriptorLayout( const DescriptorLayout* descriptorLayout )
+void Vlk::ComputePipeline::SetDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout )
 	{
-	this->DescriptorSetLayout = descriptorLayout->GetDescriptorSetLayout();;
+	this->DescriptorSetLayoutHandle = descriptorLayout->GetDescriptorSetLayout();
 	}
 
 void Vlk::ComputePipeline::SetSinglePushConstantRange( uint32_t buffersize, VkShaderStageFlags stageFlags )
@@ -68,10 +68,10 @@ void Vlk::ComputePipeline::BuildPipeline()
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 0;
-	if( this->DescriptorSetLayout != nullptr )
+	if( this->DescriptorSetLayoutHandle != nullptr )
 		{
 		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &this->DescriptorSetLayout;
+		pipelineLayoutInfo.pSetLayouts = &this->DescriptorSetLayoutHandle;
 		}
 	else
 		{

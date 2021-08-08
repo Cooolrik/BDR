@@ -48,10 +48,13 @@ namespace Vlk
 	class IndexBuffer;
 	class IndexBufferTemplate;
 
+	class DescriptorSetLayout;
+	class DescriptorSetLayoutTemplate;
+
+
 	class GraphicsPipeline;
 	class ComputePipeline;
 	class CommandPool;
-	class DescriptorLayout;
 	class DescriptorPool;
 	class VertexBufferDescription;
 	class Image;
@@ -224,7 +227,7 @@ namespace Vlk
 			IndexBuffer* CreateIndexBuffer( const IndexBufferTemplate& bt );
 			
 			/// (temporary) create descriptor layout
-			DescriptorLayout* CreateDescriptorLayout();
+			DescriptorSetLayout* CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst );
 
 			/// (temporary) create descriptor pool (allocates for uniform buffers and samplers)
 			DescriptorPool* CreateDescriptorPool( uint descriptorSetCount, uint uniformBufferCount, uint samplersCount );

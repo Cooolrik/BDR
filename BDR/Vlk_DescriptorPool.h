@@ -39,7 +39,7 @@ namespace Vlk
         public:
 
             // begin create descriptor set 
-            VkDescriptorSet BeginDescriptorSet( DescriptorLayout* descriptorLayout );
+            VkDescriptorSet BeginDescriptorSet( DescriptorSetLayout* descriptorLayout );
 
             // Sets a buffer for the descriptor
             void SetBuffer( uint bindingIndex, Buffer* buffer, uint byteOffset = 0 );

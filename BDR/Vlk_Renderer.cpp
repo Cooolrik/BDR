@@ -7,7 +7,7 @@
 #include "Vlk_Buffer.h"
 #include "Vlk_VertexBuffer.h"
 #include "Vlk_IndexBuffer.h"
-#include "Vlk_DescriptorLayout.h"
+#include "Vlk_DescriptorSetLayout.h"
 #include "Vlk_DescriptorPool.h"
 #include "Vlk_Image.h"
 #include "Vlk_Sampler.h"
@@ -1160,6 +1160,22 @@ Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( const IndexBufferTemplate& b
 	return ibuffer;
 	}
 
+Vlk::DescriptorSetLayout* Vlk::Renderer::CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst )
+	{
+	DescriptorSetLayout* dsl = new DescriptorSetLayout(this);
+
+	// create descriptor set from template bindings
+	VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+	layoutInfo.bindingCount = (uint32_t)dst.Bindings.size();
+	layoutInfo.pBindings = dst.Bindings.data();
+	VLK_CALL( vkCreateDescriptorSetLayout( this->Device, &layoutInfo, nullptr, &dsl->DescriptorSetLayoutHandle ) );
+
+	// save the bindings in the descriptor set
+	dsl->Bindings = dst.Bindings;
+
+	return dsl;
+	}
+
 void Vlk::Renderer::WaitForDeviceIdle()
 	{
 	if( this->Device == nullptr )
@@ -1169,13 +1185,6 @@ void Vlk::Renderer::WaitForDeviceIdle()
 	vkDeviceWaitIdle( this->Device );
 	}
 
-Vlk::DescriptorLayout* Vlk::Renderer::CreateDescriptorLayout()
-	{
-	DescriptorLayout* layout = new DescriptorLayout();
-	layout->Parent = this;
-
-	return layout;
-	}
 
 Vlk::DescriptorPool* Vlk::Renderer::CreateDescriptorPool( uint descriptorSetCount, uint uniformBufferCount, uint samplersCount )
 	{

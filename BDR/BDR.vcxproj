@@ -99,7 +99,7 @@
     <ClCompile Include="Vlk_CommandPool.cpp" />
     <ClCompile Include="Vlk_ComputePipeline.cpp" />
     <ClCompile Include="Vlk_DescriptorIndexingExtension.cpp" />
-    <ClCompile Include="Vlk_DescriptorLayout.cpp" />
+    <ClCompile Include="Vlk_DescriptorSetLayout.cpp" />
     <ClCompile Include="Vlk_DescriptorPool.cpp" />
     <ClCompile Include="Vlk_Extension.cpp" />
     <ClCompile Include="Vlk_GraphicsPipeline.cpp" />
@@ -123,7 +123,7 @@
     <ClInclude Include="Vlk_CommandPool.h" />
     <ClInclude Include="Vlk_ComputePipeline.h" />
     <ClInclude Include="Vlk_DescriptorIndexingExtension.h" />
-    <ClInclude Include="Vlk_DescriptorLayout.h" />
+    <ClInclude Include="Vlk_DescriptorSetLayout.h" />
     <ClInclude Include="Vlk_DescriptorPool.h" />
     <ClInclude Include="Vlk_Extension.h" />
     <ClInclude Include="Vlk_GraphicsPipeline.h" />

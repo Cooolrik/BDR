@@ -27,7 +27,7 @@
 #include <Vlk_CommandPool.h>
 #include <Vlk_VertexBuffer.h>
 #include <Vlk_IndexBuffer.h>
-#include <Vlk_DescriptorLayout.h>
+#include <Vlk_DescriptorSetLayout.h>
 #include <Vlk_DescriptorPool.h>
 #include <Vlk_Buffer.h>
 #include <Vlk_Image.h>
@@ -629,44 +629,44 @@ void SetupScene()
 	//////////////////
 
 	// culling compute pipeline
-	renderData->cullingDescriptorLayout = renderData->renderer->CreateDescriptorLayout();
-	renderData->cullingDescriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 0 - Settings UBO
-	renderData->cullingDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 1 - RenderObjectsBuffer
-	renderData->cullingDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 2 - SceneObjectsBuffer
-	renderData->cullingDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 3 - FilteredDrawBuffer
-	renderData->cullingDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 4 - InstanceToObjectBuffer
-	renderData->cullingDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		 // 5 - depthPyramid texture
-	renderData->cullingDescriptorLayout->BuildDescriptorSetLayout();
+	Vlk::DescriptorSetLayoutTemplate cdlt;
+	cdlt.AddUniformBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 0 - Settings UBO
+	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 1 - RenderObjectsBuffer
+	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 2 - SceneObjectsBuffer
+	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 3 - FilteredDrawBuffer
+	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 4 - InstanceToObjectBuffer
+	cdlt.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		 // 5 - depthPyramid texture
+	renderData->cullingDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( cdlt );
 
 	renderData->cullingPipeline = renderData->renderer->CreateComputePipeline();
 	renderData->cullingPipeline->SetShaderModule( renderData->cullingShader );
-	renderData->cullingPipeline->SetDescriptorLayout( renderData->cullingDescriptorLayout );
+	renderData->cullingPipeline->SetDescriptorSetLayout( renderData->cullingDescriptorLayout );
 	renderData->cullingPipeline->BuildPipeline();
 
 	// render pipeline
-	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorLayout();
-	renderData->renderDescriptorLayout->AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT ); // 0 - buffer object
-	renderData->renderDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT , 128 ); // 1 - texture
-	renderData->renderDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT ); // 2 - SceneObjectsBuffer
-	renderData->renderDescriptorLayout->AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT ); // 3 - InstanceToObjectBuffer
-	renderData->renderDescriptorLayout->BuildDescriptorSetLayout();
-
+	Vlk::DescriptorSetLayoutTemplate rdlt;
+	rdlt.AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT );	// 0 - buffer object
+	rdlt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT , 128 );								// 1 - texture
+	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 2 - SceneObjectsBuffer
+	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 3 - InstanceToObjectBuffer
+	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( rdlt );
+	
 	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline();
 	renderData->renderPipeline->SetVertexDataTemplateFromVertexBuffer( renderData->MegaMeshAlloc->GetVertexBuffer() );
 	renderData->renderPipeline->AddShaderModule( renderData->vertexRenderShader );
 	renderData->renderPipeline->AddShaderModule( renderData->fragmentRenderShader );
-	renderData->renderPipeline->SetDescriptorLayout( renderData->renderDescriptorLayout );
+	renderData->renderPipeline->SetDescriptorSetLayout( renderData->renderDescriptorLayout );
 	renderData->renderPipeline->BuildPipeline();
 
 	// depth reduce compute pipeline
-	renderData->depthReduceDescriptorLayout = renderData->renderer->CreateDescriptorLayout();
-	renderData->depthReduceDescriptorLayout->AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		// 0 - source image
-	renderData->depthReduceDescriptorLayout->AddStoredImageBinding( VK_SHADER_STAGE_COMPUTE_BIT );	// 1 - destination image
-	renderData->depthReduceDescriptorLayout->BuildDescriptorSetLayout();
+	Vlk::DescriptorSetLayoutTemplate drdlt;
+	drdlt.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		// 0 - source image
+	drdlt.AddStoredImageBinding( VK_SHADER_STAGE_COMPUTE_BIT );	// 1 - destination image
+	renderData->depthReduceDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( drdlt );
 
 	renderData->depthReducePipeline = renderData->renderer->CreateComputePipeline();
 	renderData->depthReducePipeline->SetShaderModule( renderData->depthReduceShader );
-	renderData->depthReducePipeline->SetDescriptorLayout( renderData->depthReduceDescriptorLayout );
+	renderData->depthReducePipeline->SetDescriptorSetLayout( renderData->depthReduceDescriptorLayout );
 	renderData->depthReducePipeline->SetSinglePushConstantRange( sizeof( DepthReducePushConstants ), VK_SHADER_STAGE_COMPUTE_BIT );
 	renderData->depthReducePipeline->BuildPipeline();
 	}

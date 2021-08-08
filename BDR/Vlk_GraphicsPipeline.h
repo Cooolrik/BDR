@@ -9,6 +9,7 @@ namespace Vlk
     {
     class ShaderModule;
     class VertexBuffer;
+    class DescriptorSetLayout;
 
     class GraphicsPipeline
         {
@@ -24,7 +25,7 @@ namespace Vlk
 
             VkVertexInputBindingDescription VertexInputBindingDescription{};
             std::vector<VkVertexInputAttributeDescription> VertexInputAttributeDescriptions{};
-            VkDescriptorSetLayout DescriptorSetLayout = nullptr;
+            VkDescriptorSetLayout DescriptorSetLayoutHandle = nullptr;
             std::vector<VkPushConstantRange> PushConstantRanges{};
 
         public:
@@ -41,7 +42,7 @@ namespace Vlk
 
             // sets the descriptor set layout for the uniform buffers and texture samplers
             void SetVkDescriptorSetLayout( VkDescriptorSetLayout descriptorSetLayout );
-            void SetDescriptorLayout( const DescriptorLayout* descriptorLayout );
+            void SetDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout );
 
             // sets the push constant ranges
             void SetSinglePushConstantRange( uint32_t buffersize, VkShaderStageFlags stageFlags );

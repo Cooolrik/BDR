@@ -28,7 +28,7 @@
     <ClCompile Include="Vlk_CommandPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Vlk_DescriptorLayout.cpp">
+    <ClCompile Include="Vlk_DescriptorSetLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Vlk_DescriptorPool.cpp">
@@ -90,7 +90,7 @@
     <ClInclude Include="Vlk_CommandPool.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vlk_DescriptorLayout.h">
+    <ClInclude Include="Vlk_DescriptorSetLayout.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_DescriptorPool.h">
