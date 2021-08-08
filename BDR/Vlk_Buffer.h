@@ -13,7 +13,7 @@ namespace Vlk
 
         protected:
             VkBuffer BufferHandle = nullptr;
-            VmaAllocation DeviceMemory = nullptr;
+            VmaAllocation Allocation = nullptr;
             VkDeviceSize BufferSize = 0;
 
         public:
@@ -26,8 +26,33 @@ namespace Vlk
             void UnmapMemory();
 
             BDGetCustomNameMacro( VkBuffer, Buffer, BufferHandle );
-            BDGetMacro( VmaAllocation, DeviceMemory );
+            BDGetMacro( VmaAllocation, Allocation );
             BDGetMacro( VkDeviceSize, BufferSize );
+        };
+
+    class BufferTemplate
+        {
+        public:
+            // initial create information
+            VkBufferCreateInfo BufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+
+            // vma allocation object
+            VmaAllocationCreateInfo AllocationCreateInfo = {};
+
+            // if an upload is to be made (either using a staging buffer, or mapping the memory directly)
+            const void* UploadSourcePtr = nullptr;
+            VkDeviceSize UploadSourceSize = 0;
+            std::vector<VkBufferCopy> UploadBufferCopies = {};
+
+            /////////////////////////////////
+
+            // create a generic buffer, and (optionally) copy the whole data size from a memory address
+            static BufferTemplate GenericBuffer(
+                VkBufferUsageFlags bufferUsageFlags, 
+                VmaMemoryUsage memoryPropertyFlags, 
+                VkDeviceSize deviceSize, 
+                const void* src_data = nullptr
+                );
         };
 
     };

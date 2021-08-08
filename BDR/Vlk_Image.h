@@ -94,9 +94,6 @@ namespace Vlk
 
             /////////////////////////////////
 
-            // create a default template
-            static ImageTemplate Default();
-
             // create an 2d color image which is optimized for texture sampling. If source ptr is set, uploads image. If mipmap_offsets is set it is assumed to be at least mipmap_levels long, sets up transfers of mipmaps from source as well.
             static ImageTemplate Texture2D( VkFormat format , uint32_t width , uint32_t height , uint32_t mipmap_levels , const void* source_ptr = nullptr , VkDeviceSize source_size = 0 , const VkDeviceSize* source_mipmap_offsets = nullptr );
 

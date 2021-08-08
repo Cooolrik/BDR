@@ -28,10 +28,13 @@ Vlk::RayTracingAccBuffer* Vlk::RayTracingExtension::CreateAccBuffer( VkAccelerat
 
 	// allocate the buffer memory
 	buffer->BufferPtr = std::unique_ptr<Buffer>( 
-		this->Parent->CreateGenericBuffer( 
-			VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VMA_MEMORY_USAGE_GPU_ONLY,
-			createInfo.size )
+		this->Parent->CreateBuffer( 
+			BufferTemplate::GenericBuffer(
+				VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				createInfo.size 
+				)
+			)
 		);
 
 	// create the acceleration struct
@@ -153,10 +156,12 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 		}
 
 	// Allocate the scrach space. It is sized to be able to handle any of the entries
-	Buffer* scratchBuffer = this->Parent->CreateGenericBuffer(
-		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-		VMA_MEMORY_USAGE_GPU_ONLY,
-		maxScratchSpace
+	Buffer* scratchBuffer = this->Parent->CreateBuffer(
+		BufferTemplate::GenericBuffer(
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			maxScratchSpace
+			)
 		);
 	VkDeviceAddress scratchAddress = scratchBuffer->GetDeviceAddress();
 
@@ -289,10 +294,12 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 
 	// set up a staging buffer with the TLAS instances
 	VkDeviceSize tlas_buffer_size = num_entries * sizeof( VkAccelerationStructureInstanceKHR );
-	Buffer* stagingBuffer = this->Parent->CreateGenericBuffer(
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VMA_MEMORY_USAGE_CPU_ONLY,
-		tlas_buffer_size
+	Buffer* stagingBuffer = this->Parent->CreateBuffer(
+		BufferTemplate::GenericBuffer( 
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VMA_MEMORY_USAGE_CPU_ONLY,
+			tlas_buffer_size
+			)
 		);
 	
 	// set up TLAS instance structures
@@ -318,10 +325,12 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	stagingBuffer->UnmapMemory();
 
 	// set up a copy on the gpu to copy to
-	Buffer* TLASInstancesBuffer = this->Parent->CreateGenericBuffer(
-		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VMA_MEMORY_USAGE_GPU_ONLY,
-		tlas_buffer_size
+	Buffer* TLASInstancesBuffer = this->Parent->CreateBuffer(
+		BufferTemplate::GenericBuffer(
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			tlas_buffer_size
+		)
 	);
 
 	// set up copy from staging buffer to on device buffer
@@ -375,10 +384,12 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	this->TLAS = this->CreateAccBuffer( createInfo );
 
 	// allocate the scratch buffer
-	Buffer* scratchBuffer = this->Parent->CreateGenericBuffer(
-		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-		VMA_MEMORY_USAGE_GPU_ONLY,
-		buildSizesInfo.buildScratchSize
+	Buffer* scratchBuffer = this->Parent->CreateBuffer(
+		BufferTemplate::GenericBuffer(
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			buildSizesInfo.buildScratchSize
+		)
 	);
 	VkDeviceAddress scratchAddress = scratchBuffer->GetDeviceAddress();
 

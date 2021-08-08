@@ -469,11 +469,13 @@ void debugPerFrameLoop()
 			{
 			VkDeviceSize bufferSize = imageW * imageH * 4 * sizeof( float );
 
-			Vlk::Buffer* debugBuffer = renderData->renderer->CreateGenericBuffer(
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VMA_MEMORY_USAGE_CPU_ONLY,
-				bufferSize
-			);
+			Vlk::Buffer* debugBuffer = renderData->renderer->CreateBuffer(
+				Vlk::BufferTemplate::GenericBuffer(
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+					VMA_MEMORY_USAGE_CPU_ONLY,
+					bufferSize
+					)
+				);
 
 			debugCurrentFrame->debugImage->CopyToBuffer(
 				debugBuffer,

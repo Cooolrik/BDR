@@ -352,33 +352,41 @@ void createPerFrameData()
 		frame.cullingUBO = renderer->CreateUniformBuffer( sizeof( CullingSettingsUBO ) );
 
 		// create the original batch indirect render array, upload data
-		frame.initialDrawBuffer = renderer->CreateGenericBuffer(
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-			VMA_MEMORY_USAGE_CPU_TO_GPU,
-			VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) ),
-			renderData->batches.data()
+		frame.initialDrawBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::GenericBuffer(
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+				VMA_MEMORY_USAGE_CPU_TO_GPU,
+				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) ),
+				renderData->batches.data()
+				)
 			);
 
 		// create the filtered array, this will be initialized from the orignal array each frame
-		frame.filteredDrawBuffer = renderer->CreateGenericBuffer(
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
-			VMA_MEMORY_USAGE_GPU_ONLY,
-			VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) )
+		frame.filteredDrawBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::GenericBuffer(
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) )
+				)
 			);
 
 		// create the instance to objectID backmapping buffer
-		frame.instanceToObjectBuffer = renderer->CreateGenericBuffer(
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			VMA_MEMORY_USAGE_GPU_ONLY,
-			VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) )
+		frame.instanceToObjectBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::GenericBuffer(
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) )
+				)
 			);
 
 		// create the render object array
-		frame.renderObjectsBuffer = renderer->CreateGenericBuffer(
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			VMA_MEMORY_USAGE_GPU_ONLY,
-			VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) ),
-			renderData->renderObjects.data()
+		frame.renderObjectsBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::GenericBuffer(
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) ),
+				renderData->renderObjects.data()
+				)
 			);
 
 		// set up the depth image mip pyramid
@@ -589,11 +597,13 @@ void SetupScene()
 		}
 
 	// create objects array
-	renderData->objectsBuffer = renderData->renderer->CreateGenericBuffer(
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-		VMA_MEMORY_USAGE_GPU_ONLY,
-		VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ),
-		renderData->objects.data()
+	renderData->objectsBuffer = renderData->renderer->CreateBuffer(
+		Vlk::BufferTemplate::GenericBuffer(
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ),
+			renderData->objects.data()
+		)
 	);
 
 

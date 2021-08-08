@@ -1066,35 +1066,50 @@ VkResult Vlk::Renderer::SubmitRenderCommandBuffersAndPresent( const std::vector<
 	return VK_SUCCESS;
 	}
 
-Vlk::Buffer* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void* src_data )
+template<class B, class BT> B* Vlk::Renderer::NewBuffer( const BT& bt )
 	{
-	Buffer* buffer = new Buffer(this);
+	B* buffer = new B( this );
 
-	// make sure we can transfer data
-	if( src_data != nullptr && memoryPropertyFlags != VMA_MEMORY_USAGE_CPU_ONLY )
+	// create the buffer using vma and the parameters
+	VLK_CALL( vmaCreateBuffer(
+		this->MemoryAllocator,
+		&bt.BufferCreateInfo,
+		&bt.AllocationCreateInfo,
+		&buffer->BufferHandle,
+		&buffer->Allocation,
+		nullptr
+	) );
+	buffer->BufferSize = bt.BufferCreateInfo.size;
+
+	// optionally upload data to the buffer
+	if(bt.UploadSourcePtr)
 		{
-		bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		}
-
-	// create the vulkan buffer, and just wrap it in the Buffer class
-	buffer->BufferHandle = this->CreateVulkanBuffer(
-		bufferUsageFlags,
-		memoryPropertyFlags,
-		deviceSize,
-		buffer->DeviceMemory
-		);
-	buffer->BufferSize = deviceSize;
-
-	// if src_data is set, copy it over to the buffer. use staging if the buffer is on GPU
-	if( src_data != nullptr )
-		{
-		void* dest_ptr = nullptr;
-
 		// map either a staging buffer or the buffer directly
-		if( memoryPropertyFlags == VMA_MEMORY_USAGE_CPU_ONLY || memoryPropertyFlags == VMA_MEMORY_USAGE_CPU_TO_GPU )
+		if(bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_ONLY ||
+			bt.AllocationCreateInfo.usage == VMA_MEMORY_USAGE_CPU_TO_GPU)
 			{
-			dest_ptr = buffer->MapMemory();
-			memcpy( dest_ptr, src_data, (size_t)deviceSize );
+			// we can map the buffer directly, copy the memory manually
+			uint8_t* mem_ptr = (uint8_t*)buffer->MapMemory();
+
+			// copy all regions
+			for(VkBufferCopy bc : bt.UploadBufferCopies)
+				{
+#ifdef _DEBUG
+				VkDeviceSize src_end_index = bc.srcOffset + bc.size;
+				VkDeviceSize dst_end_index = bc.dstOffset + bc.size;
+				
+				if( src_end_index > bt.UploadSourceSize || 
+					dst_end_index > bt.UploadSourceSize )
+					{
+					throw runtime_error( "Error: CreateBuffer() copy offset is out of bounds" );
+					}
+#endif
+				uint8_t* cpy_src = (uint8_t*)bt.UploadSourcePtr + bc.srcOffset;
+				uint8_t* cpy_dst = mem_ptr + bc.dstOffset;
+				memcpy( cpy_dst, cpy_src, (size_t)bc.size );
+				}
+
+			// done with the buffer
 			buffer->UnmapMemory();
 			}
 		else
@@ -1107,19 +1122,18 @@ Vlk::Buffer* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageF
 			stagingBuffer = this->CreateVulkanBuffer(
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VMA_MEMORY_USAGE_CPU_ONLY,
-				deviceSize,
+				bt.UploadSourceSize,
 				stagingBufferMemory
-				);
+			);
 
+			void* dest_ptr;
 			VLK_CALL( vmaMapMemory( this->MemoryAllocator, stagingBufferMemory, &dest_ptr ) );
-			memcpy( dest_ptr, src_data, (size_t)deviceSize );
+			memcpy( dest_ptr, bt.UploadSourcePtr, (size_t)bt.UploadSourceSize );
 			vmaUnmapMemory( this->MemoryAllocator, stagingBufferMemory );
 
 			// now transfer the data to the device local buffer, using a single time command
 			VkCommandBuffer cmd = this->BeginInternalCommandBuffer();
-			VkBufferCopy copyRegion{};
-			copyRegion.size = deviceSize;
-			vkCmdCopyBuffer( cmd, stagingBuffer, buffer->GetBuffer(), 1, &copyRegion );
+			vkCmdCopyBuffer( cmd, stagingBuffer, buffer->GetBuffer(), (uint)bt.UploadBufferCopies.size(), bt.UploadBufferCopies.data() );
 			this->EndAndSubmitInternalCommandBuffer( cmd );
 
 			// done with the staging buffer
@@ -1127,8 +1141,78 @@ Vlk::Buffer* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageF
 			}
 		}
 
+	// done, return buffer
 	return buffer;
 	}
+
+Vlk::Buffer* Vlk::Renderer::CreateBuffer( const BufferTemplate& bt )
+	{
+	return NewBuffer<Buffer, BufferTemplate>( bt );
+	}
+//
+//Vlk::Buffer* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void* src_data )
+//	{
+//	Buffer* buffer = new Buffer(this);
+//
+//	// make sure we can transfer data
+//	if( src_data != nullptr && memoryPropertyFlags != VMA_MEMORY_USAGE_CPU_ONLY )
+//		{
+//		bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+//		}
+//
+//	// create the vulkan buffer, and just wrap it in the Buffer class
+//	buffer->BufferHandle = this->CreateVulkanBuffer(
+//		bufferUsageFlags,
+//		memoryPropertyFlags,
+//		deviceSize,
+//		buffer->Allocation
+//		);
+//	buffer->BufferSize = deviceSize;
+//
+//	// if src_data is set, copy it over to the buffer. use staging if the buffer is on GPU
+//	if( src_data != nullptr )
+//		{
+//		void* dest_ptr = nullptr;
+//
+//		// map either a staging buffer or the buffer directly
+//		if( memoryPropertyFlags == VMA_MEMORY_USAGE_CPU_ONLY || memoryPropertyFlags == VMA_MEMORY_USAGE_CPU_TO_GPU )
+//			{
+//			dest_ptr = buffer->MapMemory();
+//			memcpy( dest_ptr, src_data, (size_t)deviceSize );
+//			buffer->UnmapMemory();
+//			}
+//		else
+//			{
+//			// GPU copy, use a staging buffer
+//			VkBuffer stagingBuffer;
+//			VmaAllocation stagingBufferMemory;
+//
+//			// create a host visible staging buffer to copy data to
+//			stagingBuffer = this->CreateVulkanBuffer(
+//				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+//				VMA_MEMORY_USAGE_CPU_ONLY,
+//				deviceSize,
+//				stagingBufferMemory
+//				);
+//
+//			VLK_CALL( vmaMapMemory( this->MemoryAllocator, stagingBufferMemory, &dest_ptr ) );
+//			memcpy( dest_ptr, src_data, (size_t)deviceSize );
+//			vmaUnmapMemory( this->MemoryAllocator, stagingBufferMemory );
+//
+//			// now transfer the data to the device local buffer, using a single time command
+//			VkCommandBuffer cmd = this->BeginInternalCommandBuffer();
+//			VkBufferCopy copyRegion{};
+//			copyRegion.size = deviceSize;
+//			vkCmdCopyBuffer( cmd, stagingBuffer, buffer->GetBuffer(), 1, &copyRegion );
+//			this->EndAndSubmitInternalCommandBuffer( cmd );
+//
+//			// done with the staging buffer
+//			vmaDestroyBuffer( this->MemoryAllocator, stagingBuffer, stagingBufferMemory );
+//			}
+//		}
+//
+//	return buffer;
+//	}
 
 Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferDescription& description, uint vertexCount, const void* data )
 	{
@@ -1155,7 +1239,7 @@ Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferDescript
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 		VMA_MEMORY_USAGE_GPU_ONLY, 
 		bufferSize,
-		vbuffer->DeviceMemory
+		vbuffer->Allocation
 		);
 	vbuffer->BufferSize = bufferSize;
 
@@ -1214,7 +1298,7 @@ Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( VkIndexType indexType , uint
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 		VMA_MEMORY_USAGE_GPU_ONLY,
 		bufferSize,
-		ibuffer->DeviceMemory
+		ibuffer->Allocation
 		);
 	ibuffer->BufferSize = bufferSize;
 
@@ -1286,7 +1370,7 @@ Vlk::UniformBuffer* Vlk::Renderer::CreateUniformBuffer( VkDeviceSize bufferSize 
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		VMA_MEMORY_USAGE_CPU_ONLY,
 		bufferSize,
-		buffer->DeviceMemory
+		buffer->Allocation
 		);
 	buffer->BufferSize = bufferSize;
 

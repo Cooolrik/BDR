@@ -718,12 +718,14 @@ class VulkanRenderTest
 
 			rayTracing->BuildTLAS( tlas_entries );
 
-			instanceBuffer = renderer->CreateGenericBuffer(
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-				VMA_MEMORY_USAGE_GPU_ONLY,
-				VkDeviceSize( instances.size() * sizeof( Instance ) ),
-				instances.data()
-			);
+			instanceBuffer = renderer->CreateBuffer(
+				Vlk::BufferTemplate::GenericBuffer(
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+					VMA_MEMORY_USAGE_GPU_ONLY,
+					VkDeviceSize( instances.size() * sizeof( Instance ) ),
+					instances.data()
+					)
+				);
 
 			//////////////////
 

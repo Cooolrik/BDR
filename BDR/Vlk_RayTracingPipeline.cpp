@@ -315,10 +315,12 @@ Vlk::RayTracingShaderBindingTable* Vlk::RayTracingPipeline::CreateShaderBindingT
 
 	// allocate the btable memory
 	btable->BufferPtr = std::unique_ptr<Buffer>(
-		this->Parent->Parent->CreateGenericBuffer(
-			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			VMA_MEMORY_USAGE_CPU_ONLY,
-			bufferSize
+		this->Parent->Parent->CreateBuffer(
+			BufferTemplate::GenericBuffer( 
+				VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				VMA_MEMORY_USAGE_CPU_ONLY,
+				bufferSize
+				)
 			)
 		);
 

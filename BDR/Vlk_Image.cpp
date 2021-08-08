@@ -240,11 +240,6 @@ static Vlk::ImageTemplate Standard2DImage(
 	return ret;
 	}
 
-Vlk::ImageTemplate Vlk::ImageTemplate::Default()
-	{
-	// return empty template
-	return ImageTemplate();
-	}
 
 Vlk::ImageTemplate Vlk::ImageTemplate::Texture2D( VkFormat format, uint32_t width , uint32_t height, uint32_t mipmap_levels , const void *source_ptr, VkDeviceSize source_size, const VkDeviceSize* source_mipmap_offsets )
 	{

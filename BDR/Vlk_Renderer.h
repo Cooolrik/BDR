@@ -42,6 +42,7 @@ namespace Vlk
 	typedef unsigned int uint;
 
 	class Buffer;
+	class BufferTemplate;
 	class GraphicsPipeline;
 	class ComputePipeline;
 	class CommandPool;
@@ -150,6 +151,9 @@ namespace Vlk
 			// generic functions to create vulkan device buffer 
 			VkBuffer CreateVulkanBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, VmaAllocation& deviceMemory ) const;
 
+			/// create base vulkan buffer
+			template<class B,class BT> B* NewBuffer( const BT& bt );
+
 			VkCommandBuffer BeginInternalCommandBuffer();
 			void EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer );
 
@@ -213,8 +217,8 @@ namespace Vlk
 			/// create a CommandPool object. set number of buffers to allocate
 			CommandPool* CreateCommandPool( uint bufferCount );
 
-			/// create generic vulkan buffer
-			Buffer* CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void *src_data = nullptr );
+			/// create base vulkan buffer
+			Buffer* CreateBuffer( const BufferTemplate &bt );
 
 			/// create vertex buffer
 			VertexBuffer* CreateVertexBuffer( const VertexBufferDescription &description , uint vertexCount, const void* data );
