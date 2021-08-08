@@ -53,7 +53,7 @@ namespace Vlk
             void CleanupPipeline();
 
             // create a Shader Binding Table for the built pipeline
-            RayTracingShaderBindingTable* CreateShaderBindingTable() const;
+            RayTracingShaderBindingTable* CreateShaderBindingTable();
 
             ~RayTracingPipeline();
 

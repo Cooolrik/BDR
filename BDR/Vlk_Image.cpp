@@ -7,19 +7,19 @@ Vlk::Image::~Image()
 	{
 	if( this->ImageView != nullptr )
 		{
-		vkDestroyImageView( this->Owner->GetDevice(), this->ImageView, nullptr );
+		vkDestroyImageView( this->Module->GetDevice(), this->ImageView, nullptr );
 		}
 	if( this->Allocation != nullptr )
 		{
-		vmaDestroyImage( this->Owner->GetMemoryAllocator(), this->ImageHandle, this->Allocation );
+		vmaDestroyImage( this->Module->GetMemoryAllocator(), this->ImageHandle, this->Allocation );
 		}
 	}
 
 void Vlk::Image::TransitionLayout( VkImageMemoryBarrier& imageMemoryBarrier, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask )
 	{
-	VkCommandBuffer commandBuffer = this->Owner->BeginInternalCommandBuffer();
+	VkCommandBuffer commandBuffer = this->Module->BeginInternalCommandBuffer();
 	vkCmdPipelineBarrier( commandBuffer, srcStageMask, destStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier );
-	this->Owner->EndAndSubmitInternalCommandBuffer( commandBuffer );
+	this->Module->EndAndSubmitInternalCommandBuffer( commandBuffer );
 	}
 
 void Vlk::Image::TransitionLayout( VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask, VkImageAspectFlags aspectMask )
@@ -41,7 +41,7 @@ void Vlk::Image::TransitionLayout( VkImageLayout oldLayout, VkImageLayout newLay
 	this->TransitionLayout( imageMemoryBarrier , srcStageMask , destStageMask );
 	}
 
-void Vlk::Image::CopyToBuffer( BufferBase* destBuffer, uint32_t width, uint32_t height, uint32_t depth, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask, VkImageAspectFlags aspectMask )
+void Vlk::Image::CopyToBuffer( Buffer* destBuffer, uint32_t width, uint32_t height, uint32_t depth, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask, VkImageAspectFlags aspectMask )
 	{
 	VkBufferImageCopy bufferImageCopy;
 
@@ -60,7 +60,7 @@ void Vlk::Image::CopyToBuffer( BufferBase* destBuffer, uint32_t width, uint32_t 
 	this->CopyToBuffer( destBuffer , &bufferImageCopy , oldLayout, newLayout, srcAccessMask, dstAccessMask, srcStageMask, destStageMask, aspectMask	);
 	}
 
-void Vlk::Image::CopyToBuffer( BufferBase* destBuffer, const VkBufferImageCopy* region, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask, VkImageAspectFlags aspectMask )
+void Vlk::Image::CopyToBuffer( Buffer* destBuffer, const VkBufferImageCopy* region, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags destStageMask, VkImageAspectFlags aspectMask )
 	{
 	if(oldLayout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL || srcAccessMask != VK_ACCESS_TRANSFER_READ_BIT)
 		{
@@ -77,9 +77,9 @@ void Vlk::Image::CopyToBuffer( BufferBase* destBuffer, const VkBufferImageCopy* 
 		}
 
 	// now copy to buffer
-	VkCommandBuffer commandBuffer = this->Owner->BeginInternalCommandBuffer();
+	VkCommandBuffer commandBuffer = this->Module->BeginInternalCommandBuffer();
 	vkCmdCopyImageToBuffer( commandBuffer, this->ImageHandle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, destBuffer->GetBuffer(), 1, region );
-	this->Owner->EndAndSubmitInternalCommandBuffer( commandBuffer );
+	this->Module->EndAndSubmitInternalCommandBuffer( commandBuffer );
 
 	if(newLayout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL || dstAccessMask != VK_ACCESS_TRANSFER_READ_BIT)
 		{

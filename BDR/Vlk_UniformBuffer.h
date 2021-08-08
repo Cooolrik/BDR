@@ -8,17 +8,12 @@
 
 namespace Vlk
     {
-    class UniformBuffer : public BufferBase
+    class UniformBuffer : public Buffer
         {
-        private:
-            UniformBuffer() = default;
-            UniformBuffer( const UniformBuffer& other );
-            friend class Renderer;
+        BDSubmoduleMacro( UniformBuffer, Buffer, Renderer );
 
         public:
-
             // update buffer with data. The size of the data must match the size when the buffer was created.
             void UpdateBuffer( void* data );
-
         };
     };

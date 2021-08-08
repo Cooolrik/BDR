@@ -9,14 +9,29 @@
 #pragma warning( disable : 26812 ) // Disable warning for "enum class" since we can't modify Vulcan SDK
 #include <vk_mem_alloc.h> // includes vulkan.h
 
-#define BDClassHeader( classname , owner )\
+#define BDSubmoduleMacro( _classname , _parentclass , _mainmodule )\
 	public:\
-		~classname();\
-	private:\
-		classname( owner* _owner ) { this->Owner = _owner; };\
-		classname( const classname& other );\
-		friend class owner;\
-		owner* Owner = nullptr;\
+		~_classname();\
+	protected:\
+		_classname( _mainmodule* _module ) : _parentclass( _module ) {};\
+		_classname( const _classname& other );\
+		friend class _mainmodule;\
+
+#define BDSubmoduleBaseMacro( _classname , _mainmodule )\
+	class _mainmodule;\
+	class _classname\
+		{\
+		protected:\
+			_mainmodule* Module = nullptr;\
+		public:\
+			~_classname() {};\
+			const _mainmodule* GetModule() const { return this->Module; };\
+		protected:\
+			_classname( _mainmodule* _module ) { this->Module = _module; };\
+			_classname( const _classname& other );\
+			friend class _mainmodule;\
+		};
+		
 
 #define BDGetMacro( type , name ) const type Get##name() const { return this->name; }
 #define BDGetCustomNameMacro( type , publicname , privatename ) const type Get##publicname() const { return this->privatename; }
@@ -26,7 +41,7 @@ namespace Vlk
 	{
 	typedef unsigned int uint;
 
-	class BufferBase;
+	class Buffer;
 	class GraphicsPipeline;
 	class ComputePipeline;
 	class CommandPool;
@@ -46,6 +61,8 @@ namespace Vlk
 	class DescriptorIndexingExtension;
 	class Sampler;
 	class SamplerTemplate;
+
+	BDSubmoduleBaseMacro( RendererSubmodule , Renderer );
 
 	class Renderer
 		{
@@ -197,7 +214,7 @@ namespace Vlk
 			CommandPool* CreateCommandPool( uint bufferCount );
 
 			/// create generic vulkan buffer
-			BufferBase* CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void *src_data = nullptr );
+			Buffer* CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void *src_data = nullptr );
 
 			/// create vertex buffer
 			VertexBuffer* CreateVertexBuffer( const VertexBufferDescription &description , uint vertexCount, const void* data );

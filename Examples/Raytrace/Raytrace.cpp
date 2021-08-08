@@ -40,6 +40,8 @@ using std::vector;
 #include <Vlk_RayTracingExtension.h>
 #include <Vlk_RayTracingPipeline.h>
 #include <Vlk_RayTracingShaderBindingTable.h>
+#include <Vlk_RayTracingBLASEntry.h>
+#include <Vlk_RayTracingTLASEntry.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -257,7 +259,7 @@ class VulkanRenderTest
 
 		Vlk::VertexBuffer* quadBuffer{};
 
-		Vlk::BufferBase* instanceBuffer{};
+		Vlk::Buffer* instanceBuffer{};
 
 		//Vlk::VertexBuffer* testBuffer{};
 

@@ -42,8 +42,8 @@ namespace Vlk
             VkDescriptorSet BeginDescriptorSet( DescriptorLayout* descriptorLayout );
 
             // Sets a buffer for the descriptor
-            void SetBuffer( uint bindingIndex, BufferBase* buffer, uint byteOffset = 0 );
-            void SetBufferInArray( uint bindingIndex, uint arrayIndex, BufferBase* buffer, uint byteOffset = 0 );
+            void SetBuffer( uint bindingIndex, Buffer* buffer, uint byteOffset = 0 );
+            void SetBufferInArray( uint bindingIndex, uint arrayIndex, Buffer* buffer, uint byteOffset = 0 );
 
             // Sets an image for the descriptor
             void SetImage( uint bindingIndex, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout );

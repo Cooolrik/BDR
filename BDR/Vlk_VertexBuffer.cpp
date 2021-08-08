@@ -2,6 +2,10 @@
 
 #include "Vlk_VertexBuffer.h"
 
+Vlk::VertexBuffer::~VertexBuffer()
+	{
+	}
+
 void Vlk::VertexBufferDescription::SetVertexInputBindingDescription( uint32_t binding, uint32_t stride, VkVertexInputRate inputRate )
 	{
 	this->VertexInputBindingDescription.binding = binding;

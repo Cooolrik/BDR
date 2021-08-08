@@ -1066,10 +1066,9 @@ VkResult Vlk::Renderer::SubmitRenderCommandBuffersAndPresent( const std::vector<
 	return VK_SUCCESS;
 	}
 
-Vlk::BufferBase* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void* src_data )
+Vlk::Buffer* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, const void* src_data )
 	{
-	BufferBase* buffer = new BufferBase();
-	buffer->Parent = this;
+	Buffer* buffer = new Buffer(this);
 
 	// make sure we can transfer data
 	if( src_data != nullptr && memoryPropertyFlags != VMA_MEMORY_USAGE_CPU_ONLY )
@@ -1077,7 +1076,7 @@ Vlk::BufferBase* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUs
 		bufferUsageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 		}
 
-	// create the vulkan buffer, and just wrap it in the BufferBase class
+	// create the vulkan buffer, and just wrap it in the Buffer class
 	buffer->BufferHandle = this->CreateVulkanBuffer(
 		bufferUsageFlags,
 		memoryPropertyFlags,
@@ -1133,8 +1132,7 @@ Vlk::BufferBase* Vlk::Renderer::CreateGenericBuffer( VkBufferUsageFlags bufferUs
 
 Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferDescription& description, uint vertexCount, const void* data )
 	{
-	VertexBuffer* vbuffer = new VertexBuffer();
-	vbuffer->Parent = this;
+	VertexBuffer* vbuffer = new VertexBuffer(this);
 	vbuffer->Description = description;
 
 	VkDeviceSize bufferSize = description.GetVertexInputBindingDescription().stride;
@@ -1183,8 +1181,7 @@ Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferDescript
 
 Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( VkIndexType indexType , uint indexCount, const void* indices )
 	{
-	IndexBuffer* ibuffer = new IndexBuffer();
-	ibuffer->Parent = this;
+	IndexBuffer* ibuffer = new IndexBuffer(this);
 	ibuffer->IndexType = indexType;
 
 	VkDeviceSize bufferSize;
@@ -1192,9 +1189,11 @@ Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( VkIndexType indexType , uint
 		bufferSize = sizeof( uint32_t );
 	else if( indexType == VK_INDEX_TYPE_UINT16 )
 		bufferSize = sizeof( uint16_t );
+	else if( indexType == VK_INDEX_TYPE_UINT8_EXT )
+		bufferSize = sizeof( uint8_t );
 	else
 		{
-		throw runtime_error( "Error: CreateIndexBuffer() indexType is invalid, only 16 or 32 bit allowed." );
+		throw runtime_error( "Error: CreateIndexBuffer() indexType is unrecognized." );
 		}
 	bufferSize *= indexCount;
 
@@ -1280,8 +1279,7 @@ Vlk::DescriptorPool* Vlk::Renderer::CreateDescriptorPool( uint descriptorSetCoun
 
 Vlk::UniformBuffer* Vlk::Renderer::CreateUniformBuffer( VkDeviceSize bufferSize )
 	{
-	UniformBuffer* buffer = new UniformBuffer();
-	buffer->Parent = this;
+	UniformBuffer* buffer = new UniformBuffer(this);
 
 	// create a uniform buffer that can be mapped 
 	buffer->BufferHandle = this->CreateVulkanBuffer(

@@ -22,17 +22,14 @@ namespace Vlk
             BDGetMacro( std::vector<VkVertexInputAttributeDescription>, VertexInputAttributeDescriptions );
         };
 
-    class VertexBuffer : public BufferBase
+    class VertexBuffer : public Buffer
         {
-        private:
-            VertexBuffer() = default;
-            VertexBuffer( const VertexBuffer& other );
-            friend class Renderer;
+        BDSubmoduleMacro( VertexBuffer, Buffer, Renderer );
 
+        private:
             VertexBufferDescription Description;
 
         public:
-
             unsigned int GetVertexCount() const
                 {
                 return (unsigned int)( this->BufferSize / this->GetVertexBufferBindingDescription().stride );
@@ -45,8 +42,7 @@ namespace Vlk
 
             std::vector<VkVertexInputAttributeDescription> GetVertexAttributeDescriptions() const
                 {
-                 return this->Description.GetVertexInputAttributeDescriptions();
+                return this->Description.GetVertexInputAttributeDescriptions();
                 }
-
         };
     };

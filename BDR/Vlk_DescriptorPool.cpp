@@ -78,12 +78,12 @@ VkDescriptorSet Vlk::DescriptorPool::BeginDescriptorSet( DescriptorLayout *descr
 	return descriptorSet;
 	}
 
-void Vlk::DescriptorPool::SetBuffer( uint bindingIndex, BufferBase* buffer, uint byteOffset )
+void Vlk::DescriptorPool::SetBuffer( uint bindingIndex, Buffer* buffer, uint byteOffset )
 	{
 	this->SetBufferInArray( bindingIndex, 0, buffer, byteOffset );
 	}
 
-void Vlk::DescriptorPool::SetBufferInArray( uint bindingIndex, uint arrayIndex, BufferBase* buffer, uint byteOffset )
+void Vlk::DescriptorPool::SetBufferInArray( uint bindingIndex, uint arrayIndex, Buffer* buffer, uint byteOffset )
 	{
 	if( this->WriteDescriptorSets[bindingIndex].pBufferInfo == nullptr )
 		{

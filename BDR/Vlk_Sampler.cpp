@@ -6,7 +6,7 @@ Vlk::Sampler::~Sampler()
 	{
 	if( this->SamplerHandle != nullptr )
 		{
-		vkDestroySampler( this->Owner->GetDevice(), this->SamplerHandle, nullptr );
+		vkDestroySampler( this->Module->GetDevice(), this->SamplerHandle, nullptr );
 		}
 	}
 

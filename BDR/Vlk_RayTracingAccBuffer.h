@@ -1,24 +1,18 @@
 #pragma once
 
-#include "Vlk_Renderer.h"
-#include "Vlk_Buffer.h"
+#include "Vlk_RayTracingExtension.h"
 
 namespace Vlk
     {
-    class RayTracingAccBuffer : public BufferBase
+    class RayTracingAccBuffer : public RayTracingExtensionSubmodule
         {
-        private:
-            RayTracingAccBuffer() = default;
-            RayTracingAccBuffer( const RayTracingAccBuffer& other );
-            friend class RayTracingExtension;
+        BDSubmoduleMacro( RayTracingAccBuffer , RayTracingExtensionSubmodule, RayTracingExtension );
 
+        private:
+            std::unique_ptr<Buffer> BufferPtr;
             VkAccelerationStructureKHR AccelerationStructure = nullptr;
 
         public:
-
-            // dtor
-            ~RayTracingAccBuffer();
-
             BDGetMacro( VkAccelerationStructureKHR, AccelerationStructure );
         };
     };

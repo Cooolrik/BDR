@@ -1,7 +1,6 @@
 #include "Vlk_Common.inl"
 #include "Vlk_BufferDeviceAddressExtension.h"
-
-#include "Vlk_RayTracingAccBuffer.h"
+#include "Vlk_Buffer.h"
 
 #include <stdexcept>
 #include <algorithm>

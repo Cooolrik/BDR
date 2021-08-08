@@ -3,30 +3,30 @@
 
 #include "Vlk_Buffer.h"
 
-VkDeviceAddress Vlk::BufferBase::GetDeviceAddress() const
+VkDeviceAddress Vlk::Buffer::GetDeviceAddress() const
 	{
 	VkBufferDeviceAddressInfo addressInfo{};
 	addressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 	addressInfo.buffer = this->BufferHandle;
-	return vkGetBufferDeviceAddress( this->Parent->GetDevice(), &addressInfo );
+	return vkGetBufferDeviceAddress( this->Module->GetDevice(), &addressInfo );
 	}
 
-void* Vlk::BufferBase::MapMemory()
+void* Vlk::Buffer::MapMemory()
 	{
 	void* memoryPtr;
-	VLK_CALL( vmaMapMemory( this->Parent->GetMemoryAllocator(), this->DeviceMemory, &memoryPtr ) );
+	VLK_CALL( vmaMapMemory( this->Module->GetMemoryAllocator(), this->DeviceMemory, &memoryPtr ) );
 	return memoryPtr;
 	}
 
-void Vlk::BufferBase::UnmapMemory()
+void Vlk::Buffer::UnmapMemory()
 	{
-	vmaUnmapMemory( this->Parent->GetMemoryAllocator(), this->DeviceMemory );
+	vmaUnmapMemory( this->Module->GetMemoryAllocator(), this->DeviceMemory );
 	}
 
-Vlk::BufferBase::~BufferBase()
+Vlk::Buffer::~Buffer()
 	{
 	if( this->DeviceMemory != nullptr )
 		{
-		vmaDestroyBuffer( this->Parent->GetMemoryAllocator(), this->BufferHandle, this->DeviceMemory );
+		vmaDestroyBuffer( this->Module->GetMemoryAllocator(), this->BufferHandle, this->DeviceMemory );
 		}
 	}

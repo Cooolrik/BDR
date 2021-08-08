@@ -3,13 +3,14 @@
 #include "Vlk_Renderer.h"
 #include "Vlk_Extension.h"
 
-#include "Vlk_RayTracingAccBuffer.h"
-#include "Vlk_RayTracingBLASEntry.h"
-#include "Vlk_RayTracingTLASEntry.h"
-
 namespace Vlk
     {
     class RayTracingPipeline;
+    class RayTracingAccBuffer;
+    class RayTracingBLASEntry;
+    class RayTracingTLASEntry;
+
+    BDSubmoduleBaseMacro( RayTracingExtensionSubmodule , RayTracingExtension );
 
     class RayTracingExtension : public Extension
         {
@@ -36,7 +37,7 @@ namespace Vlk
             std::set<RayTracingPipeline*> RayTracingPipelines;
             void RemoveRayTracingPipeline( RayTracingPipeline* pipeline );
 
-            RayTracingAccBuffer* CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo ) const;
+            RayTracingAccBuffer* CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo );
 
             VkCommandPool CreateInternalCommandPool();
             void CreateInternalCommandBuffers( VkCommandPool cmdPool, uint32_t num_entries, VkCommandBuffer* cmdBuffers );

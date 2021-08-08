@@ -8,14 +8,12 @@
 
 namespace Vlk
     {
-    class IndexBuffer : public BufferBase
+    class IndexBuffer : public Buffer
         {
-        private:
-            IndexBuffer() = default;
-            IndexBuffer( const IndexBuffer& other );
-            friend class Renderer;
+        BDSubmoduleMacro( IndexBuffer, Buffer, Renderer );
 
-            VkIndexType IndexType{};
+        private:
+            VkIndexType IndexType = {};
 
         public:
 
@@ -23,8 +21,10 @@ namespace Vlk
                 {
                 if( this->IndexType == VK_INDEX_TYPE_UINT32 )
                     return (unsigned int) (this->BufferSize / sizeof( uint32_t ));
-                else // 16 bit indices
+                else if(this->IndexType == VK_INDEX_TYPE_UINT16)
                     return (unsigned int)( this->BufferSize / sizeof( uint16_t ) );
+                else // assume 8-bit indices
+                    return (unsigned int)(this->BufferSize);
                 }
 
             BDGetMacro( VkIndexType, IndexType );

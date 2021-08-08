@@ -73,7 +73,7 @@ namespace Vlk
             );
 
             void DrawIndexedIndirect(
-                BufferBase *buffer,
+                Buffer *buffer,
                 VkDeviceSize offset,
                 uint drawCount,
                 uint stride
@@ -88,7 +88,7 @@ namespace Vlk
                 );
 
             void QueueUpBufferMemoryBarrier(
-                BufferBase*   buffer,
+                Buffer*   buffer,
                 VkAccessFlags srcAccessMask,
                 VkAccessFlags dstAccessMask,
                 VkDeviceSize  offset = 0,

@@ -7,14 +7,11 @@
 
 namespace Vlk
     {
-    class BufferBase
+    class Buffer : public RendererSubmodule
         {
-        protected:
-            BufferBase() = default;
-            BufferBase( const BufferBase& other );
-            friend class Renderer;
+        BDSubmoduleMacro( Buffer, RendererSubmodule, Renderer );
 
-            const Renderer* Parent = nullptr;
+        protected:
             VkBuffer BufferHandle = nullptr;
             VmaAllocation DeviceMemory = nullptr;
             VkDeviceSize BufferSize = 0;
@@ -24,16 +21,13 @@ namespace Vlk
             // returns the device address of the buffer.
             VkDeviceAddress GetDeviceAddress() const;
 
-            // dtor, removes any allocated buffer
-            ~BufferBase();
-
             // map/unmap (only host-visible buffers)
             void* MapMemory();
             void UnmapMemory();
 
-            BDGetMacro( Renderer*, Parent );
             BDGetCustomNameMacro( VkBuffer, Buffer, BufferHandle );
             BDGetMacro( VmaAllocation, DeviceMemory );
             BDGetMacro( VkDeviceSize, BufferSize );
         };
+
     };

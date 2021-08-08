@@ -284,15 +284,14 @@ static void CopyGroupDataAndUpdateStridedRange( VkStridedDeviceAddressRegionKHR 
 	base_index += group_count;
 	}
 
-Vlk::RayTracingShaderBindingTable* Vlk::RayTracingPipeline::CreateShaderBindingTable() const
+Vlk::RayTracingShaderBindingTable* Vlk::RayTracingPipeline::CreateShaderBindingTable()
 	{
 	if( this->Pipeline == nullptr )
 		{
 		throw runtime_error("RayTracingPipeline::CreateShaderBindingTable(): Error: Pipeline has not been built.");
 		}
 		
-	RayTracingShaderBindingTable* buffer = new RayTracingShaderBindingTable();
-	buffer->Parent = this->Parent->GetParent();
+	RayTracingShaderBindingTable* btable = new RayTracingShaderBindingTable(this->Parent);
 
 	// get size of each shader group handle, and also calculate the needed alignment of the handles in the binding table
 	uint32_t handleSize = this->Parent->GetRayTracingPipelineProperties().shaderGroupHandleSize;
@@ -308,33 +307,33 @@ Vlk::RayTracingShaderBindingTable* Vlk::RayTracingPipeline::CreateShaderBindingT
 
 	// calculate the ranges of the handles
 	uint32_t index = 0;
-	buffer->RaygenDeviceAddress = GetGroupAddress( index, 1, alignedHandleSize , alignedGroupBaseSize );
-	buffer->MissDeviceAddress = GetGroupAddress( index, (uint)this->MissShaders.size(), alignedHandleSize, alignedGroupBaseSize );
-	buffer->ClosestHitDeviceAddress = GetGroupAddress( index, (uint)this->ClosestHitShaders.size(), alignedHandleSize, alignedGroupBaseSize );
-	buffer->CallableDeviceAddress = GetGroupAddress( index, 0, alignedHandleSize, alignedGroupBaseSize );
+	btable->RaygenDeviceAddress = GetGroupAddress( index, 1, alignedHandleSize , alignedGroupBaseSize );
+	btable->MissDeviceAddress = GetGroupAddress( index, (uint)this->MissShaders.size(), alignedHandleSize, alignedGroupBaseSize );
+	btable->ClosestHitDeviceAddress = GetGroupAddress( index, (uint)this->ClosestHitShaders.size(), alignedHandleSize, alignedGroupBaseSize );
+	btable->CallableDeviceAddress = GetGroupAddress( index, 0, alignedHandleSize, alignedGroupBaseSize );
 	VkDeviceSize bufferSize = index;
 
-	// allocate the buffer memory
-	buffer->BufferHandle = this->Parent->GetParent()->CreateVulkanBuffer(
-		VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		VMA_MEMORY_USAGE_CPU_ONLY,
-		bufferSize,
-		buffer->DeviceMemory
-	);
-	buffer->BufferSize = bufferSize;
+	// allocate the btable memory
+	btable->BufferPtr = std::unique_ptr<Buffer>(
+		this->Parent->Parent->CreateGenericBuffer(
+			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			VMA_MEMORY_USAGE_CPU_ONLY,
+			bufferSize
+			)
+		);
 
-	void *mapptr = buffer->MapMemory();
-	VkDeviceAddress buffer_address = buffer->GetDeviceAddress();
+	void *mapptr = btable->BufferPtr->MapMemory();
+	VkDeviceAddress buffer_address = btable->BufferPtr->GetDeviceAddress();
 
 	uint base_index = 0; // is updated by the methods
-	CopyGroupDataAndUpdateStridedRange( buffer->RaygenDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 1, handleSize );
-	CopyGroupDataAndUpdateStridedRange( buffer->MissDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)this->MissShaders.size(), handleSize );
-	CopyGroupDataAndUpdateStridedRange( buffer->ClosestHitDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)this->ClosestHitShaders.size(), handleSize );
-	CopyGroupDataAndUpdateStridedRange( buffer->CallableDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 0, handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->RaygenDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 1, handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->MissDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)this->MissShaders.size(), handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->ClosestHitDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)this->ClosestHitShaders.size(), handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->CallableDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 0, handleSize );
 
-	buffer->UnmapMemory();
+	btable->BufferPtr->UnmapMemory();
 
-	return buffer;
+	return btable;
 	}
 
 Vlk::RayTracingPipeline::~RayTracingPipeline()

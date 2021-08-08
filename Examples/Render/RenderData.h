@@ -109,10 +109,10 @@ class PerFrameData
 		VkDescriptorSet cullingDescriptorSet = nullptr; // culling shader descriptor set
 		std::vector<VkDescriptorSet> depthReduceDescriptorSets; // depth reduce shader for depth pyramid descriptor set 
 
-		Vlk::BufferBase* initialDrawBuffer = nullptr; // buffer with all initial but empty batches 
-		Vlk::BufferBase* renderObjectsBuffer = nullptr; // list of all objects to consider for culling, along with their batches
-		Vlk::BufferBase* filteredDrawBuffer = nullptr; // buffer with all batches filled in with non-culled instances 
-		Vlk::BufferBase* instanceToObjectBuffer = nullptr; // mapping from instance to objectID, created in the culling
+		Vlk::Buffer* initialDrawBuffer = nullptr; // buffer with all initial but empty batches 
+		Vlk::Buffer* renderObjectsBuffer = nullptr; // list of all objects to consider for culling, along with their batches
+		Vlk::Buffer* filteredDrawBuffer = nullptr; // buffer with all batches filled in with non-culled instances 
+		Vlk::Buffer* instanceToObjectBuffer = nullptr; // mapping from instance to objectID, created in the culling
 
 		~PerFrameData()
 			{
@@ -154,7 +154,7 @@ class RenderData
 
 		Vlk::Sampler* depthSampler = nullptr;
 
-		Vlk::BufferBase* objectsBuffer{}; // all objects information
+		Vlk::Buffer* objectsBuffer{}; // all objects information
 		std::vector<PerFrameData> renderFrames{};
 
 		PerFrameData* currentFrame = nullptr;

@@ -197,7 +197,7 @@ void Vlk::CommandPool::DrawIndexedInstances( uint indexCount, uint instanceCount
 	vkCmdDrawIndexed( this->Buffers[this->CurrentBufferIndex], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance );
 	}
 
-void Vlk::CommandPool::DrawIndexedIndirect( BufferBase *buffer, VkDeviceSize offset, uint drawCount, uint stride )
+void Vlk::CommandPool::DrawIndexedIndirect( Buffer *buffer, VkDeviceSize offset, uint drawCount, uint stride )
 	{
 	ASSERT_RECORDING();
 
@@ -217,7 +217,7 @@ void Vlk::CommandPool::QueueUpBufferMemoryBarrier( VkBuffer buffer, VkAccessFlag
 	this->BufferMemoryBarriers.push_back( bufferMemoryBarrier );
 	}
 
-void Vlk::CommandPool::QueueUpBufferMemoryBarrier( BufferBase* buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkDeviceSize offset, VkDeviceSize size )
+void Vlk::CommandPool::QueueUpBufferMemoryBarrier( Buffer* buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkDeviceSize offset, VkDeviceSize size )
 	{
 	this->QueueUpBufferMemoryBarrier(
 		buffer->GetBuffer(),

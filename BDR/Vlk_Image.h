@@ -4,12 +4,12 @@
 
 namespace Vlk
     {
-    class BufferBase;
+    class Buffer;
 
-    class Image
+    class Image : public RendererSubmodule
         {
         private:
-            BDClassHeader( Image, Renderer );
+            BDSubmoduleMacro( Image, RendererSubmodule, Renderer );
 
             VkImage ImageHandle = nullptr;
             VkImageView ImageView = nullptr;
@@ -37,7 +37,7 @@ namespace Vlk
             // copy the image to a buffer. The image will be put into transfer mode unless it is already in it,
             // which is specified in oldLayout/srcAccessMask
             void CopyToBuffer( 
-                BufferBase *destBuffer,
+                Buffer *destBuffer,
                 uint32_t width, 
                 uint32_t height, 
                 uint32_t depth = 1,
@@ -50,7 +50,7 @@ namespace Vlk
                 VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
                 );
             void CopyToBuffer(
-                BufferBase* destBuffer,
+                Buffer* destBuffer,
                 const VkBufferImageCopy* region = nullptr,
                 VkImageLayout oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                 VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,

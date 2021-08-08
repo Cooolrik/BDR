@@ -3,23 +3,23 @@
 // disable warning for "enum class" since we can't modify Vulcan SDK
 #pragma warning( disable : 26812 )
 
-#include "Vlk_Renderer.h"
+#include "Vlk_RayTracingExtension.h"
 #include "Vlk_Buffer.h"
 
 namespace Vlk
     {
-    class RayTracingShaderBindingTable : public BufferBase
+    class RayTracingShaderBindingTable : public RayTracingExtensionSubmodule
         {
-        private:
-            RayTracingShaderBindingTable() = default;
-            RayTracingShaderBindingTable( const RayTracingShaderBindingTable& other );
-            friend class Renderer;
-            friend class RayTracingPipeline;
+        BDSubmoduleMacro( RayTracingShaderBindingTable, RayTracingExtensionSubmodule, RayTracingExtension );
+        friend class RayTracingPipeline;
 
-            VkStridedDeviceAddressRegionKHR RaygenDeviceAddress;
-            VkStridedDeviceAddressRegionKHR MissDeviceAddress;
-            VkStridedDeviceAddressRegionKHR ClosestHitDeviceAddress;
-            VkStridedDeviceAddressRegionKHR CallableDeviceAddress;
+        private:
+            std::unique_ptr<Buffer> BufferPtr;
+
+            VkStridedDeviceAddressRegionKHR RaygenDeviceAddress = {};
+            VkStridedDeviceAddressRegionKHR MissDeviceAddress = {};
+            VkStridedDeviceAddressRegionKHR ClosestHitDeviceAddress = {};
+            VkStridedDeviceAddressRegionKHR CallableDeviceAddress = {};
 
         public:
 

@@ -4,17 +4,16 @@
 
 namespace Vlk
     {
-    class BufferBase;
+    class Buffer;
 
-    class Sampler
+    class Sampler : public RendererSubmodule
         {
-        private:
-            BDClassHeader( Sampler, Renderer );
+        BDSubmoduleMacro( Sampler, RendererSubmodule, Renderer );
 
+        private:
             VkSampler SamplerHandle = nullptr;
 
         public:
-
             BDGetCustomNameMacro( VkSampler, Sampler, SamplerHandle );
         };
 
