@@ -17,4 +17,12 @@ struct SceneObject
     uint geometryID;
     uint materialID;
 	uint batchID;
+	uint vertexCutoffIndex;
+	float LODQuantizations[4];
+	};
+
+struct Instance
+	{
+	uint objectID; // object to render
+	float quantization; // quantization distance 
 	};

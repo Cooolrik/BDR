@@ -6,7 +6,7 @@
 namespace Vlk
     {
     class RayTracingPipeline;
-    class RayTracingAccBuffer;
+    class RayTracingAccelerationStructure;
     class RayTracingBLASEntry;
     class RayTracingTLASEntry;
 
@@ -31,13 +31,13 @@ namespace Vlk
             VkPhysicalDeviceAccelerationStructurePropertiesKHR AccelerationStructureProperties{};
             VkPhysicalDeviceRayTracingPipelinePropertiesKHR RayTracingPipelineProperties{};
 
-            std::vector<RayTracingAccBuffer*> BLASes;
-            RayTracingAccBuffer* TLAS;
+            std::vector<RayTracingAccelerationStructure*> BLASes;
+            RayTracingAccelerationStructure* TLAS;
 
             std::set<RayTracingPipeline*> RayTracingPipelines;
             void RemoveRayTracingPipeline( RayTracingPipeline* pipeline );
 
-            RayTracingAccBuffer* CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo );
+            RayTracingAccelerationStructure* CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo );
 
             VkCommandPool CreateInternalCommandPool();
             void CreateInternalCommandBuffers( VkCommandPool cmdPool, uint32_t num_entries, VkCommandBuffer* cmdBuffers );
@@ -56,7 +56,7 @@ namespace Vlk
             void BuildTLAS( const std::vector<RayTracingTLASEntry*>& TLASEntries );
 
             // get the TLAS
-            RayTracingAccBuffer* GetTLAS();
+            RayTracingAccelerationStructure* GetTLAS();
 
             // create a ray tracing pipeline object
             RayTracingPipeline* CreateRayTracingPipeline();

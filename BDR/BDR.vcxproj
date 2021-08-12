@@ -107,7 +107,7 @@
     <ClCompile Include="Vlk_Image.cpp" />
     <ClCompile Include="Vlk_IndexBuffer.cpp" />
     <ClCompile Include="Vlk_RayTracingBLASEntry.cpp" />
-    <ClCompile Include="Vlk_RayTracingAccBuffer.cpp" />
+    <ClCompile Include="Vlk_RayTracingAccelerationStructure.cpp" />
     <ClCompile Include="Vlk_RayTracingExtension.cpp" />
     <ClCompile Include="Vlk_RayTracingPipeline.cpp" />
     <ClCompile Include="Vlk_RayTracingShaderBindingTable.cpp" />
@@ -131,7 +131,7 @@
     <ClInclude Include="Vlk_Image.h" />
     <ClInclude Include="Vlk_IndexBuffer.h" />
     <ClInclude Include="Vlk_RayTracingBLASEntry.h" />
-    <ClInclude Include="Vlk_RayTracingAccBuffer.h" />
+    <ClInclude Include="Vlk_RayTracingAccelerationStructure.h" />
     <ClInclude Include="Vlk_RayTracingExtension.h" />
     <ClInclude Include="Vlk_RayTracingPipeline.h" />
     <ClInclude Include="Vlk_RayTracingShaderBindingTable.h" />

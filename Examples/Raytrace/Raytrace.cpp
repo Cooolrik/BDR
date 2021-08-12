@@ -52,6 +52,10 @@ using std::vector;
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define FAST_OBJ_IMPLEMENTATION
+#include <fast_obj.h>
+
+
 #include <SourceMesh.h>
 
 // number of frames to render after input is received

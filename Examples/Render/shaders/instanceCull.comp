@@ -28,13 +28,23 @@ layout(set = 0, binding = 0) uniform CullingSettingsUBO
 	float frustumYz; // frustum culling data Y.z
 	float nearZ; // near depth
 	float farZ; // far depth
+
+	// pyramid culling info
 	bool pyramidCull; // is set, use depth pyramid to cull
 	float Proj00; // projection[0][0]
 	float Proj11; // projection[1][1]
 	float pyramidWidth; // width of the largest mip in the depth pyramid
 	float pyramidHeight; // height of the largest mip in the depth pyramid
-	uint objectsCount; // number of objects to consider in the renderObjectBuffer buffer
+
+	// number of objects to consider in the renderObjectBuffer buffer
+	uint objectsCount; 
+
+	// values that are only for debugging purposes
+	float debug_float_value1; 
+	float debug_float_value2; 
+	float debug_float_value3; 
 	} cullingSettings;
+
 
 // the input buffer of objects to consider for rendering. the size is defined in the "objectsCount" constant. Indexed with renderIndex.
 layout(set = 0, binding = 1) readonly buffer RenderObjectsBuffer
@@ -54,11 +64,11 @@ layout(set = 0, binding = 3)  buffer FilteredDrawBuffer
 	DrawCommand commands[];
 	} filteredDrawBuffer;
 
-// mapping of instanceID (current frame) to objectID (scene global and stable). Indexed with instanceIndex
-layout(set = 0, binding = 4)  buffer InstanceToObjectBuffer
+// per-instance information
+layout(set = 0, binding = 4)  buffer InstanceBuffer
 	{   
-	uint objectIDs[];
-	} instanceToObjectBuffer;
+	Instance instances[];
+	} instanceBuffer;
 
 // depth pyramid to read depth from 
 layout(set = 0, binding = 5) uniform sampler2D depthPyramidSampler;
@@ -125,18 +135,16 @@ void main()
 		isVisible = isVisible && center.z - radius < -cullingSettings.nearZ && center.z + radius > -cullingSettings.farZ; // depth
 		isVisible = isVisible && dot(object_direction,object_rejection_direction) > object_rejection_cutoff;
 
+		vec4 aabb = projectSphere( center, radius );
+		float width = (aabb.z - aabb.x) * cullingSettings.pyramidWidth;
+		float height = (aabb.w - aabb.y) * cullingSettings.pyramidHeight;
+		float mip_level = floor(log2(max(width, height)));
+		uint lodlevel = 3 - uint(clamp(mip_level,0,3));
+		
 		if( isVisible && cullingSettings.pyramidCull ) 
 			{
-			vec4 aabb = projectSphere( center, radius );
-		
-			// get the size of the aabb in texel coords
-			float width = (aabb.z - aabb.x) * cullingSettings.pyramidWidth;
-			float height = (aabb.w - aabb.y) * cullingSettings.pyramidHeight;
-			
-			// sample the pyramid on the right level, convert the depth to a depth value
-			float mip_level = floor(log2(max(width, height)));
 			float sampleDepth = textureLod(depthPyramidSampler, (aabb.xy + aabb.zw)/2, mip_level).x;
-		
+
 			// calc the depths to compare
 			float near = cullingSettings.nearZ;
 			float far = cullingSettings.farZ;
@@ -150,14 +158,15 @@ void main()
 		if( isVisible )
 			{
 			// retrieve the batchID from the scene object
-			uint batchID = sceneObjectsBuffer.objects[objectID].batchID;
+			uint batchID = sceneObjectsBuffer.objects[objectID].batchID + lodlevel;
 
 			// increase instance count and retrieve instanceID
 			uint instanceIndex = atomicAdd(filteredDrawBuffer.commands[batchID].instanceCount,1);
 			instanceIndex += filteredDrawBuffer.commands[batchID].firstInstance;
 
-			// fill in the instance to objectID back-map
-			instanceToObjectBuffer.objectIDs[instanceIndex] = objectID;
+			// fill in the instance information
+			instanceBuffer.instances[instanceIndex].objectID = objectID;
+			instanceBuffer.instances[instanceIndex].quantization = sceneObjectsBuffer.objects[objectID].LODQuantizations[lodlevel];
 			}
 		}
 	}

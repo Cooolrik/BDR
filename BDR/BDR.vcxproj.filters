@@ -14,6 +14,9 @@
     <Filter Include="Source Files\3rdParty">
       <UniqueIdentifier>{908fffc6-39dd-42b3-9815-01bac395d543}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Extensions\Vlk_RayTracingExtension">
+      <UniqueIdentifier>{be978916-c470-4c2d-ab75-55ec61ddc52a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vlk_Renderer.cpp">
@@ -37,12 +40,6 @@
     <ClCompile Include="Vlk_Buffer.cpp">
       <Filter>Source Files\Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="Vlk_Extension.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Vlk_RayTracingExtension.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
     <ClCompile Include="Vlk_IndexBuffer.cpp">
       <Filter>Source Files\Buffers</Filter>
     </ClCompile>
@@ -52,22 +49,7 @@
     <ClCompile Include="Vlk_vma_implementation.cpp">
       <Filter>Source Files\3rdParty</Filter>
     </ClCompile>
-    <ClCompile Include="Vlk_RayTracingBLASEntry.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Vlk_RayTracingAccBuffer.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
     <ClCompile Include="Vlk_BufferDeviceAddressExtension.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Vlk_RayTracingTLASEntry.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Vlk_RayTracingPipeline.cpp">
-      <Filter>Source Files\Extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="Vlk_RayTracingShaderBindingTable.cpp">
       <Filter>Source Files\Extensions</Filter>
     </ClCompile>
     <ClCompile Include="Vlk_DescriptorIndexingExtension.cpp">
@@ -83,6 +65,27 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Vlk_Sampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingAccelerationStructure.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingBLASEntry.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingExtension.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingPipeline.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingShaderBindingTable.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_RayTracingTLASEntry.cpp">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClCompile>
+    <ClCompile Include="Vlk_Extension.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,34 +111,13 @@
     <ClInclude Include="Vlk_Buffer.h">
       <Filter>Source Files\Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="Vlk_Extension.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_RayTracingExtension.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
     <ClInclude Include="Vlk_IndexBuffer.h">
       <Filter>Source Files\Buffers</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_VertexBuffer.h">
       <Filter>Source Files\Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="Vlk_RayTracingBLASEntry.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_RayTracingAccBuffer.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
     <ClInclude Include="Vlk_BufferDeviceAddressExtension.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_RayTracingTLASEntry.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_RayTracingPipeline.h">
-      <Filter>Source Files\Extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="Vlk_RayTracingShaderBindingTable.h">
       <Filter>Source Files\Extensions</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_DescriptorIndexingExtension.h">
@@ -151,6 +133,27 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_Sampler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingAccelerationStructure.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingBLASEntry.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingExtension.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingPipeline.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingShaderBindingTable.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_RayTracingTLASEntry.h">
+      <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Extension.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

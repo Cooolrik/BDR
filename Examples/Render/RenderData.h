@@ -33,7 +33,9 @@ struct ObjectData
 	glm::uint meshID{};
 	glm::uint materialID{};
 	glm::uint batchID{};
-	glm::uint _b1[2];
+	glm::uint vertexCutoffIndex = 0; // only quantize vertices after this index, the ones before are locked, to avoid gaps.
+	glm::float32 LODQuantizations[4];
+	glm::uint _b[1];
 	};
 
 struct BatchData
@@ -57,6 +59,11 @@ struct CullingSettingsUBO
 	float pyramidWidth; // width of the largest mip in the depth pyramid
 	float pyramidHeight; // height of the largest mip in the depth pyramid
 	uint32_t objectCount; // number of objects in scene to consider
+
+	// debug values, only for debugging purposes
+	float debug_float_value1; 
+	float debug_float_value2; 
+	float debug_float_value3; 
 	};
 
 class UniformBufferObject

@@ -272,6 +272,9 @@ static bool DrawFrame()
 	cubo->pyramidWidth = (float)renderData->DepthPyramidImageW; // width of the largest mip in the depth pyramid
 	cubo->pyramidHeight = (float)renderData->DepthPyramidImageH; // height of the largest mip in the depth pyramid
 	cubo->objectCount = renderData->scene_objects;
+	cubo->debug_float_value1 = renderData->camera.debug_float_value1;
+	cubo->debug_float_value2 = renderData->camera.debug_float_value2;
+	cubo->debug_float_value3 = renderData->camera.debug_float_value3;
 	renderData->currentFrame->cullingUBO->UnmapMemory();
 
 	// create the command buffer and send to present 
@@ -370,12 +373,12 @@ void createPerFrameData()
 				)
 			);
 
-		// create the instance to objectID backmapping buffer
+		// create the instance buffer
 		frame.instanceToObjectBuffer = renderer->CreateBuffer(
 			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
-				VkDeviceSize( renderData->scene_objects * sizeof( uint32_t ) )
+				VkDeviceSize( renderData->scene_objects * 4 /*num_lods*/ * sizeof( uint32_t ) * 2 /*2 uints in struct*/)
 				)
 			);
 
@@ -464,31 +467,33 @@ void SetupScene()
 	// the meshes of the scene
 	std::vector<const char*> source_mesh_names =
 		{
-		"../Assets/meteor_0.obj",
-		"../Assets/meteor_1.obj",
-		"../Assets/meteor_2.obj",
-		"../Assets/meteor_3.obj",
-		"../Assets/meteor_4.obj",
-		"../Assets/meteor_5.obj",
+		"../Assets/meteor_0.mmbin",
+		"../Assets/meteor_1.mmbin",
+		"../Assets/meteor_2.mmbin",
+		"../Assets/meteor_3.mmbin",
+		"../Assets/meteor_4.mmbin",
+		"../Assets/meteor_5.mmbin",
 		};
 
 	std::vector<const char*> source_tex_names =
 		{
-		"../Assets/image1.dds"
+		"../Assets/image1.dds",
+		"../Assets/image2.dds",
+		"../Assets/image3.dds",
+		"../Assets/image4.dds",
+		"../Assets/image5.dds",
+		"../Assets/image6.dds",
 		};
 				
-	//const uint mega_mesh_max_tris = 512;
-	const uint mega_mesh_max_tris = 512;
-	const uint mega_mesh_max_verts = 1024;
-
 	const uint texture_array_size = 128;
 
 #ifdef _DEBUG
-	const uint unique_meshes_count = 2;
+	const uint unique_meshes_count = 1;
+	const uint megamesh_max_objects_cnt = 1; // number of megamesh objects in scene (not same as scene_objects)
 #else
 	const uint unique_meshes_count = 80;
-#endif
 	const uint megamesh_max_objects_cnt = 80; // number of megamesh objects in scene (not same as scene_objects)
+#endif
 
 	// for now, the objects are: megameshes * batches_per_mm * objects_per_mm
 
@@ -504,7 +509,7 @@ void SetupScene()
 		}
 
 	renderData->MegaMeshAlloc = new MegaMeshAllocator();
-	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshes , mega_mesh_max_tris, mega_mesh_max_verts );
+	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshes );
 
 	// reset stats
 	renderData->scene_tris = 0;
@@ -514,6 +519,24 @@ void SetupScene()
 
 	uint megamesh_instance_count = 0;
 
+	const uint num_lods = 4;
+
+	// scene data
+
+	// batches, one item per batch (draw call) in the renderer. 
+	// size() = unique_meshes_count * mm_submesh_count * num_lods 
+	vector<BatchData>& batches = renderData->batches; 
+
+	// objects, one item per object to draw on-screen. there is one object for each instance per batch.
+	// each item has info on the object, such as world position etc.
+	// size() = unique_meshes_count * mm_submesh_count * mm_object_count 
+	vector<ObjectData>& objects = renderData->objects;
+
+	// renderObjects has a list of the objects in "objects" which should be considered for rendering.
+	// the size of this is for now equal to the whole list of objects
+	// size() = objects.size()
+	vector<uint>& renderObjects = renderData->renderObjects;
+
 	// set up objects and render-batches for each unique megamesh 
 	for( uint mm = 0; mm < unique_meshes_count; ++mm )
 		{
@@ -522,13 +545,12 @@ void SetupScene()
 
 		// allocate batches and objects for the megamesh
 		uint mm_submesh_count = renderData->MegaMeshes[mm].GetSubMeshCount();
-		renderData->batches.resize( (size_t)renderData->scene_batches + mm_submesh_count );
+		batches.resize( batches.size() + size_t(mm_submesh_count) * num_lods );
 
 		// allocate one instance for each batch and object
 		uint mm_object_batch_instance_count = mm_submesh_count * mm_object_count;
-		renderData->objects.resize( (size_t)renderData->scene_objects + mm_object_batch_instance_count );
-
-		renderData->renderObjects.resize( (size_t)renderData->scene_objects + mm_object_batch_instance_count );
+		objects.resize( objects.size() + mm_object_batch_instance_count );
+		renderObjects.resize( renderObjects.size() + mm_object_batch_instance_count );
 
 		uint materialID = mm;
 
@@ -536,11 +558,13 @@ void SetupScene()
 		for( uint o = 0; o < mm_object_count; ++o )
 			{
 			glm::mat4 transform( 1 );
-			float scale = ( ( frand() * 2.7f ) + 1.3f ) * 3.f; // 0.3 -> 3.0
+			float scale = 1;
+#ifndef _DEBUG
+			scale = ( ( frand() * 2.7f ) + 1.3f ) * 3.f; // 0.3 -> 3.0
 			transform = glm::translate( transform, vrand( glm::vec3(-1,-1,-1), glm::vec3( 1,1, 1 )) * 1000.f ); // random pos
 			transform = glm::rotate( transform, frand_radian(), vrand_unit() ); // random rotation
 			transform = glm::scale( transform, glm::vec3( scale, scale, scale ) );
-
+#endif
 			for( uint sm = 0; sm < mm_submesh_count; ++sm )
 				{
 				glm::vec3 bspherecenter = transform * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetBoundingSphereCenter(), 1.f );
@@ -548,27 +572,33 @@ void SetupScene()
 
 				uint object_index = renderData->scene_objects + ( sm * mm_object_count ) + o;
 
-				renderData->objects[object_index].transform = transform;
-				renderData->objects[object_index].transformIT = glm::transpose( glm::inverse( transform ) );
+				objects[object_index].transform = transform;
+				objects[object_index].transformIT = glm::transpose( glm::inverse( transform ) );
 
-				renderData->objects[object_index].boundingSphere[0] = bspherecenter[0];
-				renderData->objects[object_index].boundingSphere[1] = bspherecenter[1];
-				renderData->objects[object_index].boundingSphere[2] = bspherecenter[2];
-				renderData->objects[object_index].boundingSphere[3] = bsphereradius;
+				objects[object_index].boundingSphere[0] = bspherecenter[0];
+				objects[object_index].boundingSphere[1] = bspherecenter[1];
+				objects[object_index].boundingSphere[2] = bspherecenter[2];
+				objects[object_index].boundingSphere[3] = bsphereradius;
 
 				glm::vec3 rejectionconecenter = transform * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeCenter(), 1.f );
 				glm::vec3 rejectionconedirection = glm::normalize(renderData->objects[object_index].transformIT * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeDirection(), 0.f ));
 				float rejectionconecutoff = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeCutoff();
-				renderData->objects[object_index].rejectionConeCenter = rejectionconecenter;
-				renderData->objects[object_index].rejectionConeDirectionAndCutoff = glm::vec4( rejectionconedirection, rejectionconecutoff );
+				objects[object_index].rejectionConeCenter = rejectionconecenter;
+				objects[object_index].rejectionConeDirectionAndCutoff = glm::vec4( rejectionconedirection, rejectionconecutoff );
 
-				uint batch_id = renderData->scene_batches + sm; // one batch per submesh
+				uint batch_id = renderData->scene_batches + (sm * num_lods); // num_lods batches per submesh
 
-				renderData->objects[object_index].meshID = mm;
-				renderData->objects[object_index].materialID = materialID;
-				renderData->objects[object_index].batchID = batch_id;
+				objects[object_index].meshID = mm;
+				objects[object_index].materialID = materialID;
+				objects[object_index].batchID = batch_id;
+				objects[object_index].vertexCutoffIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset() + 64;
 
-				renderData->renderObjects[object_index] = object_index;
+				objects[object_index].LODQuantizations[0] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[0];
+				objects[object_index].LODQuantizations[1] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[1];
+				objects[object_index].LODQuantizations[2] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[2];
+				objects[object_index].LODQuantizations[3] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[3];
+
+				renderObjects[object_index] = object_index;
 							
 				// update stats
 				renderData->scene_tris += (uint64_t)( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3 );
@@ -577,23 +607,28 @@ void SetupScene()
 			}
 
 		// setup batches, one per submesh of the megamesh 
+		// do 4 lods per submesh
 		for( uint sm = 0; sm < mm_submesh_count; ++sm )
 			{
-			uint first_object_index = renderData->scene_objects + ( sm * mm_object_count );
-			uint batch_id = renderData->scene_batches + sm;
+			for( uint lod = 0; lod < num_lods; ++lod )
+				{
+				uint first_instance_index = (renderData->scene_objects * num_lods) + ( sm * mm_object_count * num_lods ) + (lod * mm_object_count);
 
-			// set up batchdata for the batch
-			renderData->batches[batch_id].drawCmd.indexCount = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount();
-			renderData->batches[batch_id].drawCmd.instanceCount = 0; // set the original array to 0 instances, this will be filled in by the culling compute shader
-			renderData->batches[batch_id].drawCmd.firstIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexOffset();
-			renderData->batches[batch_id].drawCmd.vertexOffset = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset();
-			renderData->batches[batch_id].drawCmd.firstInstance = first_object_index;
+				uint batch_id = renderData->scene_batches + (sm * num_lods) + lod;
+
+				// set up batchdata for the batch
+				batches[batch_id].drawCmd.indexCount = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODIndexCounts()[lod];
+				batches[batch_id].drawCmd.instanceCount = 0; // set the original array to 0 instances, this will be filled in by the culling compute shader
+				batches[batch_id].drawCmd.firstIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexOffset();
+				batches[batch_id].drawCmd.vertexOffset = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset();
+				batches[batch_id].drawCmd.firstInstance = first_instance_index;
+				}
 			}
 
 		megamesh_instance_count += mm_object_count;
 
 		renderData->scene_objects += (mm_object_count * mm_submesh_count);
-		renderData->scene_batches += mm_submesh_count;
+		renderData->scene_batches += mm_submesh_count*num_lods;
 		}
 
 	// create objects array
@@ -620,6 +655,7 @@ void SetupScene()
 	printf( "\tTotal Tris: %lld\n", renderData->scene_tris );
 	printf( "\tTotal Verts: %lld\n", renderData->scene_verts );
 	printf( "\tMesh allocation: %lld bytes\n", renderData->MegaMeshAlloc->GetIndexBuffer()->GetBufferSize() + renderData->MegaMeshAlloc->GetVertexBuffer()->GetBufferSize() );
+	printf( "\tObject data allocation: %lld bytes\n", VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ) );
 	printf( "\tAverage Megamesh triangle count: %lld\n", renderData->scene_tris / (uint64_t)megamesh_instance_count );
 	printf( "\tAverage Tris per Subobject: %lld\n", renderData->scene_tris /(uint64_t)renderData->scene_objects );
 	printf( "\tAverage Verts per Subobject: %lld\n", renderData->scene_verts / (uint64_t)renderData->scene_objects );

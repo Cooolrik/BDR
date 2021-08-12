@@ -28,6 +28,9 @@ class SubMesh
 		glm::vec3 rejectionConeDirection;
 		float rejectionConeCutoff;
 
+		unsigned int LODIndexCounts[4];
+		float LODQuantizeDistances[4];
+
 	public:
 		unsigned int GetVertexOffset() const { return vertexOffset; }
 		unsigned int GetVertexCount() const { return vertexCount; }
@@ -41,6 +44,9 @@ class SubMesh
 		glm::vec3 GetRejectionConeCenter() const { return rejectionConeCenter; }
 		glm::vec3 GetRejectionConeDirection() const { return rejectionConeDirection; }
 		float GetRejectionConeCutoff() const { return rejectionConeCutoff; }
+
+		const unsigned int* GetLODIndexCounts() const { return LODIndexCounts; }
+		const float* GetLODQuantizeDistances() const { return LODQuantizeDistances; }
 	};
 
 class MegaMesh
@@ -58,9 +64,6 @@ class MegaMesh
 class MegaMeshAllocator
 	{
 	private:
-		class SourceSubMesh;
-		class SourceMesh;
-
 		Vlk::VertexBuffer* vertexBuffer{};
 		Vlk::IndexBuffer* indexBuffer{};
 
@@ -68,9 +71,9 @@ class MegaMeshAllocator
 		Vlk::VertexBuffer* GetVertexBuffer() const { return vertexBuffer; }
 		Vlk::IndexBuffer* GetIndexBuffer() const { return indexBuffer; }
 
-		// load in all meshes in one go
+		// load in all meshes in one go from mmbin files
 		// TODO: make the allocator dynamic. right now only static allocation on setup
-		std::vector<MegaMesh> LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths, unsigned int max_tris, unsigned int max_verts );
+		std::vector<MegaMesh> LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths );
 
 		void Clear();
 

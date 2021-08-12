@@ -28,6 +28,6 @@ void main()
 	//
 	//outColor = vec4( float(r/256.0), float(g/256.0), float(b/256.0), 1.0 );
 
-	//outColor = vec4((N*0.5+0.5)*base_color,1); 
-	outColor = vec4(base_color,1); 
+	outColor = vec4((N*0.5+0.5)*base_color,1); 
+	//outColor = vec4(base_color,1); 
 	}

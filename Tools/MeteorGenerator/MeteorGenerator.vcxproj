@@ -55,7 +55,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\PerlinNoise</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\PerlinNoise;$(SolutionDir)..\Dependencies\fast_obj</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -71,7 +71,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\PerlinNoise</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\PerlinNoise;$(SolutionDir)..\Dependencies\fast_obj</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -82,7 +82,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\Tool_Multimesh.cpp" />
+    <ClCompile Include="..\Common\Tool_Vertex.cpp" />
     <ClCompile Include="MeteorGenerator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Common\Tool_Multimesh.h" />
+    <ClInclude Include="..\Common\Tool_Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

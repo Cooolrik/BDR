@@ -4,7 +4,7 @@
 #include "Vlk_DescriptorSetLayout.h"
 #include "Vlk_Renderer.h"
 #include "Vlk_Image.h"
-#include "Vlk_RayTracingAccBuffer.h"
+#include "Vlk_RayTracingAccelerationStructure.h"
 #include "Vlk_Buffer.h"
 
 using namespace std;
@@ -124,12 +124,12 @@ void Vlk::DescriptorPool::SetImageInArray( uint bindingIndex, uint arrayIndex, V
 	this->WriteDescriptorInfos[bindingIndex].DescriptorImageInfo[arrayIndex] = imageInfo;
 	}
 
-void Vlk::DescriptorPool::SetAccelerationStructure( uint bindingIndex, RayTracingAccBuffer* accelerationStructure )
+void Vlk::DescriptorPool::SetAccelerationStructure( uint bindingIndex, RayTracingAccelerationStructure* accelerationStructure )
 	{
 	this->SetAccelerationStructureInArray( bindingIndex, 0, accelerationStructure );
 	}
 
-void Vlk::DescriptorPool::SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccBuffer* accelerationStructure )
+void Vlk::DescriptorPool::SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccelerationStructure* accelerationStructure )
 	{
 	if( this->WriteDescriptorSets[bindingIndex].descriptorType != VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR )
 		{

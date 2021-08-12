@@ -1,11 +1,11 @@
 #include "Vlk_Common.inl"
 #include "Vlk_RayTracingExtension.h"
-#include "Vlk_RayTracingAccBuffer.h"
+#include "Vlk_RayTracingAccelerationStructure.h"
 #include "Vlk_RayTracingBLASEntry.h"
 #include "Vlk_RayTracingTLASEntry.h"
 #include "Vlk_RayTracingPipeline.h"
 
-#include "Vlk_RayTracingAccBuffer.h"
+#include "Vlk_RayTracingAccelerationStructure.h"
 #include "Vlk_Buffer.h"
 #include "Vlk_CommandPool.h"
 
@@ -22,12 +22,12 @@ void Vlk::RayTracingExtension::RemoveRayTracingPipeline( RayTracingPipeline* pip
 	this->RayTracingPipelines.erase( it );
 	}
 
-Vlk::RayTracingAccBuffer* Vlk::RayTracingExtension::CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo )
+Vlk::RayTracingAccelerationStructure* Vlk::RayTracingExtension::CreateAccBuffer( VkAccelerationStructureCreateInfoKHR createInfo )
 	{
-	RayTracingAccBuffer* buffer = new RayTracingAccBuffer( this );
+	RayTracingAccelerationStructure* buffer = new RayTracingAccelerationStructure( this );
 
 	// allocate the buffer memory
-	buffer->BufferPtr = std::unique_ptr<Buffer>( 
+	buffer->ASBuffer = std::unique_ptr<Buffer>( 
 		this->Parent->CreateBuffer( 
 			BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
@@ -38,7 +38,7 @@ Vlk::RayTracingAccBuffer* Vlk::RayTracingExtension::CreateAccBuffer( VkAccelerat
 		);
 
 	// create the acceleration struct
-	createInfo.buffer = buffer->BufferPtr->GetBuffer();
+	createInfo.buffer = buffer->ASBuffer->GetBuffer();
 	VLK_CALL( vkCreateAccelerationStructureKHR( this->Parent->GetDevice(), &createInfo, nullptr, &buffer->AccelerationStructure ) );
 
 	return buffer;
@@ -97,7 +97,7 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 	size_t num_entries = BLASEntries.size();
 
 	// temporary structures where the data is stored before compacting. also resize the array with the final compacted structures
-	std::vector<RayTracingAccBuffer*> nonCompactedBLASes( num_entries );
+	std::vector<RayTracingAccelerationStructure*> nonCompactedBLASes( num_entries );
 	this->BLASes.resize( num_entries );
 
 	// set up build structs for blas processings. one structure per blas entry
@@ -416,7 +416,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	delete stagingBuffer;
 	}
 
-Vlk::RayTracingAccBuffer* Vlk::RayTracingExtension::GetTLAS()
+Vlk::RayTracingAccelerationStructure* Vlk::RayTracingExtension::GetTLAS()
 	{
 	return this->TLAS;
 	}

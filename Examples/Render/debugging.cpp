@@ -415,9 +415,9 @@ inline uint LinearFloatToSRGBByte( float f )
 	else
 		f = powf( f, 1.f / 2.4f );
 
-	// convert to byte range, clamp again
-	f *= 255.5f;
-	int v = (uint)f;
+	// truncate to byte range, clamp again
+	f *= 256.f;
+	int v = (int)f;
 	if( v < 0 )
 		v = 0;
 	else if ( v > 255 )

@@ -11,12 +11,18 @@
     <Filter Include="Source Files\Common">
       <UniqueIdentifier>{e9b2cf98-55c6-4843-b64e-a19f853fc7c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\debugging">
+      <UniqueIdentifier>{c7ac8b75-fb25-47db-af79-78b8cd02c91d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\debugging\shaders">
+      <UniqueIdentifier>{3cebb22d-4651-422b-8f72-c8a1ba92a541}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common\Tools">
+      <UniqueIdentifier>{4b77c1e3-5bcc-4d43-b4ba-32a84281c103}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="debugging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Camera.cpp">
@@ -34,6 +40,15 @@
     <ClCompile Include="..\Common\Vertex.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="debugging.cpp">
+      <Filter>Source Files\debugging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Tools\Common\Tool_Multimesh.cpp">
+      <Filter>Source Files\Common\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Tools\Common\Tool_Vertex.cpp">
+      <Filter>Source Files\Common\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="shaders\fragShader.frag">
@@ -48,14 +63,14 @@
     <CustomBuild Include="shaders\depthReduce.comp">
       <Filter>Source Files\shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="shaders\debugShader.comp">
-      <Filter>Source Files\shaders</Filter>
-    </CustomBuild>
     <CustomBuild Include="shaders\debugFragShader.frag">
-      <Filter>Source Files\shaders</Filter>
+      <Filter>Source Files\debugging\shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\debugShader.comp">
+      <Filter>Source Files\debugging\shaders</Filter>
     </CustomBuild>
     <CustomBuild Include="shaders\debugVertShader.vert">
-      <Filter>Source Files\shaders</Filter>
+      <Filter>Source Files\debugging\shaders</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -65,9 +80,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderData.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="debugging.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Camera.h">
@@ -84,6 +96,15 @@
     </ClInclude>
     <ClInclude Include="..\Common\Vertex.h">
       <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="debugging.h">
+      <Filter>Source Files\debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Tools\Common\Tool_Multimesh.h">
+      <Filter>Source Files\Common\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Tools\Common\Tool_Vertex.h">
+      <Filter>Source Files\Common\Tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@
 namespace Vlk
     {
     class Texture;
-    class RayTracingAccBuffer;
+    class RayTracingAccelerationStructure;
 
     class DescriptorPool
         {
@@ -49,10 +49,10 @@ namespace Vlk
             void SetImage( uint bindingIndex, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout );
             void SetImageInArray( uint bindingIndex, uint arrayIndex, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout );
 
-            void SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccBuffer* accelerationStructure );
+            void SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccelerationStructure* accelerationStructure );
 
             // Sets the acceleration structure bound to the descriptor
-            void SetAccelerationStructure( uint bindingIndex, RayTracingAccBuffer* accelerationStructure );
+            void SetAccelerationStructure( uint bindingIndex, RayTracingAccelerationStructure* accelerationStructure );
 
             // update and finalize the descriptor set
             void EndDescriptorSet();
