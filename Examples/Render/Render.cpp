@@ -509,7 +509,7 @@ void SetupScene()
 		objects_per_mesh.push_back( 1 );
 		}
 
-	renderData->MegaMeshAlloc = new MegaMeshAllocator();
+	renderData->MegaMeshAlloc = new ZeptoMeshAllocator();
 	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshnames );
 
 	// reset stats

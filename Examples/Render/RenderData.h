@@ -15,7 +15,7 @@
 #include "Vlk_Sampler.h"
 
 #include <Camera.h>
-#include <MegaMesh.h>
+#include <ZeptoMesh.h>
 #include <Texture.h>
 
 // object - an actual object in the scene, the ID is global as long as the object exists
@@ -188,8 +188,8 @@ class RenderData
 		uint DepthPyramidImageH;
 		uint DepthPyramidMipMapLevels;
 
-		std::vector<MegaMesh> MegaMeshes;
-		MegaMeshAllocator* MegaMeshAlloc{};
+		std::vector<ZeptoMesh> MegaMeshes;
+		ZeptoMeshAllocator* MegaMeshAlloc{};
 		std::vector<std::unique_ptr<Texture>> Textures;
 		Vlk::Sampler *TexturesSampler = nullptr;
 

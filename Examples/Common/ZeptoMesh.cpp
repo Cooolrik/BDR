@@ -1,4 +1,4 @@
-#include "MegaMesh.h"
+#include "ZeptoMesh.h"
 
 #include <vector>
 #include <iostream>
@@ -15,9 +15,9 @@
 typedef unsigned int uint;
 using std::vector;
 
-std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths )
+std::vector<ZeptoMesh> ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths )
 	{
-	std::vector<MegaMesh> ret;
+	std::vector<ZeptoMesh> ret;
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
 
@@ -108,12 +108,12 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 	return ret;
 	}
 
-MegaMeshAllocator::~MegaMeshAllocator()
+ZeptoMeshAllocator::~ZeptoMeshAllocator()
 	{
 	this->Clear();
 	}
 
-void MegaMeshAllocator::Clear()
+void ZeptoMeshAllocator::Clear()
 	{
 	if( vertexBuffer ) { delete vertexBuffer; vertexBuffer = nullptr; }
 	if( indexBuffer ) { delete indexBuffer; indexBuffer = nullptr; }

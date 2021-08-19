@@ -104,7 +104,7 @@
     <ClCompile Include="..\..\Tools\Common\Tool_Vertex.cpp" />
     <ClCompile Include="..\Common\Camera.cpp" />
     <ClCompile Include="..\Common\Common.cpp" />
-    <ClCompile Include="..\Common\MegaMesh.cpp" />
+    <ClCompile Include="..\Common\ZeptoMesh.cpp" />
     <ClCompile Include="..\Common\Texture.cpp" />
     <ClCompile Include="..\Common\Vertex.cpp" />
     <ClCompile Include="debugging.cpp" />
@@ -193,7 +193,7 @@
     <ClInclude Include="..\..\Tools\Common\Tool_Vertex.h" />
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\Common.h" />
-    <ClInclude Include="..\Common\MegaMesh.h" />
+    <ClInclude Include="..\Common\ZeptoMesh.h" />
     <ClInclude Include="..\Common\Texture.h" />
     <ClInclude Include="..\Common\Vertex.h" />
     <ClInclude Include="debugging.h" />

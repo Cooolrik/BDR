@@ -31,7 +31,7 @@
     <ClCompile Include="..\Common\Common.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\MegaMesh.cpp">
+    <ClCompile Include="..\Common\ZeptoMesh.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Texture.cpp">
@@ -88,9 +88,6 @@
     <ClInclude Include="..\Common\Common.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MegaMesh.h">
-      <Filter>Source Files\Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\Common\Texture.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
@@ -105,6 +102,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Tools\Common\Tool_Vertex.h">
       <Filter>Source Files\Common\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ZeptoMesh.h">
+      <Filter>Source Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

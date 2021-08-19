@@ -13,7 +13,7 @@ namespace Vlk
 class SubMesh
 	{
 	private:
-		friend class MegaMeshAllocator;
+		friend class ZeptoMeshAllocator;
 
 		unsigned int vertexOffset = {}; // offset into vertex buffer where mesh starts
 		unsigned int vertexCount = {}; // number of vertices
@@ -49,10 +49,10 @@ class SubMesh
 		const unsigned int* GetLODQuantizeBits() const { return LODQuantizeBits; }
 	};
 
-class MegaMesh
+class ZeptoMesh
 	{
 	private:
-		friend class MegaMeshAllocator;
+		friend class ZeptoMeshAllocator;
 
 		std::vector<SubMesh> SubMeshes = {};
 		glm::vec3 AABB[2] = {};
@@ -72,7 +72,7 @@ class MegaMesh
 		const glm::vec3& GetCompressedVertexTranslate() const { return CompressedVertexTranslate; }
 	};
 
-class MegaMeshAllocator
+class ZeptoMeshAllocator
 	{
 	private:
 		Vlk::VertexBuffer* vertexBuffer{};
@@ -84,9 +84,9 @@ class MegaMeshAllocator
 
 		// load in all meshes in one go from mmbin files
 		// TODO: make the allocator dynamic. right now only static allocation on setup
-		std::vector<MegaMesh> LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths );
+		std::vector<ZeptoMesh> LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths );
 
 		void Clear();
 
-		~MegaMeshAllocator();
+		~ZeptoMeshAllocator();
 	};
