@@ -13,11 +13,13 @@ layout(location = 4) in flat uint materialID;
 
 layout(location = 0) out vec4 outColor;
 
-layout(set = 0, binding = 1) uniform sampler2D texSamplers[128];
+layout(set = 0, binding = 1) uniform sampler2D texSamplers[256];
 
 void main() 
 	{
 	vec3 N = normalize(fragNormal);
+
+	float light = (dot(N,vec3(0.7f,0.7f,0.7f)) + 2.f)/3.f;
 
 	vec3 base_color = texture(texSamplers[materialID],fragTexCoord).rgb;
 	//vec3 base_color = vec3(fragTexCoord.x,0,fragTexCoord.y);
@@ -28,6 +30,6 @@ void main()
 	//
 	//outColor = vec4( float(r/256.0), float(g/256.0), float(b/256.0), 1.0 );
 
-	outColor = vec4((N*0.5+0.5)*base_color,1); 
+	outColor = vec4(light*base_color,1); 
 	//outColor = vec4(base_color,1); 
 	}

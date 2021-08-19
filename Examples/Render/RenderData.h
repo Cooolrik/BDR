@@ -34,13 +34,28 @@ struct ObjectData
 	glm::uint materialID{};
 	glm::uint batchID{};
 	glm::uint vertexCutoffIndex = 0; // only quantize vertices after this index, the ones before are locked, to avoid gaps.
-	glm::float32 LODQuantizations[4];
+	glm::uint LODQuantizations[4];
 	glm::uint _b[1];
 	};
 
 struct BatchData
 	{
 	VkDrawIndexedIndirectCommand drawCmd; 
+	};
+
+struct InstanceData
+	{
+	uint objectID; // object to render
+	uint quantizationMask;
+	uint quantizationRound;
+	};
+
+struct MeshData
+	{
+	glm::vec3 CompressedVertexScale = {}; // object space min value for vertices
+	glm::uint _b1; 
+	glm::vec3 CompressedVertexTranslate = {}; // value to multiply vertices to get object space
+	glm::uint _b2;
 	};
 
 struct CullingSettingsUBO
@@ -149,7 +164,6 @@ class RenderData
 
 		Vlk::Renderer* renderer{};
 		
-
 		Vlk::GraphicsPipeline* renderPipeline = nullptr;
 		Vlk::DescriptorSetLayout* renderDescriptorLayout = nullptr;
 
@@ -161,7 +175,9 @@ class RenderData
 
 		Vlk::Sampler* depthSampler = nullptr;
 
-		Vlk::Buffer* objectsBuffer{}; // all objects information
+		Vlk::Buffer* objectsBuffer = nullptr; // all objects information
+		Vlk::Buffer* meshesBuffer = nullptr; // all meshes information
+
 		std::vector<PerFrameData> renderFrames{};
 
 		PerFrameData* currentFrame = nullptr;
@@ -186,6 +202,7 @@ class RenderData
 		std::vector<ObjectData> objects;
 		std::vector<BatchData> batches;
 		std::vector<uint32_t> renderObjects;
+		std::vector<MeshData> meshes;
 
 		Camera camera;
 
@@ -224,11 +241,6 @@ class RenderData
 				delete this->TexturesSampler;
 				}
 
-			// done with the renderer, remove stuff
-			//for (auto i : this->Textures)
-			//	{
-			//	delete i;
-			//	}
 			this->Textures.clear();
 			
 			delete renderDescriptorLayout;
@@ -238,6 +250,7 @@ class RenderData
 			delete MegaMeshAlloc;
 
 			delete objectsBuffer;
+			delete meshesBuffer;
 
 			clearPerFrameData();
 

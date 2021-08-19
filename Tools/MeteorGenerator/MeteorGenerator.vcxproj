@@ -83,11 +83,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\Tool_Multimesh.cpp" />
+    <ClCompile Include="..\Common\Tool_Serializer.cpp" />
     <ClCompile Include="..\Common\Tool_Vertex.cpp" />
     <ClCompile Include="MeteorGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Tool_Multimesh.h" />
+    <ClInclude Include="..\Common\Tool_Serializer.h" />
     <ClInclude Include="..\Common\Tool_Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

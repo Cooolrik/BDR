@@ -14,15 +14,37 @@ struct SceneObject
 	vec4 boundingSphere;
 	vec4 rejectionConeDirectionAndCutoff;
 	vec3 rejectionConeCenter;
-    uint geometryID;
+    uint meshID;
     uint materialID;
 	uint batchID;
 	uint vertexCutoffIndex;
-	float LODQuantizations[4];
+	uint LODQuantizations[4];
 	};
 
 struct Instance
 	{
 	uint objectID; // object to render
-	float quantization; // quantization distance 
+	uint quantizationMask; 
+	uint quantizationRound; 
 	};
+
+struct Mesh
+	{
+	vec3 CompressedVertexScale; 
+	uint _b1; 
+	vec3 CompressedVertexTranslate; 
+	uint _b2;
+	};
+	
+// the draw command layout for the indirect rendering call
+// most of the command is already filled out, we only add to the
+// instance count if an object is deemed visible
+struct DrawCommand
+	{
+	uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int vertexOffset;
+    uint firstInstance;
+	};
+	

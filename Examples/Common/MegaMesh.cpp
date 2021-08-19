@@ -19,7 +19,7 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 	{
 	std::vector<MegaMesh> ret;
 	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
+	std::vector<uint16_t> indices;
 
 	this->Clear();
 
@@ -36,6 +36,12 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 			{
 			throw std::runtime_error( std::string("Error, cannot load mmbin file: ") + std::string( paths[i] ) );
 			}
+
+		ret[i].AABB[0] = source_mesh.AABB[0];
+		ret[i].AABB[1] = source_mesh.AABB[1];
+
+		ret[i].CompressedVertexScale = source_mesh.CompressedVertexScale;
+		ret[i].CompressedVertexTranslate = source_mesh.CompressedVertexTranslate;
 
 		// set up the render mega meshes
 		ret[i].SubMeshes.resize( source_mesh.SubMeshes.size() );
@@ -56,24 +62,30 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 			for( uint lod = 0 ; lod < 4; ++lod )
 				{
 				ret[i].SubMeshes[q].LODIndexCounts[lod] = source_mesh.SubMeshes[q].LODTriangleCounts[lod] * 3;
-				ret[i].SubMeshes[q].LODQuantizeDistances[lod] = source_mesh.SubMeshes[q].LODQuantizeDistances[lod];
+				ret[i].SubMeshes[q].LODQuantizeBits[lod] = source_mesh.SubMeshes[q].LODQuantizeBits[lod];
 				}
 
 			// squash vertex data into render vertex struct
-			vector<Vertex> renderVertices( source_mesh.SubMeshes[q].vertices.size() );
-			for( size_t v = 0 ; v < source_mesh.SubMeshes[q].vertices.size() ; ++v )
+			vector<Vertex> renderVertices( source_mesh.SubMeshes[q].compressed_vertices.size() );
+			for( size_t v = 0 ; v < source_mesh.SubMeshes[q].compressed_vertices.size() ; ++v )
 				{
-				glm::vec3& coords = source_mesh.SubMeshes[q].vertices[v].Coords;
-				glm::vec3& normals = source_mesh.SubMeshes[q].vertices[v].Normals;
-				glm::vec2& texCoords = source_mesh.SubMeshes[q].vertices[v].TexCoords;
-				
-				renderVertices[v].X_Y_Z_U = glm::vec4( coords.x, coords.y, coords.z, texCoords.x );
-				renderVertices[v].NX_NY_NZ_V = glm::vec4( normals.x, normals.y, normals.z, texCoords.y );
+				renderVertices[v].Coords[0] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[0];
+				renderVertices[v].Coords[1] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[1];
+				renderVertices[v].Coords[2] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[2];
+				renderVertices[v]._buffer = 0;
+				renderVertices[v].Normals = source_mesh.SubMeshes[q].compressed_vertices[v].Normals;
+				renderVertices[v].TexCoords = source_mesh.SubMeshes[q].compressed_vertices[v].TexCoords;
+				}
+			
+			vector<uint16_t> renderIndices( source_mesh.SubMeshes[q].indices.size() );
+			for( size_t t = 0 ; t < source_mesh.SubMeshes[q].indices.size() ; ++t )
+				{
+				renderIndices[t] = (uint16_t)source_mesh.SubMeshes[q].indices[t];
 				}
 
 			// append to buffers
 			vertices.insert( vertices.end(), renderVertices.begin(), renderVertices.end() );
-			indices.insert( indices.end(), source_mesh.SubMeshes[q].indices.begin(), source_mesh.SubMeshes[q].indices.end() );
+			indices.insert( indices.end(), renderIndices.begin(), renderIndices.end() );
 			}
 		}
 
@@ -87,7 +99,7 @@ std::vector<MegaMesh> MegaMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, st
 		);
 	indexBuffer = renderer->CreateIndexBuffer( 
 		Vlk::IndexBufferTemplate::IndexBuffer(
-			VK_INDEX_TYPE_UINT32, 
+			VK_INDEX_TYPE_UINT16, 
 			(uint)indices.size(), 
 			indices.data() 
 			)

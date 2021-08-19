@@ -36,7 +36,7 @@
 
 #include "Texture.h"
 
-#include "debugging.h"
+//#include "debugging.h"
 
 #ifdef NDEBUG
 const bool useValidationLayers = false;
@@ -111,7 +111,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	pool->BindGraphicsPipeline( renderData->renderPipeline );
 	pool->BindDescriptorSet( renderData->renderPipeline, currentFrame->renderDescriptorSet );
 	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
-	debugDrawGraphicsPipeline( pool );
+	//debugDrawGraphicsPipeline( pool );
 	pool->EndRenderPass();
 
 	// prepare depth target for reading from compute shader
@@ -158,7 +158,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	copyRegion.extent = { renderData->camera.ScreenW, renderData->camera.ScreenH, 1 };
 	vkCmdCopyImage( buffer, currentFrame->colorImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, currentFrame->swapChainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion );
 
-	debugCommandBuffer( pool, buffer );
+	//debugCommandBuffer( pool, buffer );
 
 	// restore swap chain image to present type
 	pool->QueueUpImageMemoryBarrier( currentFrame->swapChainImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_NONE_KHR );
@@ -197,7 +197,7 @@ static bool DrawFrame()
 	// update view 
 	renderData->camera.UpdateFrame();
 
-	debugDrawPreFrame( renderData->currentFrame, renderData->previousFrame );
+	//debugDrawPreFrame( renderData->currentFrame, renderData->previousFrame );
 
 	PerFrameData* currentFrame = renderData->currentFrame;
 	PerFrameData* previousFrame = renderData->previousFrame;
@@ -206,13 +206,14 @@ static bool DrawFrame()
 
 	currentFrame->renderDescriptorSet = currentFrame->descriptorPool->BeginDescriptorSet( renderData->renderDescriptorLayout );
 	currentFrame->descriptorPool->SetBuffer( 0, currentFrame->uniformBuffer );
-	for(uint i = 0; i < 128; ++i)
+	for(uint i = 0; i < 256; ++i)
 		{
 		Texture *ptex = renderData->Textures[i % renderData->Textures.size()].get();
 		currentFrame->descriptorPool->SetImageInArray( 1, i, ptex->GetImage()->GetImageView(), renderData->TexturesSampler->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL );
 		}
 	currentFrame->descriptorPool->SetBuffer( 2, renderData->objectsBuffer );
 	currentFrame->descriptorPool->SetBuffer( 3, currentFrame->instanceToObjectBuffer );
+	currentFrame->descriptorPool->SetBuffer( 4, renderData->meshesBuffer );
 	currentFrame->descriptorPool->EndDescriptorSet();
 
 	currentFrame->cullingDescriptorSet = currentFrame->descriptorPool->BeginDescriptorSet( renderData->cullingDescriptorLayout );
@@ -285,7 +286,7 @@ static bool DrawFrame()
 		return false;
 		}
 
-	debugDrawPostFrame();
+	//debugDrawPostFrame();
 
 	// update totals
 	renderData->total_tris += renderData->frame_tris;
@@ -378,7 +379,7 @@ void createPerFrameData()
 			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
-				VkDeviceSize( renderData->scene_objects * 4 /*num_lods*/ * sizeof( uint32_t ) * 2 /*2 uints in struct*/)
+				VkDeviceSize( renderData->scene_objects * 4 /*num_lods*/ * sizeof( InstanceData ) )
 				)
 			);
 
@@ -449,7 +450,7 @@ void recreateSwapChain()
 
 	createPerFrameData();
 
-	debugRecreateSwapChain();
+	//debugRecreateSwapChain();
 
 	renderData->camera.framebufferResized = false;
 	}
@@ -499,17 +500,17 @@ void SetupScene()
 
 	// set up a random list of meshes, to emulate more different meshes
 	// to not cheat, we will load in the mesh data for every mesh
-	std::vector<const char*> meshes;
+	std::vector<const char*> meshnames;
 	std::vector<uint> objects_per_mesh;
 	for( uint m = 0; m < unique_meshes_count; ++m )
 		{
-		meshes.push_back( source_mesh_names[irand( 0, (uint)source_mesh_names.size() - 1 )] );
+		meshnames.push_back( source_mesh_names[irand( 0, (uint)source_mesh_names.size() - 1 )] );
 		LoadTexture( source_tex_names[irand( 0, (uint)source_tex_names.size() - 1 )] );
 		objects_per_mesh.push_back( 1 );
 		}
 
 	renderData->MegaMeshAlloc = new MegaMeshAllocator();
-	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshes );
+	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshnames );
 
 	// reset stats
 	renderData->scene_tris = 0;
@@ -537,7 +538,11 @@ void SetupScene()
 	// size() = objects.size()
 	vector<uint>& renderObjects = renderData->renderObjects;
 
+	// meshes is the list of unique megamesh meshes
+	vector<MeshData>& meshes = renderData->meshes;
+
 	// set up objects and render-batches for each unique megamesh 
+	meshes.resize( unique_meshes_count );
 	for( uint mm = 0; mm < unique_meshes_count; ++mm )
 		{
 		// get a number of objects for this mesh
@@ -554,6 +559,10 @@ void SetupScene()
 
 		uint materialID = mm;
 
+		// set up the mesh data
+		meshes[mm].CompressedVertexScale = renderData->MegaMeshes[mm].GetCompressedVertexScale();
+		meshes[mm].CompressedVertexTranslate = renderData->MegaMeshes[mm].GetCompressedVertexTranslate();
+		
 		// do the objects, and each instance in each batch
 		for( uint o = 0; o < mm_object_count; ++o )
 			{
@@ -593,10 +602,10 @@ void SetupScene()
 				objects[object_index].batchID = batch_id;
 				objects[object_index].vertexCutoffIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset() + 64;
 
-				objects[object_index].LODQuantizations[0] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[0];
-				objects[object_index].LODQuantizations[1] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[1];
-				objects[object_index].LODQuantizations[2] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[2];
-				objects[object_index].LODQuantizations[3] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeDistances()[3];
+				objects[object_index].LODQuantizations[0] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[0];
+				objects[object_index].LODQuantizations[1] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[1];
+				objects[object_index].LODQuantizations[2] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[2];
+				objects[object_index].LODQuantizations[3] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[3];
 
 				renderObjects[object_index] = object_index;
 							
@@ -638,9 +647,54 @@ void SetupScene()
 			VMA_MEMORY_USAGE_GPU_ONLY,
 			VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ),
 			renderData->objects.data()
-		)
-	);
+			)
+		);
 
+	// create meshes array
+	renderData->meshesBuffer = renderData->renderer->CreateBuffer(
+		Vlk::BufferTemplate::ManualBuffer(
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			VkDeviceSize( (uint)renderData->meshes.size() * sizeof( MeshData ) ),
+			renderData->meshes.data()
+			)
+		);
+	
+	////////////////////
+	// Calculate the per-triangle cost of the mega meshes
+
+	// set up objects and render-batches for each unique megamesh 
+	uint64_t total_size_all = 0;
+	uint64_t total_tris_all = 0;
+	for( uint mm = 0; mm < unique_meshes_count; ++mm )
+		{
+		uint64_t num_tris = 0;
+		uint64_t num_verts = 0;
+		uint64_t num_batches = renderData->MegaMeshes[mm].GetSubMeshCount();
+		uint64_t num_mesh_lods = 4;
+
+		// add up all triangles and vertices in the megamesh
+		for( uint sm = 0 ; sm < renderData->MegaMeshes[mm].GetSubMeshCount() ; ++sm )
+			{
+			num_tris += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3;
+			num_verts += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexCount();
+			}
+
+		uint64_t mesh_size_bytes = 
+			( num_tris * 3 * sizeof( uint16_t ) ) +
+			( num_verts * sizeof( Vertex ) ) +
+			( num_batches * num_mesh_lods * sizeof( BatchData ) );
+
+		uint64_t possible_mesh_size_bytes =
+			( num_tris * 3 * sizeof( uint8_t ) ) +
+			( num_verts * 16 /*sizeof(Vertex)*/ ) +
+			( num_batches * 2 * num_mesh_lods * sizeof( BatchData ) );
+
+		total_size_all += mesh_size_bytes;
+		total_tris_all += num_tris;
+		}
+
+	double bytes_per_triangle = double( total_size_all ) / double( total_tris_all );
 
 	////////////////////
 
@@ -656,6 +710,7 @@ void SetupScene()
 	printf( "\tTotal Verts: %lld\n", renderData->scene_verts );
 	printf( "\tMesh allocation: %lld bytes\n", renderData->MegaMeshAlloc->GetIndexBuffer()->GetBufferSize() + renderData->MegaMeshAlloc->GetVertexBuffer()->GetBufferSize() );
 	printf( "\tObject data allocation: %lld bytes\n", VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ) );
+	printf( "\tMemory cost per triangle: %.2f\n", bytes_per_triangle );
 	printf( "\tAverage Megamesh triangle count: %lld\n", renderData->scene_tris / (uint64_t)megamesh_instance_count );
 	printf( "\tAverage Tris per Subobject: %lld\n", renderData->scene_tris /(uint64_t)renderData->scene_objects );
 	printf( "\tAverage Verts per Subobject: %lld\n", renderData->scene_verts / (uint64_t)renderData->scene_objects );
@@ -682,9 +737,10 @@ void SetupScene()
 	// render pipeline
 	Vlk::DescriptorSetLayoutTemplate rdlt;
 	rdlt.AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT );	// 0 - buffer object
-	rdlt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT , 128 );								// 1 - texture
+	rdlt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT , 256 );								// 1 - texture
 	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 2 - SceneObjectsBuffer
 	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 3 - InstanceToObjectBuffer
+	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 4 - MeshBuffer
 	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( rdlt );
 	
 	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline();
@@ -779,7 +835,7 @@ void run()
 
 	createPerFrameData();
 
-	debugSetup( renderData );
+	//debugSetup( renderData );
 
 	glfwFocusWindow( renderData->window );
 
@@ -800,7 +856,7 @@ void run()
 
 		renderData->camera.UpdateInput( renderData->window );
 
-		debugPerFrameLoop();
+		//debugPerFrameLoop();
 
 		//if(renderData->camera.slow_down_frames)
 		//	{
@@ -863,7 +919,7 @@ void run()
 
 	renderData->renderer->WaitForDeviceIdle();
 
-	debugCleanup();
+	//debugCleanup();
 
 	delete renderData;
 	}

@@ -12,6 +12,14 @@
 
 namespace Tools
 	{
+	struct alignas( 16 ) Compressed16Vertex
+		{
+		glm::uint16_t Coords[3] = {}; //  16-bit encoded coords (0->1, scale to bounding box)
+		glm::uint16_t _unnused = 0;
+		glm::uint Normals = 0; // oct encoded normals
+		glm::uint TexCoords = 0; // half2 encoded uvs
+		};
+
 	class Vertex
 		{
 		public:
@@ -23,7 +31,11 @@ namespace Tools
 				{
 				return ( Coords == other.Coords ) && ( Normals == other.Normals ) && ( TexCoords == other.TexCoords );
 				}
+
+			// create a compressed vertex. the inverted scale and translate transforms will be applied to the 3d coordinate before storing
+			Compressed16Vertex Compress( glm::vec3& scale, glm::vec3& translate );
 		};
+
 	};
 
 namespace std

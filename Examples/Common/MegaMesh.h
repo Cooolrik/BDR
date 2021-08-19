@@ -15,21 +15,21 @@ class SubMesh
 	private:
 		friend class MegaMeshAllocator;
 
-		unsigned int vertexOffset; // offset into vertex buffer where mesh starts
-		unsigned int vertexCount; // number of vertices
+		unsigned int vertexOffset = {}; // offset into vertex buffer where mesh starts
+		unsigned int vertexCount = {}; // number of vertices
 
-		unsigned int indexOffset; // offset into index buffer where mesh starts
-		unsigned int indexCount; // number of indices (3 per triangle)
+		unsigned int indexOffset = {}; // offset into index buffer where mesh starts
+		unsigned int indexCount = {}; // number of indices (3 per triangle)
 
-		glm::vec3 boundingSphereCenter; 
-		float boundingSphereRadius;
+		glm::vec3 boundingSphereCenter = {};
+		float boundingSphereRadius = {};
 
-		glm::vec3 rejectionConeCenter;
-		glm::vec3 rejectionConeDirection;
-		float rejectionConeCutoff;
+		glm::vec3 rejectionConeCenter = {};
+		glm::vec3 rejectionConeDirection = {};
+		float rejectionConeCutoff = {};
 
-		unsigned int LODIndexCounts[4];
-		float LODQuantizeDistances[4];
+		unsigned int LODIndexCounts[4] = {};
+		unsigned int LODQuantizeBits[4] = {};
 
 	public:
 		unsigned int GetVertexOffset() const { return vertexOffset; }
@@ -46,7 +46,7 @@ class SubMesh
 		float GetRejectionConeCutoff() const { return rejectionConeCutoff; }
 
 		const unsigned int* GetLODIndexCounts() const { return LODIndexCounts; }
-		const float* GetLODQuantizeDistances() const { return LODQuantizeDistances; }
+		const unsigned int* GetLODQuantizeBits() const { return LODQuantizeBits; }
 	};
 
 class MegaMesh
@@ -54,11 +54,22 @@ class MegaMesh
 	private:
 		friend class MegaMeshAllocator;
 
-		std::vector<SubMesh> SubMeshes;
+		std::vector<SubMesh> SubMeshes = {};
+		glm::vec3 AABB[2] = {};
+
+		// apply this transform to all compressed vertices
+		glm::vec3 CompressedVertexScale;
+		glm::vec3 CompressedVertexTranslate;
 
 	public:
 		unsigned int GetSubMeshCount() const { return (unsigned int)this->SubMeshes.size(); }
 		const SubMesh& GetSubMesh( unsigned int index ) const {	return this->SubMeshes[index]; }
+
+		//const glm::vec3& GetAABBMin() const { return AABB[0]; }
+		//const glm::vec3& GetAABBMax() const { return AABB[1]; }
+
+		const glm::vec3& GetCompressedVertexScale() const { return CompressedVertexScale; }
+		const glm::vec3& GetCompressedVertexTranslate() const { return CompressedVertexTranslate; }
 	};
 
 class MegaMeshAllocator

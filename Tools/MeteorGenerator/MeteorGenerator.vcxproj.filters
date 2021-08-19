@@ -27,12 +27,18 @@
     <ClCompile Include="..\Common\Tool_Vertex.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Tool_Serializer.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Tool_Multimesh.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Tool_Vertex.h">
+      <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Tool_Serializer.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
   </ItemGroup>

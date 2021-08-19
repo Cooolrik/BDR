@@ -1,4 +1,5 @@
 #include "Tool_Multimesh.h"
+#include "Tool_Serializer.h"
 
 #include <vector>
 #include <iostream>
@@ -15,7 +16,7 @@ inline void update_bb_axis( float coord, float& minv, float& maxv )
 		maxv = coord;
 	}
 
-void Tools::Multimesh::Submesh::calcBoundingSphereAndRejectionCone()
+void Tools::Multimesh::Submesh::calcBoundingVolumesAndRejectionCone()
 	{
 	glm::vec3 minv = glm::vec3( FLT_MAX );
 	glm::vec3 maxv = glm::vec3( -FLT_MAX );
@@ -26,6 +27,9 @@ void Tools::Multimesh::Submesh::calcBoundingSphereAndRejectionCone()
 		update_bb_axis( vertices[i].Coords.y, minv.y, maxv.y );
 		update_bb_axis( vertices[i].Coords.z, minv.z, maxv.z );
 		}
+
+	this->AABB[0] = minv;
+	this->AABB[1] = maxv;
 
 	// place sphere in center of bb (TODO:do better) and find max radius
 	this->boundingSphere = ( minv + maxv ) / 2.f;
@@ -62,13 +66,33 @@ void Tools::Multimesh::Submesh::calcBoundingSphereAndRejectionCone()
 	this->rejectionConeCutoff = 0.0f;
 	}
 
-void Tools::Multimesh::calcBoundingSpheresAndRejectionCones()
+void Tools::Multimesh::calcBoundingVolumesAndRejectionCones()
 	{
 	uint submesh_count = (uint)SubMeshes.size();
+
+	glm::vec3 minv = glm::vec3( FLT_MAX );
+	glm::vec3 maxv = glm::vec3( -FLT_MAX );
+
 	for( uint i = 0; i < submesh_count; ++i )
 		{
-		SubMeshes[i].calcBoundingSphereAndRejectionCone();
+		SubMeshes[i].calcBoundingVolumesAndRejectionCone();
+
+		if( minv.x > SubMeshes[i].AABB[0].x )
+			minv.x = SubMeshes[i].AABB[0].x;
+		if( minv.y > SubMeshes[i].AABB[0].y )
+			minv.y = SubMeshes[i].AABB[0].y;
+		if( minv.z > SubMeshes[i].AABB[0].z )
+			minv.z = SubMeshes[i].AABB[0].z;
+		if( maxv.x < SubMeshes[i].AABB[1].x )
+			maxv.x = SubMeshes[i].AABB[1].x;
+		if( maxv.y < SubMeshes[i].AABB[1].y )
+			maxv.y = SubMeshes[i].AABB[1].y;
+		if( maxv.z < SubMeshes[i].AABB[1].z )
+			maxv.z = SubMeshes[i].AABB[1].z;
 		}
+
+	this->AABB[0] = minv;
+	this->AABB[1] = maxv;
 
 	// calc full bsphere 
 	// using weighted average of spheres as center
@@ -89,98 +113,72 @@ void Tools::Multimesh::calcBoundingSpheresAndRejectionCones()
 		}
 	}
 
+void Tools::Multimesh::serialize( std::fstream& fs, bool reading )
+	{
+	Serializer s( fs, reading );
+
+	s.Item( this->boundingSphere.x );
+	s.Item( this->boundingSphere.y );
+	s.Item( this->boundingSphere.z );
+	s.Item( this->boundingSphereRadius );
+
+	s.Item( this->AABB[0] );
+	s.Item( this->AABB[1] );
+
+	s.Item( this->CompressedVertexScale );
+	s.Item( this->CompressedVertexTranslate );
+
+	s.VectorSize( this->SubMeshes );
+	for( size_t i = 0; i < this->SubMeshes.size(); ++i )
+		{
+		Submesh& smesh = this->SubMeshes[i];
+
+		s.Vector( smesh.vertices );
+		s.Vector( smesh.indices );
+		s.Vector( smesh.compressed_vertices );
+
+		s.Item( smesh.boundingSphere );
+		s.Item( smesh.boundingSphereRadius );
+		  
+		s.Item( smesh.AABB[0] );
+		s.Item( smesh.AABB[1] );
+		  
+		s.Item( smesh.rejectionConeCenter );
+		s.Item( smesh.rejectionConeDirection );
+		s.Item( smesh.rejectionConeCutoff );
+
+		for( uint lod = 0; lod < 4; ++lod )
+			{
+			s.Item( smesh.LODTriangleCounts[lod] );
+			s.Item( smesh.LODQuantizeBits[lod] );
+			}
+		}
+	}
+
 bool Tools::Multimesh::load( const char* path )
 	{
-	std::ifstream fs;
+	std::fstream fs;
 
-	fs.open( path, std::ifstream::binary );
+	fs.open( path, std::fstream::in | std::fstream::binary );
 	if( !fs.is_open() )
 		return false;
 
-	uint submesh_count;
-	fs.read( (char*)&submesh_count, sizeof( uint ) );
-	this->SubMeshes.resize( submesh_count );
-	for( uint i = 0; i < submesh_count; ++i )
-		{
-		uint vertex_count;
-		uint index_count;
-
-		fs.read( (char*)&vertex_count, sizeof( uint ) );
-		fs.read( (char*)&index_count, sizeof( uint ) );
-
-		this->SubMeshes[i].vertices.resize( vertex_count );
-		this->SubMeshes[i].indices.resize( index_count );
-
-		fs.read( (char*)this->SubMeshes[i].vertices.data(), sizeof( Vertex ) * vertex_count );
-		fs.read( (char*)this->SubMeshes[i].indices.data(), sizeof( uint ) * index_count );
-		fs.read( (char*)&this->SubMeshes[i].boundingSphere.x, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].boundingSphere.y, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].boundingSphere.z, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].boundingSphereRadius, sizeof( float ) );
-
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeCenter.x, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeCenter.y, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeCenter.z, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeDirection.x, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeDirection.y, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeDirection.z, sizeof( float ) );
-		fs.read( (char*)&this->SubMeshes[i].rejectionConeCutoff, sizeof( float ) );
-
-		fs.read( (char*)this->SubMeshes[i].LODTriangleCounts, sizeof( uint ) * 4 );
-		fs.read( (char*)this->SubMeshes[i].LODQuantizeDistances, sizeof( float ) * 4 );
-		}
-
-	fs.read( (char*)&this->boundingSphere.x, sizeof( float ) );
-	fs.read( (char*)&this->boundingSphere.y, sizeof( float ) );
-	fs.read( (char*)&this->boundingSphere.z, sizeof( float ) );
-	fs.read( (char*)&this->boundingSphereRadius, sizeof( float ) );
+	this->serialize( fs, true );
 
 	fs.close();
-
 	return true;
 	}
 
-void Tools::Multimesh::save( const char* path )
-		{
-		std::ofstream fs;
+bool Tools::Multimesh::save( const char* path )
+	{
+	std::fstream fs;
+	
+	fs.open( path, std::fstream::out | std::ofstream::binary );
+	if( !fs.is_open() )
+		return false;
+	
+	this->serialize( fs, false );
 
-		fs.open( path, std::ofstream::binary );
-
-		uint submesh_count = (uint)SubMeshes.size();
-
-		fs.write( (char*)&submesh_count, sizeof( uint ) );
-
-		for( uint i = 0; i < submesh_count; ++i )
-			{
-			uint vertex_count = (uint)SubMeshes[i].vertices.size();
-			uint index_count = (uint)SubMeshes[i].indices.size();
-
-			fs.write( (char*)&vertex_count, sizeof( uint ) );
-			fs.write( (char*)&index_count, sizeof( uint ) );
-
-			fs.write( (char*)this->SubMeshes[i].vertices.data(), sizeof( Vertex ) * vertex_count );
-			fs.write( (char*)this->SubMeshes[i].indices.data(), sizeof( uint ) * index_count );
-			fs.write( (char*)&this->SubMeshes[i].boundingSphere.x, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].boundingSphere.y, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].boundingSphere.z, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].boundingSphereRadius, sizeof( float ) );
-
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeCenter.x, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeCenter.y, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeCenter.z, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeDirection.x, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeDirection.y, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeDirection.z, sizeof( float ) );
-			fs.write( (char*)&this->SubMeshes[i].rejectionConeCutoff, sizeof( float ) );
-
-			fs.write( (char*)this->SubMeshes[i].LODTriangleCounts, sizeof( uint ) * 4 );
-			fs.write( (char*)this->SubMeshes[i].LODQuantizeDistances, sizeof( float ) * 4 );
-			}
-
-		fs.write( (char*)&this->boundingSphere.x, sizeof( float ) );
-		fs.write( (char*)&this->boundingSphere.y, sizeof( float ) );
-		fs.write( (char*)&this->boundingSphere.z, sizeof( float ) );
-		fs.write( (char*)&this->boundingSphereRadius, sizeof( float ) );
-
-		fs.close();
-		}
+	fs.close();
+	return true;
+	}

@@ -29,6 +29,7 @@ typedef unsigned int uint;
 using std::vector;
 using std::unordered_multimap;
 using Tools::Vertex;
+using Tools::Compressed16Vertex;
 
 const uint PlaneQuadTesselation = 16; // 16*16*2 = 512 tris
 const uint MeshTesselation = 8;
@@ -59,12 +60,13 @@ class Submesh
 	{
 	public:
 		vector<Vertex> Vertices = {};
+		vector<Compressed16Vertex> CompressedVertices = {};
 		std::unordered_map<Vertex, uint> VerticesMap = {};
 		vector<Triangle> Triangles = {};
 		uint LockedVerticesCount = 0;
 
 		uint LODTriangleCounts[4] = {};
-		float LODQuantizeDistances[4] = {};
+		uint LODQuantizeBits[4] = {};
 
 		uint GetVertexId( Vertex v );
 		void GenerateTriangle( Vertex v0, Vertex v1, Vertex v2 );
@@ -85,7 +87,7 @@ class Submesh
 		void FindLockedVertices();
 
 		// quantize mesh and return the remaining valid triangles
-		vector<uint> QuantizeMesh( float quantize_distance , uint tris_to_consider = UINT_MAX );
+		vector<uint> QuantizeMesh( uint quantize_bits , uint tris_to_consider = UINT_MAX );
 
 		void CalculateQuantizedLODs();
 	};
@@ -93,6 +95,9 @@ class Submesh
 vector<glm::vec3> GlobalCoords{};
 std::unordered_map<glm::vec3, uint> GlobalCoordsMap{};
 vector<Submesh> Submeshes;
+
+glm::vec3 CompressedVertexScale;
+glm::vec3 CompressedVertexTranslate;
 
 uint GetGlobalCoordId( glm::vec3 c )
 	{
@@ -289,10 +294,16 @@ vector<TriangleNeighbours> Submesh::GetNeighbours()
 void Submesh::ReorderVertices( vector<uint> new_vertex_location )
 	{
 	vector<Vertex> original_vertices = this->Vertices;
+	vector<Compressed16Vertex> original_compressed_vertices = this->CompressedVertices;
 
 	for( size_t v = 0 ; v < original_vertices.size() ; ++v )
 		{
 		this->Vertices[new_vertex_location[v]] = original_vertices[v];
+		}
+
+	for( size_t v = 0 ; v < original_compressed_vertices.size() ; ++v )
+		{
+		this->CompressedVertices[new_vertex_location[v]] = original_compressed_vertices[v];
 		}
 
 	for( size_t t = 0; t < Triangles.size(); ++t )
@@ -314,9 +325,9 @@ void Submesh::ReorderTriangles( vector<uint> new_triangle_location )
 		}
 	}
 
-vector<uint> Submesh::QuantizeMesh( float quantize_distance , uint tris_to_consider )
+vector<uint> Submesh::QuantizeMesh( uint quantize_bits, uint tris_to_consider )
 	{
-	vector<glm::vec3> Coords( this->Vertices.size() );
+	vector<glm::u16vec3> Coords( this->CompressedVertices.size() );
 	vector<uint> ret;
 
 	if( tris_to_consider == UINT_MAX )
@@ -325,28 +336,35 @@ vector<uint> Submesh::QuantizeMesh( float quantize_distance , uint tris_to_consi
 	// copy locked coords verbatim
 	for( uint v = 0; v < this->LockedVerticesCount; ++v )
 		{
-		Coords[v] = this->Vertices[v].Coords;
+		Coords[v].x = uint16_t( this->CompressedVertices[v].Coords[0] );
+		Coords[v].y = uint16_t( this->CompressedVertices[v].Coords[1] );
+		Coords[v].z = uint16_t( this->CompressedVertices[v].Coords[2] );
 		}
 
 	// quantize the remaining coords
-	for( uint v = this->LockedVerticesCount; v < uint(this->Vertices.size()); ++v )
+	uint quantize_mask = 0xffffffff << quantize_bits; // shift up mask as many bits as to remove
+	uint quantize_mask_round = ( 0x1 << quantize_bits ) >> 1;
+	for( uint v = this->LockedVerticesCount; v < uint(this->CompressedVertices.size()); ++v )
 		{
-		Coords[v] = glm::trunc( this->Vertices[v].Coords / quantize_distance ) * quantize_distance;
+		Coords[v].x = uint16_t( (this->CompressedVertices[v].Coords[0] & quantize_mask) | quantize_mask_round );
+		Coords[v].y = uint16_t( (this->CompressedVertices[v].Coords[1] & quantize_mask) | quantize_mask_round );
+		Coords[v].z = uint16_t( (this->CompressedVertices[v].Coords[2] & quantize_mask) | quantize_mask_round );
 		}
 
 	// now, check all the triangles that we are to consider
 	ret.reserve( tris_to_consider );
 	for( size_t t = 0 ; t < tris_to_consider ; ++t )
 		{
-		glm::vec3 v0 = Coords[this->Triangles[t].VertexIds[0]];
-		glm::vec3 v1 = Coords[this->Triangles[t].VertexIds[1]];
-		glm::vec3 v2 = Coords[this->Triangles[t].VertexIds[2]];
+		glm::u16vec3 v0 = Coords[this->Triangles[t].VertexIds[0]];
+		glm::u16vec3 v1 = Coords[this->Triangles[t].VertexIds[1]];
+		glm::u16vec3 v2 = Coords[this->Triangles[t].VertexIds[2]];
 
 		if( v0 == v1 || v1 == v2 || v2 == v0 )
 			{
 			continue;
 			}
 
+		// this triangle still has some size, keep it in the list
 		ret.emplace_back( uint(t) );
 		}
 
@@ -405,7 +423,7 @@ void Submesh::CalculateQuantizedLODs()
 
 	// lod 0 always have all tris, and no quantization
 	this->LODTriangleCounts[0] = uint( this->Triangles.size() );
-	this->LODQuantizeDistances[0] = 0; // no quantization
+	this->LODQuantizeBits[0] = 0; // no quantization
 
 	// for the lod levels [1 -> 3], do quantization, to reduce tris by 50% each step (so 100%, 50%, 25%, 12.5%)
 	uint tri_count = LODTriangleCounts[0];
@@ -419,14 +437,11 @@ void Submesh::CalculateQuantizedLODs()
 
 		// do a binary search to find LOD level which is just below the threshold
 		bool found_lod = false;
-		float quant_level = 0;
 		vector<uint> valid_tris;
-		while( quant_shift < 31 )
+		while( quant_shift < 15 )
 			{
-			quant_level = float( 1 << quant_shift ) / float( 1 << 16 );
+			valid_tris = this->QuantizeMesh( quant_shift, tris_to_consider );
 			++quant_shift;
-
-			valid_tris = this->QuantizeMesh( quant_level , tris_to_consider );
 			if( uint( valid_tris.size() ) <= tri_count )
 				{
 				found_lod = true;
@@ -466,20 +481,20 @@ void Submesh::CalculateQuantizedLODs()
 			this->ReorderTriangles( reorder_triangles );
 
 			// fill in the lod info
-			this->LODQuantizeDistances[lod] = quant_level;
+			this->LODQuantizeBits[lod] = quant_shift;
 			this->LODTriangleCounts[lod] = uint( valid_tris.size() );
 			tris_to_consider = this->LODTriangleCounts[lod];
 
-			printf( "LOD level %d, Quantization %f , Tris %d\n", lod, this->LODQuantizeDistances[lod], this->LODTriangleCounts[lod] );
+			printf( "LOD level %d, Quantization %d , Tris %d\n", lod, this->LODQuantizeBits[lod], this->LODTriangleCounts[lod] );
 			}
 		else
 			{
 			// if no lod was found, no point in trying anymore, just use previous level values for the remaining lods and break
 			for( uint i = lod ; i < 4 ; ++i )
 				{
-				this->LODQuantizeDistances[i] = this->LODQuantizeDistances[lod - 1];
+				this->LODQuantizeBits[i] = this->LODQuantizeBits[lod - 1];
 				this->LODTriangleCounts[i] = this->LODTriangleCounts[lod - 1];
-				printf( "LOD level %d, Quantization %f , Tris %d- no fewer tris possible\n", i, this->LODQuantizeDistances[i], this->LODTriangleCounts[i] );
+				printf( "LOD level %d, Quantization %d , Tris %d- no fewer tris possible\n", i, this->LODQuantizeBits[i], this->LODTriangleCounts[i] );
 				}
 			}
 
@@ -620,40 +635,38 @@ void output_obj_lod( uint lod , const char* path )
 
 	for( size_t m = 0; m < Submeshes.size(); ++m )
 		{
-		vector<glm::vec3> Coords( Submeshes[m].Vertices.size() );
-
-		float quantize_distance = Submeshes[m].LODQuantizeDistances[lod];
+		vector<glm::u16vec3> CompressedCoords( Submeshes[m].Vertices.size() );
+		
+		uint quantize_bits = Submeshes[m].LODQuantizeBits[lod];
 		uint tri_count = Submeshes[m].LODTriangleCounts[lod];
 
-		if( quantize_distance > 0.f )
+		// copy locked coords verbatim
+		for( uint v = 0; v < Submeshes[m].LockedVerticesCount; ++v )
 			{
-			// copy locked coords verbatim
-			for( uint v = 0; v < Submeshes[m].LockedVerticesCount; ++v )
-				{
-				Coords[v] = Submeshes[m].Vertices[v].Coords;
-				}
-
-			// quantize the remaining coords
-			for( uint v = Submeshes[m].LockedVerticesCount; v < uint( Submeshes[m].Vertices.size() ); ++v )
-				{
-				Coords[v] = glm::trunc( Submeshes[m].Vertices[v].Coords / quantize_distance ) * quantize_distance;
-				}
+			CompressedCoords[v].x = uint16_t( Submeshes[m].CompressedVertices[v].Coords[0] );
+			CompressedCoords[v].y = uint16_t( Submeshes[m].CompressedVertices[v].Coords[1] );
+			CompressedCoords[v].z = uint16_t( Submeshes[m].CompressedVertices[v].Coords[2] );
 			}
-		else
+
+		// quantize the remaining coords
+		uint quantize_mask = 0xffffffff << quantize_bits; // shift up mask as many bits as to remove
+		uint quantize_mask_round = (0x1 << quantize_bits) >> 1;
+		for( uint v = Submeshes[m].LockedVerticesCount; v < uint( Submeshes[m].CompressedVertices.size() ); ++v )
 			{
-			for( uint v = 0; v < uint( Submeshes[m].Vertices.size() ); ++v )
-				{
-				Coords[v] = Submeshes[m].Vertices[v].Coords;
-				}
+			CompressedCoords[v].x = uint16_t( (Submeshes[m].CompressedVertices[v].Coords[0] & quantize_mask) | quantize_mask_round );
+			CompressedCoords[v].y = uint16_t( (Submeshes[m].CompressedVertices[v].Coords[1] & quantize_mask) | quantize_mask_round );
+			CompressedCoords[v].z = uint16_t( (Submeshes[m].CompressedVertices[v].Coords[2] & quantize_mask) | quantize_mask_round );
 			}
 
 		fs << "g mesh_" << m << std::endl;
 
 		for( size_t v = 0; v < Submeshes[m].Vertices.size(); ++v )
 			{
-			fs << "v " << Coords[v].x
-				<< " " << Coords[v].y
-				<< " " << Coords[v].z
+			glm::vec3 trcoord = ( glm::vec3( CompressedCoords[v] ) * CompressedVertexScale ) + CompressedVertexTranslate;
+
+			fs << "v " << trcoord.x
+				<< " " << trcoord.y
+				<< " " << trcoord.z
 				<< std::endl;
 			}
 
@@ -701,6 +714,7 @@ void output_multimesh( const char* path )
 	for( size_t m = 0; m < Submeshes.size(); ++m )
 		{
 		out.SubMeshes[m].vertices = Submeshes[m].Vertices;
+		out.SubMeshes[m].compressed_vertices = Submeshes[m].CompressedVertices;
 		out.SubMeshes[m].indices.resize( Submeshes[m].Triangles.size() * 3 );
 		for( size_t t = 0; t < Submeshes[m].Triangles.size(); ++t )
 			{
@@ -708,11 +722,15 @@ void output_multimesh( const char* path )
 			out.SubMeshes[m].indices[t * 3 + 1] = Submeshes[m].Triangles[t].VertexIds[1];
 			out.SubMeshes[m].indices[t * 3 + 2] = Submeshes[m].Triangles[t].VertexIds[2];
 			}
-		memcpy( out.SubMeshes[m].LODQuantizeDistances, Submeshes[m].LODQuantizeDistances, sizeof( float ) * 4 );
+		memcpy( out.SubMeshes[m].LODQuantizeBits, Submeshes[m].LODQuantizeBits, sizeof( uint ) * 4 );
 		memcpy( out.SubMeshes[m].LODTriangleCounts, Submeshes[m].LODTriangleCounts, sizeof( uint ) * 4 );
 		}
 
-	out.calcBoundingSpheresAndRejectionCones();
+	out.calcBoundingVolumesAndRejectionCones();
+
+	out.CompressedVertexScale = CompressedVertexScale;
+	out.CompressedVertexTranslate = CompressedVertexTranslate;
+
 	out.save( path );
 	}
 
@@ -743,12 +761,26 @@ int main( int argc, char argv[] )
 			GlobalCoords[c] = glm::normalize( GlobalCoords[c] );
 			GlobalCoords[c] *= MeshScale;
 			GlobalCoords[c] *= 1.0 + perlin.accumulatedOctaveNoise3D_0_1( GlobalCoords[c].x, GlobalCoords[c].y, GlobalCoords[c].z, octaves );
+
+			// update aabb
+			minv = glm::vec3( 
+				min( minv.x, GlobalCoords[c].x ),
+				min( minv.y, GlobalCoords[c].y ),
+				min( minv.z, GlobalCoords[c].z ) 
+				);
+			maxv = glm::vec3(
+				max( maxv.x, GlobalCoords[c].x ),
+				max( maxv.y, GlobalCoords[c].y ),
+				max( maxv.z, GlobalCoords[c].z )
+				);
 			}
+
+		CompressedVertexScale = ( maxv - minv ) / float( 0xffff ); // 0->0xffff maps to minv->maxv
+		CompressedVertexTranslate = minv;
 
 		// update all normals:
 		// accumulate vertex normals
-		vector<glm::vec3> global_normals;
-		global_normals.resize( GlobalCoords.size() );
+		vector<glm::vec3> global_normals( GlobalCoords.size() );
 		for( size_t m = 0; m < Submeshes.size(); ++m )
 			{
 			for( size_t t = 0; t < Submeshes[m].Triangles.size(); ++t )
@@ -778,9 +810,23 @@ int main( int argc, char argv[] )
 			global_normals[v] = glm::normalize( global_normals[v] );
 			}
 
+		// create compressed 3d coords and normals
+		vector<Tools::Compressed16Vertex> compressed_vertices( GlobalCoords.size() );
+		for( size_t v = 0 ; v < GlobalCoords.size(); ++v )
+			{
+			Tools::Vertex vert;
+
+			vert.Coords = GlobalCoords[v];
+			vert.Normals = global_normals[v];
+			vert.TexCoords = glm::vec2( 0 ); // we will pack uvs separately
+
+			compressed_vertices[v] = vert.Compress( CompressedVertexScale , CompressedVertexTranslate );
+			}
+
 		// update coords and normals in vertices
 		for( size_t m = 0; m < Submeshes.size(); ++m )
 			{
+			Submeshes[m].CompressedVertices.resize( Submeshes[m].Vertices.size() );
 			for( size_t t = 0; t < Submeshes[m].Triangles.size(); ++t )
 				{
 				for( size_t v = 0 ; v < 3; ++v )
@@ -790,6 +836,10 @@ int main( int argc, char argv[] )
 					
 					Submeshes[m].Vertices[vid].Coords = GlobalCoords[cid];
 					Submeshes[m].Vertices[vid].Normals = global_normals[cid];
+
+					// copy compressed vertex from global vertex, but replace texcoords from local vertex
+					Submeshes[m].CompressedVertices[vid] = compressed_vertices[cid];
+					Submeshes[m].CompressedVertices[vid].TexCoords = glm::packHalf2x16( Submeshes[m].Vertices[vid].TexCoords );
 					}
 				}
 			}
@@ -799,10 +849,13 @@ int main( int argc, char argv[] )
 			Submeshes[m].CalculateQuantizedLODs();
 			}
 
-		//output_obj_lod( 0, "lod0.obj" );
-		//output_obj_lod( 1, "lod1.obj" );
-		//output_obj_lod( 2, "lod2.obj" );
-		//output_obj_lod( 3, "lod3.obj" );
+		// debug output lods
+		for( uint i = 0; i < 4; ++i )
+			{
+			char str[30];
+			sprintf_s( str, "lod%d.obj", i );
+			output_obj_lod( i, str );
+			}
 
 		char str[30];
 		sprintf_s( str, "meteor_%d.mmbin", q );
