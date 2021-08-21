@@ -1,81 +1,5 @@
 
-#include "Application.h"
-#include "ZeptoMesh.h"
-
-#include "../Common/ShaderStructs.inl"
-
-class SceneRender
-	{
-	public:
-		glm::mat4 view;
-		glm::mat4 proj;
-		glm::mat4 viewI;
-		glm::mat4 projI;
-		glm::vec3 viewPosition; // origin of the view in world space
-		float _b1;
-	};
-
-class ObjectRender
-	{
-	public:
-		glm::vec3 CompressedVertexScale;
-		glm::uint quantizationMask;
-		glm::vec3 CompressedVertexTranslate;
-		glm::uint quantizationRound;
-		glm::vec3 Color;
-		glm::uint materialID;
-		glm::uint vertexCutoffIndex;
-	};
-
-struct PerFrameData
-	{
-	// from renderer
-	VkFramebuffer Framebuffer = nullptr;
-	VkImage SwapChainImage = nullptr;
-	const Vlk::Image* ColorTarget = nullptr;
-	const Vlk::Image* DepthTarget = nullptr;
-
-	// my per frame data
-	unique_ptr<Vlk::CommandPool> CommandPool = nullptr;
-	unique_ptr<Vlk::DescriptorPool> RenderDescriptorPool = nullptr;
-	unique_ptr<Vlk::Buffer> SceneUBO = nullptr;
-	VkDescriptorSet RenderDescriptorSet = nullptr;
-	};
-
-class MeshViewer 
-	{
-	private:
-		// from application class
-		ApplicationBase& app;
-		Vlk::Renderer* Renderer;
-		Camera& Camera;
-
-		// application data
-		vector<PerFrameData> PerFrameData;
-
-		unique_ptr<Vlk::GraphicsPipeline> RenderPipeline = nullptr;
-		unique_ptr<Vlk::DescriptorSetLayout> RenderPipelineDescriptorSetLayout = nullptr;
-				
-		vector<unique_ptr<Texture>> Textures = {}; // all textures
-		unique_ptr<Vlk::Sampler> LinearSampler = nullptr; // standard bilinear sampler 
-
-		unique_ptr<ZeptoMeshAllocator> MeshAlloc = nullptr;
-
-		unique_ptr<Vlk::ShaderModule> vertexRenderShader = nullptr;
-		unique_ptr<Vlk::ShaderModule> fragmentRenderShader = nullptr;
-
-	public:
-		MeshViewer( ApplicationBase& _app ) : 
-			app( _app ), 
-			Renderer( _app.Renderer ), 
-			Camera( _app.Camera ) 
-			{}
-
-		void SetupScene();
-		
-		void SetupPerFrameData();
-		VkCommandBuffer DrawScene();
-	};
+#include "MeshViewer.h"
 
 void MeshViewer::SetupScene()
 	{
@@ -192,8 +116,6 @@ VkCommandBuffer MeshViewer::DrawScene()
 	pool->BindGraphicsPipeline( this->RenderPipeline.get() );
 	pool->BindDescriptorSet( this->RenderPipeline.get(), currentFrame.RenderDescriptorSet );
 
-	uint indices = 0;
-
 	// update and render each submesh
 	for( uint m = 0; m < this->MeshAlloc->GetMeshCount(); ++m )
 		{
@@ -240,12 +162,8 @@ VkCommandBuffer MeshViewer::DrawScene()
 
 			pool->PushConstants( this->RenderPipeline.get(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( ObjectRender ), &pc );
 			pool->DrawIndexed( submesh.LODIndexCounts[lod], 1, submesh.IndexOffset, submesh.VertexOffset, 0 );
-			
-			indices += submesh.LODIndexCounts[lod];
 			}
 		}
-	
-	printf( "%d\n", indices );
 
 	pool->EndRenderPass();
 
@@ -270,17 +188,4 @@ VkCommandBuffer MeshViewer::DrawScene()
 	// done with the buffer, return it
 	currentFrame.CommandPool->EndCommandBuffer();
 	return buffer;
-	}
-
-//////////////////////////////////////////////////////////////////////
-
-int main(int argc, char argv[])
-	{
-	Application<MeshViewer> app;
-
-#ifdef _DEBUG
-	app.EnableValidation = true;
-#endif
-		
-	return app.Run();
 	}

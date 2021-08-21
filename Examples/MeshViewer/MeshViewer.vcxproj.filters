@@ -43,6 +43,9 @@
     <ClCompile Include="..\Common\Application.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="shaders\Render.frag">
@@ -76,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\Application.h">
       <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshViewer.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -108,6 +108,7 @@
     <ClCompile Include="..\Common\ZeptoMesh.cpp" />
     <ClCompile Include="..\Common\Texture.cpp" />
     <ClCompile Include="..\Common\Vertex.cpp" />
+    <ClCompile Include="App.cpp" />
     <ClCompile Include="MeshViewer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +145,7 @@
     <ClInclude Include="..\Common\ZeptoMesh.h" />
     <ClInclude Include="..\Common\Texture.h" />
     <ClInclude Include="..\Common\Vertex.h" />
+    <ClInclude Include="MeshViewer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\ShaderStructs.inl" />

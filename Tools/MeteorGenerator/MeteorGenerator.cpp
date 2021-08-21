@@ -31,7 +31,7 @@ using std::unordered_multimap;
 using Tools::Vertex;
 using Tools::Compressed16Vertex;
 
-const uint PlaneQuadTesselation = 16; // 16*16*2 = 512 tris
+const uint PlaneQuadTesselation = 32; // 16*16*2 = 512 tris
 const uint MeshTesselation = 8;
 const uint NumberOfMeshesToGenerate = 6;
 const bool LockBorderVertices = true;

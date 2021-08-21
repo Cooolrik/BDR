@@ -379,7 +379,7 @@ void createPerFrameData()
 			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
-				VkDeviceSize( renderData->scene_objects * 4 /*num_lods*/ * sizeof( InstanceData ) )
+				VkDeviceSize( (VkDeviceSize)renderData->scene_objects * 4 /*num_lods*/ * sizeof( InstanceData ) )
 				)
 			);
 
@@ -490,8 +490,8 @@ void SetupScene()
 	const uint unique_meshes_count = 1;
 	const uint megamesh_max_objects_cnt = 1; // number of megamesh objects in scene (not same as scene_objects)
 #else
-	const uint unique_meshes_count = 80;
-	const uint megamesh_max_objects_cnt = 80; // number of megamesh objects in scene (not same as scene_objects)
+	const uint unique_meshes_count = 160;
+	const uint megamesh_max_objects_cnt = 20; // number of megamesh objects in scene (not same as scene_objects)
 #endif
 
 	// for now, the objects are: megameshes * batches_per_mm * objects_per_mm
@@ -664,40 +664,36 @@ void SetupScene()
 		);
 	
 	////////////////////
-	// Calculate the per-triangle cost of the mega meshes
+	// Calculate the per-triangle cost of the zepto meshes
 
-	//// set up objects and render-batches for each unique megamesh 
-	//uint64_t total_size_all = 0;
-	//uint64_t total_tris_all = 0;
-	//for( uint mm = 0; mm < unique_meshes_count; ++mm )
-	//	{
-	//	uint64_t num_tris = 0;
-	//	uint64_t num_verts = 0;
-	//	uint64_t num_batches = renderData->MegaMeshes[mm].GetSubMeshCount();
-	//	uint64_t num_mesh_lods = 4;
+	// set up objects and render-batches for each unique megamesh 
+	uint64_t total_size_all = 0;
+	uint64_t total_tris_all = 0;
+	for( uint mm = 0; mm < unique_meshes_count; ++mm )
+		{
+		uint64_t num_tris = 0;
+		uint64_t num_verts = 0;
+		uint64_t num_batches = renderData->MeshAlloc->GetMesh(mm)->SubMeshes.size();
+		uint64_t num_mesh_lods = 4;
 
-	//	// add up all triangles and vertices in the megamesh
-	//	for( uint sm = 0 ; sm < renderData->MegaMeshes[mm].GetSubMeshCount() ; ++sm )
-	//		{
-	//		num_tris += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3;
-	//		num_verts += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexCount();
-	//		}
+		// add up all triangles and vertices in the megamesh
+		for( uint sm = 0 ; sm < renderData->MeshAlloc->GetMesh( mm )->SubMeshes.size() ; ++sm )
+			{
+			const ZeptoSubMesh& mesh = renderData->MeshAlloc->GetMesh( mm )->SubMeshes[sm];
+			num_tris += mesh.IndexCount / 3;
+			num_verts += mesh.VertexCount;
+			}
 
-	//	uint64_t mesh_size_bytes = 
-	//		( num_tris * 3 * sizeof( uint16_t ) ) +
-	//		( num_verts * sizeof( Vertex ) ) +
-	//		( num_batches * num_mesh_lods * sizeof( BatchData ) );
+		uint64_t mesh_size_bytes = 
+			( num_tris * 3 * sizeof( uint16_t ) ) +
+			( num_verts * sizeof( Vertex ) ) +
+			( num_batches * num_mesh_lods * sizeof( BatchData ) );
 
-	//	uint64_t possible_mesh_size_bytes =
-	//		( num_tris * 3 * sizeof( uint8_t ) ) +
-	//		( num_verts * 16 /*sizeof(Vertex)*/ ) +
-	//		( num_batches * 2 * num_mesh_lods * sizeof( BatchData ) );
+		total_size_all += mesh_size_bytes;
+		total_tris_all += num_tris;
+		}
 
-	//	total_size_all += mesh_size_bytes;
-	//	total_tris_all += num_tris;
-	//	}
-
-	//double bytes_per_triangle = double( total_size_all ) / double( total_tris_all );
+	double bytes_per_triangle = double( total_size_all ) / double( total_tris_all );
 
 	////////////////////
 
@@ -713,7 +709,7 @@ void SetupScene()
 	printf( "\tTotal Verts: %lld\n", renderData->scene_verts );
 	printf( "\tMesh allocation: %lld bytes\n", renderData->MeshAlloc->GetIndexBuffer()->GetBufferSize() + renderData->MeshAlloc->GetVertexBuffer()->GetBufferSize() );
 	printf( "\tObject data allocation: %lld bytes\n", VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ) );
-	//printf( "\tMemory cost per triangle: %.2f\n", bytes_per_triangle );
+	printf( "\tMemory cost per triangle: %.2f\n", bytes_per_triangle );
 	printf( "\tAverage Megamesh triangle count: %lld\n", renderData->scene_tris / (uint64_t)megamesh_instance_count );
 	printf( "\tAverage Tris per Subobject: %lld\n", renderData->scene_tris /(uint64_t)renderData->scene_objects );
 	printf( "\tAverage Verts per Subobject: %lld\n", renderData->scene_verts / (uint64_t)renderData->scene_objects );
