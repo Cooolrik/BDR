@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Raytrace", "Examples\Raytra
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshViewer", "Examples\MeshViewer\MeshViewer.vcxproj", "{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,6 +31,10 @@ Global
 		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Debug|x64.Build.0 = Debug|x64
 		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Release|x64.ActiveCfg = Release|x64
 		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637}.Release|x64.Build.0 = Release|x64
+		{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}.Debug|x64.ActiveCfg = Debug|x64
+		{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}.Debug|x64.Build.0 = Debug|x64
+		{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}.Release|x64.ActiveCfg = Release|x64
+		{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +42,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{12F4669B-6C44-4DE0-90B2-6DB5D2E74637} = {59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}
 		{12F4869B-6C44-4DE0-90B2-6DB5D2E79637} = {59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}
+		{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4} = {59BEE502-2F90-4DE3-8FBF-D250CFFD3E0C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A2F79FCF-204F-43FF-96F8-2973E54AC755}

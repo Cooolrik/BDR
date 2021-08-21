@@ -24,12 +24,12 @@ namespace Vlk
                 {
                 public:
                     // standard vulkan stuff
-                    vector<VkDescriptorBufferInfo> DescriptorBufferInfo;
-                    vector<VkDescriptorImageInfo> DescriptorImageInfo;
+                    std::vector<VkDescriptorBufferInfo> DescriptorBufferInfo;
+                    std::vector<VkDescriptorImageInfo> DescriptorImageInfo;
 
                     // extensions
                     VkWriteDescriptorSetAccelerationStructureKHR WriteDescriptorSetAccelerationStructureKHR;
-                    vector<VkAccelerationStructureKHR> AccelerationStructureKHR;
+                    std::vector<VkAccelerationStructureKHR> AccelerationStructureKHR;
                 };
 
             std::vector<DescriptorInfo> WriteDescriptorInfos;

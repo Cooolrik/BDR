@@ -34,6 +34,10 @@ using Tools::Compressed16Vertex;
 const uint PlaneQuadTesselation = 16; // 16*16*2 = 512 tris
 const uint MeshTesselation = 8;
 const uint NumberOfMeshesToGenerate = 6;
+const bool LockBorderVertices = true;
+const bool SaveUncompressedVertices = false;
+const bool RandomizeScale = true;
+const bool DeformSurface = true;
 
 #define sanity_check( must_be_true ) if( !(must_be_true) ) { throw std::runtime_error("Sanity check failed: " # must_be_true ); }
 
@@ -192,7 +196,7 @@ void Submesh::GeneratePlane( uint axis, bool flipped, glm::vec3 minv, glm::vec3 
 			for( uint i = 0; i < 4; ++i )
 				{
 				verts[i].Coords = coords[i];
-				verts[i].Normals = glm::vec4( 0 );
+				verts[i].Normal = glm::vec4( 0 );
 				verts[i].TexCoords = uvcoords[i];
 				}
 
@@ -377,24 +381,27 @@ void Submesh::CalculateQuantizedLODs()
 	vector<bool> lock_vertices( this->Vertices.size() , false );
 
 	// find all edge vertices and mark as locked
-	for( size_t t = 0; t < Triangles.size(); ++t )
+	if( LockBorderVertices )
 		{
-		for( size_t e = 0; e < 3; ++e )
+		for( size_t t = 0; t < Triangles.size(); ++t )
 			{
-			if( tri_neighbours[t].NeighbourIds[e] < 0 )
+			for( size_t e = 0; e < 3; ++e )
 				{
-				// border or complex edge, mark as locked
-				uint half_edge_id = uint( ( t * 3 ) + e );
-				uint vertex_ids[2];
-				this->GetVerticesOfHalfEdge( half_edge_id, vertex_ids );
-				for( size_t v = 0; v < 2; ++v )
+				if( tri_neighbours[t].NeighbourIds[e] < 0 )
 					{
-					lock_vertices[vertex_ids[v]] = true;
+					// border or complex edge, mark as locked
+					uint half_edge_id = uint( ( t * 3 ) + e );
+					uint vertex_ids[2];
+					this->GetVerticesOfHalfEdge( half_edge_id, vertex_ids );
+					for( size_t v = 0; v < 2; ++v )
+						{
+						lock_vertices[vertex_ids[v]] = true;
+						}
 					}
 				}
 			}
+		tri_neighbours.clear();
 		}
-	tri_neighbours.clear();
 
 	// move all locked vertices to the beginning of the vertex list
 	vector<uint> vertex_remap( this->Vertices.size() );
@@ -598,9 +605,9 @@ void output_obj( const char *path )
 
 		for( size_t v = 0; v < Submeshes[m].Vertices.size(); ++v )
 			{
-			fs << "vn " << Submeshes[m].Vertices[v].Normals.x
-				<< " " << Submeshes[m].Vertices[v].Normals.y
-				<< " " << Submeshes[m].Vertices[v].Normals.z
+			fs << "vn " << Submeshes[m].Vertices[v].Normal.x
+				<< " " << Submeshes[m].Vertices[v].Normal.y
+				<< " " << Submeshes[m].Vertices[v].Normal.z
 				<< std::endl;
 			}
 
@@ -679,9 +686,9 @@ void output_obj_lod( uint lod , const char* path )
 
 		for( size_t v = 0; v < Submeshes[m].Vertices.size(); ++v )
 			{
-			fs << "vn " << Submeshes[m].Vertices[v].Normals.x
-				<< " " << Submeshes[m].Vertices[v].Normals.y
-				<< " " << Submeshes[m].Vertices[v].Normals.z
+			fs << "vn " << Submeshes[m].Vertices[v].Normal.x
+				<< " " << Submeshes[m].Vertices[v].Normal.y
+				<< " " << Submeshes[m].Vertices[v].Normal.z
 				<< std::endl;
 			}
 
@@ -713,25 +720,47 @@ void output_multimesh( const char* path )
 	out.SubMeshes.resize( Submeshes.size() );
 	for( size_t m = 0; m < Submeshes.size(); ++m )
 		{
-		out.SubMeshes[m].vertices = Submeshes[m].Vertices;
-		out.SubMeshes[m].compressed_vertices = Submeshes[m].CompressedVertices;
-		out.SubMeshes[m].indices.resize( Submeshes[m].Triangles.size() * 3 );
+		Tools::Multimesh::Submesh& outmesh = out.SubMeshes[m];
+
+		outmesh.VertexOffset = (uint)out.Vertices.size();
+		outmesh.VertexCount = (uint)Submeshes[m].Vertices.size();
+
+		outmesh.IndexOffset = (uint)out.Indices.size();
+		outmesh.IndexCount = (uint)Submeshes[m].Triangles.size() * 3;
+
+		// append all vertices and indices to the main list in the multimesh
+		out.Vertices.insert( out.Vertices.end(), Submeshes[m].Vertices.begin(), Submeshes[m].Vertices.end() );
+		out.CompressedVertices.insert( out.CompressedVertices.end(), Submeshes[m].CompressedVertices.begin(), Submeshes[m].CompressedVertices.end() );
+
+		// add the triangles into the index list
+		out.Indices.resize( (size_t)outmesh.IndexOffset + (size_t)outmesh.IndexCount );
 		for( size_t t = 0; t < Submeshes[m].Triangles.size(); ++t )
 			{
-			out.SubMeshes[m].indices[t * 3 + 0] = Submeshes[m].Triangles[t].VertexIds[0];
-			out.SubMeshes[m].indices[t * 3 + 1] = Submeshes[m].Triangles[t].VertexIds[1];
-			out.SubMeshes[m].indices[t * 3 + 2] = Submeshes[m].Triangles[t].VertexIds[2];
+			out.Indices[outmesh.IndexOffset + (t * 3 + 0)] = Submeshes[m].Triangles[t].VertexIds[0];
+			out.Indices[outmesh.IndexOffset + (t * 3 + 1)] = Submeshes[m].Triangles[t].VertexIds[1];
+			out.Indices[outmesh.IndexOffset + (t * 3 + 2)] = Submeshes[m].Triangles[t].VertexIds[2];
 			}
-		memcpy( out.SubMeshes[m].LODQuantizeBits, Submeshes[m].LODQuantizeBits, sizeof( uint ) * 4 );
-		memcpy( out.SubMeshes[m].LODTriangleCounts, Submeshes[m].LODTriangleCounts, sizeof( uint ) * 4 );
+
+		out.SubMeshes[m].LockedVertexCount = Submeshes[m].LockedVerticesCount;
+		for( uint lod = 0; lod < 4; ++lod )
+			{
+			out.SubMeshes[m].LODQuantizeBits[lod] = Submeshes[m].LODQuantizeBits[lod];
+			out.SubMeshes[m].LODIndexCounts[lod] = Submeshes[m].LODTriangleCounts[lod] * 3;
+			}
 		}
 
-	out.calcBoundingVolumesAndRejectionCones();
+	out.CalcBoundingVolumesAndRejectionCones();
 
 	out.CompressedVertexScale = CompressedVertexScale;
 	out.CompressedVertexTranslate = CompressedVertexTranslate;
 
-	out.save( path );
+	// dont save the uncompressed vertices
+	if( !SaveUncompressedVertices )
+		{
+		out.Vertices.clear();
+		}
+
+	out.Save( path );
 	}
 
 int main( int argc, char argv[] )
@@ -753,26 +782,31 @@ int main( int argc, char argv[] )
 		GeneratePlanes( 2, true, glm::vec3( minv.x, minv.y, minv.z ), glm::vec3( maxv.x, maxv.y, minv.z ), glm::vec2( 0, 0 ), glm::vec2( 1, 1 ) );
 		GeneratePlanes( 2, false, glm::vec3( minv.x, minv.y, maxv.z ), glm::vec3( maxv.x, maxv.y, maxv.z ), glm::vec2( 0, 0 ), glm::vec2( 1, 1 ) );
 
-		glm::vec3 MeshScale( 1, 1, frand( 0.5, 3.0 ) );
+		glm::vec3 MeshScale( 1, 1, 1 );
+		if( RandomizeScale )
+			MeshScale.z = frand( 0.5, 3.0 );
 
 		// deform mesh 
-		for( size_t c = 0 ; c < GlobalCoords.size(); ++c )
+		if( DeformSurface )
 			{
-			GlobalCoords[c] = glm::normalize( GlobalCoords[c] );
-			GlobalCoords[c] *= MeshScale;
-			GlobalCoords[c] *= 1.0 + perlin.accumulatedOctaveNoise3D_0_1( GlobalCoords[c].x, GlobalCoords[c].y, GlobalCoords[c].z, octaves );
+			for( size_t c = 0 ; c < GlobalCoords.size(); ++c )
+				{
+				GlobalCoords[c] = glm::normalize( GlobalCoords[c] );
+				GlobalCoords[c] *= MeshScale;
+				GlobalCoords[c] *= 1.0 + perlin.accumulatedOctaveNoise3D_0_1( GlobalCoords[c].x, GlobalCoords[c].y, GlobalCoords[c].z, octaves );
 
-			// update aabb
-			minv = glm::vec3( 
-				min( minv.x, GlobalCoords[c].x ),
-				min( minv.y, GlobalCoords[c].y ),
-				min( minv.z, GlobalCoords[c].z ) 
+				// update aabb
+				minv = glm::vec3(
+					min( minv.x, GlobalCoords[c].x ),
+					min( minv.y, GlobalCoords[c].y ),
+					min( minv.z, GlobalCoords[c].z )
 				);
-			maxv = glm::vec3(
-				max( maxv.x, GlobalCoords[c].x ),
-				max( maxv.y, GlobalCoords[c].y ),
-				max( maxv.z, GlobalCoords[c].z )
+				maxv = glm::vec3(
+					max( maxv.x, GlobalCoords[c].x ),
+					max( maxv.y, GlobalCoords[c].y ),
+					max( maxv.z, GlobalCoords[c].z )
 				);
+				}
 			}
 
 		CompressedVertexScale = ( maxv - minv ) / float( 0xffff ); // 0->0xffff maps to minv->maxv
@@ -817,7 +851,7 @@ int main( int argc, char argv[] )
 			Tools::Vertex vert;
 
 			vert.Coords = GlobalCoords[v];
-			vert.Normals = global_normals[v];
+			vert.Normal = global_normals[v];
 			vert.TexCoords = glm::vec2( 0 ); // we will pack uvs separately
 
 			compressed_vertices[v] = vert.Compress( CompressedVertexScale , CompressedVertexTranslate );
@@ -835,7 +869,7 @@ int main( int argc, char argv[] )
 					uint vid = Submeshes[m].Triangles[t].VertexIds[v];
 					
 					Submeshes[m].Vertices[vid].Coords = GlobalCoords[cid];
-					Submeshes[m].Vertices[vid].Normals = global_normals[cid];
+					Submeshes[m].Vertices[vid].Normal = global_normals[cid];
 
 					// copy compressed vertex from global vertex, but replace texcoords from local vertex
 					Submeshes[m].CompressedVertices[vid] = compressed_vertices[cid];
@@ -850,15 +884,17 @@ int main( int argc, char argv[] )
 			}
 
 		// debug output lods
+#ifdef _DEBUG
 		for( uint i = 0; i < 4; ++i )
 			{
 			char str[30];
 			sprintf_s( str, "lod%d.obj", i );
 			output_obj_lod( i, str );
 			}
+#endif
 
-		char str[30];
-		sprintf_s( str, "meteor_%d.mmbin", q );
+		char str[MAX_PATH];
+		sprintf_s( str, "../../Examples/Assets/meteor_%d.mmbin", q );
 		output_multimesh( str );
 
 		GlobalCoords.clear();

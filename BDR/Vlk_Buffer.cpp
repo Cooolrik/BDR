@@ -62,7 +62,7 @@ Vlk::BufferTemplate Vlk::BufferTemplate::ManualBuffer( VkBufferUsageFlags buffer
 Vlk::BufferTemplate Vlk::BufferTemplate::UniformBuffer( VkDeviceSize bufferSize, const void* src_data )
 	{
 	return ManualBuffer(
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VMA_MEMORY_USAGE_CPU_TO_GPU,
 		bufferSize,
 		src_data

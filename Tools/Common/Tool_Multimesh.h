@@ -10,11 +10,19 @@ namespace Tools
 		public:
 			class Submesh;
 
+			// full vertex and index list of the multimesh. 
+			// note that not both Vertices and CompressedVertices
+			// need to be filled in, as they are redundant
+			std::vector<Vertex> Vertices = {};
+			std::vector<Compressed16Vertex> CompressedVertices = {};
+			std::vector<uint16_t> Indices = {};
+
+			// submeshes of the mesh, with individual offsets in the vertices and indices lists
 			std::vector<Submesh> SubMeshes;
 
 			// bounding volumes for the full mesh
-			glm::vec3 boundingSphere = {};
-			float boundingSphereRadius = 0.f;
+			glm::vec3 BoundingSphere = {};
+			float BoundingSphereRadius = 0.f;
 			glm::vec3 AABB[2] = {};
 			
 			// apply this transform to all compressed vertices
@@ -23,36 +31,36 @@ namespace Tools
 
 			// calculate bounding volumes and rejection cones for all 
 			// submeshes as well as the full multimesh
-			void calcBoundingVolumesAndRejectionCones();
-
-			// build from .obj file
-			void build( const char* path, unsigned int max_tris, unsigned int max_verts );
+			void CalcBoundingVolumesAndRejectionCones();
+			void CalcSubmeshBoundingVolumesAndRejectionCone( unsigned int index );
 
 			// load/save binary
-			bool load( const char* path );
-			bool save( const char* path );
-			void serialize( std::fstream& fs , bool reading = true );
+			bool Load( const char* path );
+			bool Save( const char* path );
+			void Serialize( std::fstream& fs , bool reading = true );
 		};
 
 	class Multimesh::Submesh
 		{
 		public:
-			std::vector<Vertex> vertices = {};
-			std::vector<Compressed16Vertex> compressed_vertices = {}; 
-			std::vector<uint16_t> indices = {};
+			unsigned int VertexOffset;
+			unsigned int VertexCount;
+			  
+			unsigned int IndexOffset;
+			unsigned int IndexCount;
 
-			glm::vec3 boundingSphere = {};
-			float boundingSphereRadius = 0.f;
+			glm::vec3 BoundingSphere = {};
+			float BoundingSphereRadius = 0.f;
 			glm::vec3 AABB[2] = {};
 
-			glm::vec3 rejectionConeCenter = {};
-			glm::vec3 rejectionConeDirection = {};
-			float rejectionConeCutoff = 0.f;
+			glm::vec3 RejectionConeCenter = {};
+			glm::vec3 RejectionConeDirection = {};
+			float RejectionConeCutoff = 0.f;
 
-			unsigned int LODTriangleCounts[4] = {}; // number of triangles to use for the lod
+			unsigned int LockedVertexCount = 0; // number of vertices (in the beginning of each list) to not quantize 
+
+			unsigned int LODIndexCounts[4] = {}; // number of triangles to use for the lod
 			unsigned int LODQuantizeBits[4] = {}; // number of lower bits to remove for the lod (0: full res)
-
-			void calcBoundingVolumesAndRejectionCone();
 		};
 
 	};

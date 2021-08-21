@@ -4,6 +4,7 @@
 #pragma warning( disable : 26812 )
 
 #include "Vlk_Renderer.h"
+#include "Vlk_Image.h"
 
 namespace Vlk
     {
@@ -40,44 +41,38 @@ namespace Vlk
             void EndRenderPass();
 
             void BindGraphicsPipeline( GraphicsPipeline* pipeline );
-
             void BindComputePipeline( ComputePipeline* pipeline );
-
             void BindRayTracingPipeline( RayTracingPipeline* pipeline );
 
             void BindVertexBuffer( VertexBuffer* buffer );
-
             void BindIndexBuffer( IndexBuffer* buffer );
 
             void BindDescriptorSet( GraphicsPipeline* pipeline, VkDescriptorSet set );
             void BindDescriptorSet( RayTracingPipeline* pipeline, VkDescriptorSet set );
             void BindDescriptorSet( ComputePipeline* pipeline, VkDescriptorSet set );
 
-
             void PushConstants( GraphicsPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
-
             void PushConstants( RayTracingPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
-
             void PushConstants( ComputePipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
 
+            void UpdateBuffer( Buffer* buffer, VkDeviceSize dstOffset, uint32_t dataSize, const void* pData );
+
             void Draw( uint vertexCount );
-
-            void DrawIndexed( uint firstIndex, uint indexCount );
-
-            void DrawIndexedInstances(
+            
+            void DrawIndexed(
                 uint indexCount,
                 uint instanceCount,
                 uint firstIndex,
                 int vertexOffset,
                 uint firstInstance
-            );
+                );
 
             void DrawIndexedIndirect(
-                Buffer *buffer,
+                const Buffer *buffer,
                 VkDeviceSize offset,
                 uint drawCount,
                 uint stride
-            );
+                );
 
             void QueueUpBufferMemoryBarrier( 
                 VkBuffer      buffer,
@@ -88,12 +83,12 @@ namespace Vlk
                 );
 
             void QueueUpBufferMemoryBarrier(
-                Buffer*   buffer,
+                const Buffer* buffer,
                 VkAccessFlags srcAccessMask,
                 VkAccessFlags dstAccessMask,
                 VkDeviceSize  offset = 0,
-                VkDeviceSize  size = VkDeviceSize(~0)
-            );
+                VkDeviceSize  size = VkDeviceSize( ~0 )
+              );
 
             void QueueUpImageMemoryBarrier(
                 VkImage image,
@@ -105,13 +100,13 @@ namespace Vlk
                 );
 
             void QueueUpImageMemoryBarrier(
-                Image *image,
+                const Image* image,
                 VkImageLayout oldLayout,
                 VkImageLayout newLayout,
                 VkAccessFlags srcAccessMask,
                 VkAccessFlags dstAccessMask,
                 VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT
-            );
+                );
 
             // creates a command barries with queued up barriers
             void PipelineBarrier(

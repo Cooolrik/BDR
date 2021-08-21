@@ -188,8 +188,7 @@ class RenderData
 		uint DepthPyramidImageH;
 		uint DepthPyramidMipMapLevels;
 
-		std::vector<ZeptoMesh> MegaMeshes;
-		ZeptoMeshAllocator* MegaMeshAlloc{};
+		ZeptoMeshAllocator* MeshAlloc{};
 		std::vector<std::unique_ptr<Texture>> Textures;
 		Vlk::Sampler *TexturesSampler = nullptr;
 
@@ -247,7 +246,7 @@ class RenderData
 			delete cullingDescriptorLayout;
 			delete depthReduceDescriptorLayout;
 
-			delete MegaMeshAlloc;
+			delete MeshAlloc;
 
 			delete objectsBuffer;
 			delete meshesBuffer;

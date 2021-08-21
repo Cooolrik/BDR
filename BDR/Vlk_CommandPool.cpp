@@ -176,6 +176,13 @@ void Vlk::CommandPool::PushConstants( ComputePipeline* pipeline, VkShaderStageFl
 	vkCmdPushConstants( this->Buffers[this->CurrentBufferIndex], pipeline->GetPipelineLayout(), stageFlags, offset, size, pValues );
 	}
 
+void Vlk::CommandPool::UpdateBuffer( Buffer* buffer, VkDeviceSize dstOffset, uint32_t dataSize, const void* pData )
+	{
+	ASSERT_RECORDING();
+
+	vkCmdUpdateBuffer( this->Buffers[this->CurrentBufferIndex], buffer->GetBuffer(), dstOffset, dataSize, pData );
+	}
+
 void Vlk::CommandPool::Draw( uint vertexCount )
 	{
 	ASSERT_RECORDING();
@@ -183,21 +190,14 @@ void Vlk::CommandPool::Draw( uint vertexCount )
 	vkCmdDraw( this->Buffers[this->CurrentBufferIndex], vertexCount, 1, 0, 0 );
 	}
 
-void Vlk::CommandPool::DrawIndexed( uint firstIndex, uint indexCount )
-	{
-	ASSERT_RECORDING();
-
-	vkCmdDrawIndexed( this->Buffers[this->CurrentBufferIndex], indexCount, 1, firstIndex, 0, 0 );
-	}
-
-void Vlk::CommandPool::DrawIndexedInstances( uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance )
+void Vlk::CommandPool::DrawIndexed( uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance )
 	{
 	ASSERT_RECORDING();
 
 	vkCmdDrawIndexed( this->Buffers[this->CurrentBufferIndex], indexCount, instanceCount, firstIndex, vertexOffset, firstInstance );
 	}
 
-void Vlk::CommandPool::DrawIndexedIndirect( Buffer *buffer, VkDeviceSize offset, uint drawCount, uint stride )
+void Vlk::CommandPool::DrawIndexedIndirect( const Buffer *buffer, VkDeviceSize offset, uint drawCount, uint stride )
 	{
 	ASSERT_RECORDING();
 
@@ -217,7 +217,7 @@ void Vlk::CommandPool::QueueUpBufferMemoryBarrier( VkBuffer buffer, VkAccessFlag
 	this->BufferMemoryBarriers.push_back( bufferMemoryBarrier );
 	}
 
-void Vlk::CommandPool::QueueUpBufferMemoryBarrier( Buffer* buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkDeviceSize offset, VkDeviceSize size )
+void Vlk::CommandPool::QueueUpBufferMemoryBarrier( const Buffer* buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkDeviceSize offset, VkDeviceSize size )
 	{
 	this->QueueUpBufferMemoryBarrier(
 		buffer->GetBuffer(),
@@ -246,7 +246,7 @@ void Vlk::CommandPool::QueueUpImageMemoryBarrier( VkImage image, VkImageLayout o
 	this->ImageMemoryBarriers.push_back( imageMemoryBarrier );
 	}
 
-void Vlk::CommandPool::QueueUpImageMemoryBarrier( Image* image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageAspectFlags aspectMask )
+void Vlk::CommandPool::QueueUpImageMemoryBarrier( const Image* image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkImageAspectFlags aspectMask )
 	{
 	this->QueueUpImageMemoryBarrier(
 		image->GetImage(),

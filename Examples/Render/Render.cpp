@@ -106,8 +106,8 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 
 	// render
 	pool->BeginRenderPass( currentFrame->framebuffer );
-	pool->BindVertexBuffer( renderData->MegaMeshAlloc->GetVertexBuffer() );
-	pool->BindIndexBuffer( renderData->MegaMeshAlloc->GetIndexBuffer() );
+	pool->BindVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
+	pool->BindIndexBuffer( renderData->MeshAlloc->GetIndexBuffer() );
 	pool->BindGraphicsPipeline( renderData->renderPipeline );
 	pool->BindDescriptorSet( renderData->renderPipeline, currentFrame->renderDescriptorSet );
 	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
@@ -486,8 +486,6 @@ void SetupScene()
 		"../Assets/image6.dds",
 		};
 				
-	const uint texture_array_size = 128;
-
 #ifdef _DEBUG
 	const uint unique_meshes_count = 1;
 	const uint megamesh_max_objects_cnt = 1; // number of megamesh objects in scene (not same as scene_objects)
@@ -509,8 +507,8 @@ void SetupScene()
 		objects_per_mesh.push_back( 1 );
 		}
 
-	renderData->MegaMeshAlloc = new ZeptoMeshAllocator();
-	renderData->MegaMeshes = renderData->MegaMeshAlloc->LoadMeshes( renderData->renderer, meshnames );
+	renderData->MeshAlloc = new ZeptoMeshAllocator();
+	renderData->MeshAlloc->LoadMeshes( renderData->renderer, meshnames );
 
 	// reset stats
 	renderData->scene_tris = 0;
@@ -545,11 +543,13 @@ void SetupScene()
 	meshes.resize( unique_meshes_count );
 	for( uint mm = 0; mm < unique_meshes_count; ++mm )
 		{
+		const ZeptoMesh& mesh = *(renderData->MeshAlloc->GetMesh( mm ));
+
 		// get a number of objects for this mesh
 		uint mm_object_count = megamesh_max_objects_cnt;
 
 		// allocate batches and objects for the megamesh
-		uint mm_submesh_count = renderData->MegaMeshes[mm].GetSubMeshCount();
+		uint mm_submesh_count = (uint)mesh.SubMeshes.size();
 		batches.resize( batches.size() + size_t(mm_submesh_count) * num_lods );
 
 		// allocate one instance for each batch and object
@@ -560,8 +560,8 @@ void SetupScene()
 		uint materialID = mm;
 
 		// set up the mesh data
-		meshes[mm].CompressedVertexScale = renderData->MegaMeshes[mm].GetCompressedVertexScale();
-		meshes[mm].CompressedVertexTranslate = renderData->MegaMeshes[mm].GetCompressedVertexTranslate();
+		meshes[mm].CompressedVertexScale = mesh.CompressedVertexScale;
+		meshes[mm].CompressedVertexTranslate = mesh.CompressedVertexTranslate;
 		
 		// do the objects, and each instance in each batch
 		for( uint o = 0; o < mm_object_count; ++o )
@@ -576,8 +576,10 @@ void SetupScene()
 #endif
 			for( uint sm = 0; sm < mm_submesh_count; ++sm )
 				{
-				glm::vec3 bspherecenter = transform * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetBoundingSphereCenter(), 1.f );
-				float bsphereradius = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetBoundingSphereRadius() * scale;
+				const ZeptoSubMesh& submesh = mesh.SubMeshes[sm];
+
+				glm::vec3 bspherecenter = transform * glm::vec4( submesh.BoundingSphere, 1.f );
+				float bsphereradius = submesh.BoundingSphereRadius * scale;
 
 				uint object_index = renderData->scene_objects + ( sm * mm_object_count ) + o;
 
@@ -589,29 +591,28 @@ void SetupScene()
 				objects[object_index].boundingSphere[2] = bspherecenter[2];
 				objects[object_index].boundingSphere[3] = bsphereradius;
 
-				glm::vec3 rejectionconecenter = transform * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeCenter(), 1.f );
-				glm::vec3 rejectionconedirection = glm::normalize(renderData->objects[object_index].transformIT * glm::vec4( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeDirection(), 0.f ));
-				float rejectionconecutoff = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetRejectionConeCutoff();
+				glm::vec3 rejectionconecenter = transform * glm::vec4( submesh.RejectionConeCenter, 1.f );
+				glm::vec3 rejectionconedirection = glm::normalize(renderData->objects[object_index].transformIT * glm::vec4( submesh.RejectionConeDirection, 0.f ));
 				objects[object_index].rejectionConeCenter = rejectionconecenter;
-				objects[object_index].rejectionConeDirectionAndCutoff = glm::vec4( rejectionconedirection, rejectionconecutoff );
+				objects[object_index].rejectionConeDirectionAndCutoff = glm::vec4( rejectionconedirection, submesh.RejectionConeCutoff );
 
 				uint batch_id = renderData->scene_batches + (sm * num_lods); // num_lods batches per submesh
 
 				objects[object_index].meshID = mm;
 				objects[object_index].materialID = materialID;
 				objects[object_index].batchID = batch_id;
-				objects[object_index].vertexCutoffIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset() + 64;
+				objects[object_index].vertexCutoffIndex = submesh.VertexOffset + submesh.LockedVertexCount;
 
-				objects[object_index].LODQuantizations[0] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[0];
-				objects[object_index].LODQuantizations[1] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[1];
-				objects[object_index].LODQuantizations[2] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[2];
-				objects[object_index].LODQuantizations[3] = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODQuantizeBits()[3];
+				objects[object_index].LODQuantizations[0] = submesh.LODQuantizeBits[0];
+				objects[object_index].LODQuantizations[1] = submesh.LODQuantizeBits[1];
+				objects[object_index].LODQuantizations[2] = submesh.LODQuantizeBits[2];
+				objects[object_index].LODQuantizations[3] = submesh.LODQuantizeBits[3];
 
 				renderObjects[object_index] = object_index;
 							
 				// update stats
-				renderData->scene_tris += (uint64_t)( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3 );
-				renderData->scene_verts += (uint64_t)( renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexCount() );
+				renderData->scene_tris += (uint64_t)( submesh.IndexCount / 3 );
+				renderData->scene_verts += (uint64_t)( submesh.VertexCount );
 				}
 			}
 
@@ -619,6 +620,8 @@ void SetupScene()
 		// do 4 lods per submesh
 		for( uint sm = 0; sm < mm_submesh_count; ++sm )
 			{
+			const ZeptoSubMesh& submesh = mesh.SubMeshes[sm];
+
 			for( uint lod = 0; lod < num_lods; ++lod )
 				{
 				uint first_instance_index = (renderData->scene_objects * num_lods) + ( sm * mm_object_count * num_lods ) + (lod * mm_object_count);
@@ -626,10 +629,10 @@ void SetupScene()
 				uint batch_id = renderData->scene_batches + (sm * num_lods) + lod;
 
 				// set up batchdata for the batch
-				batches[batch_id].drawCmd.indexCount = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetLODIndexCounts()[lod];
+				batches[batch_id].drawCmd.indexCount = submesh.LODIndexCounts[lod];
 				batches[batch_id].drawCmd.instanceCount = 0; // set the original array to 0 instances, this will be filled in by the culling compute shader
-				batches[batch_id].drawCmd.firstIndex = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexOffset();
-				batches[batch_id].drawCmd.vertexOffset = renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexOffset();
+				batches[batch_id].drawCmd.firstIndex = submesh.IndexOffset;
+				batches[batch_id].drawCmd.vertexOffset = submesh.VertexOffset;
 				batches[batch_id].drawCmd.firstInstance = first_instance_index;
 				}
 			}
@@ -663,54 +666,54 @@ void SetupScene()
 	////////////////////
 	// Calculate the per-triangle cost of the mega meshes
 
-	// set up objects and render-batches for each unique megamesh 
-	uint64_t total_size_all = 0;
-	uint64_t total_tris_all = 0;
-	for( uint mm = 0; mm < unique_meshes_count; ++mm )
-		{
-		uint64_t num_tris = 0;
-		uint64_t num_verts = 0;
-		uint64_t num_batches = renderData->MegaMeshes[mm].GetSubMeshCount();
-		uint64_t num_mesh_lods = 4;
+	//// set up objects and render-batches for each unique megamesh 
+	//uint64_t total_size_all = 0;
+	//uint64_t total_tris_all = 0;
+	//for( uint mm = 0; mm < unique_meshes_count; ++mm )
+	//	{
+	//	uint64_t num_tris = 0;
+	//	uint64_t num_verts = 0;
+	//	uint64_t num_batches = renderData->MegaMeshes[mm].GetSubMeshCount();
+	//	uint64_t num_mesh_lods = 4;
 
-		// add up all triangles and vertices in the megamesh
-		for( uint sm = 0 ; sm < renderData->MegaMeshes[mm].GetSubMeshCount() ; ++sm )
-			{
-			num_tris += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3;
-			num_verts += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexCount();
-			}
+	//	// add up all triangles and vertices in the megamesh
+	//	for( uint sm = 0 ; sm < renderData->MegaMeshes[mm].GetSubMeshCount() ; ++sm )
+	//		{
+	//		num_tris += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetIndexCount() / 3;
+	//		num_verts += renderData->MegaMeshes[mm].GetSubMesh( sm ).GetVertexCount();
+	//		}
 
-		uint64_t mesh_size_bytes = 
-			( num_tris * 3 * sizeof( uint16_t ) ) +
-			( num_verts * sizeof( Vertex ) ) +
-			( num_batches * num_mesh_lods * sizeof( BatchData ) );
+	//	uint64_t mesh_size_bytes = 
+	//		( num_tris * 3 * sizeof( uint16_t ) ) +
+	//		( num_verts * sizeof( Vertex ) ) +
+	//		( num_batches * num_mesh_lods * sizeof( BatchData ) );
 
-		uint64_t possible_mesh_size_bytes =
-			( num_tris * 3 * sizeof( uint8_t ) ) +
-			( num_verts * 16 /*sizeof(Vertex)*/ ) +
-			( num_batches * 2 * num_mesh_lods * sizeof( BatchData ) );
+	//	uint64_t possible_mesh_size_bytes =
+	//		( num_tris * 3 * sizeof( uint8_t ) ) +
+	//		( num_verts * 16 /*sizeof(Vertex)*/ ) +
+	//		( num_batches * 2 * num_mesh_lods * sizeof( BatchData ) );
 
-		total_size_all += mesh_size_bytes;
-		total_tris_all += num_tris;
-		}
+	//	total_size_all += mesh_size_bytes;
+	//	total_tris_all += num_tris;
+	//	}
 
-	double bytes_per_triangle = double( total_size_all ) / double( total_tris_all );
+	//double bytes_per_triangle = double( total_size_all ) / double( total_tris_all );
 
 	////////////////////
 
 	// print info
 	printf( "////////////////////////////\n" );
 	printf( "Scene Info:\n" );
-	printf( "\tUnique Mega Meshes Count: %d\n", (int)renderData->MegaMeshes.size() );
+	printf( "\tUnique Mega Meshes Count: %d\n", renderData->MeshAlloc->GetMeshCount() );
 	printf( "\tUnique Batches Count: %d\n", (int)renderData->scene_batches);
 	printf( "\tMega Meshes Instances Count: %d\n", megamesh_instance_count );
 	printf( "\tAverage objects per batch: %.2f\n", (double)renderData->scene_objects / (double)renderData->scene_batches );
 	printf( "\tTotal Objects: %d\n", renderData->scene_objects );
 	printf( "\tTotal Tris: %lld\n", renderData->scene_tris );
 	printf( "\tTotal Verts: %lld\n", renderData->scene_verts );
-	printf( "\tMesh allocation: %lld bytes\n", renderData->MegaMeshAlloc->GetIndexBuffer()->GetBufferSize() + renderData->MegaMeshAlloc->GetVertexBuffer()->GetBufferSize() );
+	printf( "\tMesh allocation: %lld bytes\n", renderData->MeshAlloc->GetIndexBuffer()->GetBufferSize() + renderData->MeshAlloc->GetVertexBuffer()->GetBufferSize() );
 	printf( "\tObject data allocation: %lld bytes\n", VkDeviceSize( renderData->scene_objects * sizeof( ObjectData ) ) );
-	printf( "\tMemory cost per triangle: %.2f\n", bytes_per_triangle );
+	//printf( "\tMemory cost per triangle: %.2f\n", bytes_per_triangle );
 	printf( "\tAverage Megamesh triangle count: %lld\n", renderData->scene_tris / (uint64_t)megamesh_instance_count );
 	printf( "\tAverage Tris per Subobject: %lld\n", renderData->scene_tris /(uint64_t)renderData->scene_objects );
 	printf( "\tAverage Verts per Subobject: %lld\n", renderData->scene_verts / (uint64_t)renderData->scene_objects );
@@ -744,7 +747,7 @@ void SetupScene()
 	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( rdlt );
 	
 	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline();
-	renderData->renderPipeline->SetVertexDataTemplateFromVertexBuffer( renderData->MegaMeshAlloc->GetVertexBuffer() );
+	renderData->renderPipeline->SetVertexDataTemplateFromVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
 	renderData->renderPipeline->AddShaderModule( renderData->vertexRenderShader );
 	renderData->renderPipeline->AddShaderModule( renderData->fragmentRenderShader );
 	renderData->renderPipeline->SetDescriptorSetLayout( renderData->renderDescriptorLayout );

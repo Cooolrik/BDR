@@ -23,6 +23,14 @@ namespace Tools
 					this->fs.write( (char*)&item, sizeof( type ) );
 				}
 
+			template<class type,unsigned int count> void Array( type* arrayitem )
+				{
+				if( this->reading )
+					this->fs.read( (char*)arrayitem, sizeof( type ) * count );
+				else
+					this->fs.write( (char*)arrayitem, sizeof( type ) * count );
+				}
+
 			template<class vectortype> void VectorSize( vectortype& _vector )
 				{
 				if( this->reading )

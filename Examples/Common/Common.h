@@ -7,16 +7,16 @@
 #include <Windows.h>
 
 #include <vector>
+#include <memory>
 
 typedef unsigned int uint;
 using std::vector;
+using std::unique_ptr;
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#define GetConstMacro( type , name ) const type Get##name() const { return this->name; }
 
 // inclusive random, value can be either mini or maxi
 inline int irand( int mini, int maxi )
@@ -58,3 +58,36 @@ inline glm::vec3 vrand_unit()
 	glm::vec3 v = vrand();
 	return glm::normalize( v );
 	}
+
+#define GetConstMacro( type , name ) const type Get##name() const { return this->name; }
+
+template<class T> unique_ptr<T> u_ptr( T* ptr ) { return unique_ptr<T>( ptr ); }
+
+#ifdef VULKAN_H_
+
+#pragma warning( push )
+#pragma warning( disable : 4505 )
+inline void throw_vulkan_error( VkResult errorvalue, const char* errorstr )
+	{
+	char str[20];
+	sprintf_s( str, "%d", (int)errorvalue );
+	throw std::runtime_error( errorstr );
+	}
+#pragma warning( pop )
+
+// makes sure the return value is VK_SUCCESS or throws an exception
+#define VLK_CALL( s ) { VkResult VLK_CALL_res = s; if( VLK_CALL_res != VK_SUCCESS ) { throw_vulkan_error( VLK_CALL_res , "Vulcan call " #s " failed (did not return VK_SUCCESS)"); } }
+
+template<class T> unique_ptr<Vlk::Buffer> CreateGPUBufferForVector( Vlk::Renderer *renderer , const T& vec )
+	{
+	return u_ptr( renderer->CreateBuffer(
+		Vlk::BufferTemplate::ManualBuffer(
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY,
+			VkDeviceSize( sizeof( T::value_type ) * vec.size() ),
+			vec.data()
+			)
+		));
+	}
+
+#endif

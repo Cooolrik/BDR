@@ -15,77 +15,51 @@
 typedef unsigned int uint;
 using std::vector;
 
-std::vector<ZeptoMesh> ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths )
+bool ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths )
 	{
-	std::vector<ZeptoMesh> ret;
 	std::vector<Vertex> vertices;
 	std::vector<uint16_t> indices;
 
+	// clear any current allocation
 	this->Clear();
 
-	ret.resize( paths.size() );
-
 	// load in all models, append into one large memory allocation
+	this->Meshes.resize( paths.size() );
 	for( size_t i = 0; i < paths.size(); ++i )
 		{
-		Tools::Multimesh source_mesh;
+		this->Meshes[i] = std::unique_ptr<ZeptoMesh>( new ZeptoMesh );
+		ZeptoMesh& mesh = *(this->Meshes[i].get());
 
 		// load in source mesh from cache, or build it if it is not cached yet
 		std::string cache_file = std::string( paths[i] );
-		if( !source_mesh.load( cache_file.c_str() ) )
+		if( !mesh.Load( cache_file.c_str() ) )
 			{
 			throw std::runtime_error( std::string("Error, cannot load mmbin file: ") + std::string( paths[i] ) );
+			return false;
 			}
 
-		ret[i].AABB[0] = source_mesh.AABB[0];
-		ret[i].AABB[1] = source_mesh.AABB[1];
+		// set up base indices for the zeptomesh
+		size_t MeshVertexBase = vertices.size();
+		size_t MeshVertexCount = mesh.CompressedVertices.size();
+		size_t MeshIndexBase = indices.size();
+		size_t MeshIndexCount = mesh.Indices.size();
 
-		ret[i].CompressedVertexScale = source_mesh.CompressedVertexScale;
-		ret[i].CompressedVertexTranslate = source_mesh.CompressedVertexTranslate;
+		// copy into the arrays
+		vertices.resize( MeshVertexBase + MeshVertexCount );
+		memcpy( &( vertices.data()[MeshVertexBase] ), mesh.CompressedVertices.data(), sizeof( Vertex ) * MeshVertexCount );
+		indices.resize( MeshIndexBase + MeshIndexCount );
+		memcpy( &( indices.data()[MeshIndexBase] ), mesh.Indices.data(), sizeof( uint16_t ) * MeshIndexCount );
 
-		// set up the render mega meshes
-		ret[i].SubMeshes.resize( source_mesh.SubMeshes.size() );
-		for( size_t q = 0; q < source_mesh.SubMeshes.size(); ++q )
+		// clear the arrays in the mesh, it's not needed anymore
+		mesh.Vertices.clear();
+		mesh.CompressedVertices.clear();
+		mesh.Indices.clear();
+
+		// update the vertex and index offsets in the submeshes, as the mesh now resides in a larger array
+		for( size_t q = 0; q < mesh.SubMeshes.size(); ++q )
 			{
-			// set up the render mesh offsets
-			ret[i].SubMeshes[q].vertexOffset = (uint)vertices.size();
-			ret[i].SubMeshes[q].vertexCount = (uint)source_mesh.SubMeshes[q].vertices.size();
-			ret[i].SubMeshes[q].indexOffset = (uint)indices.size();
-			ret[i].SubMeshes[q].indexCount = (uint)source_mesh.SubMeshes[q].indices.size();
-			ret[i].SubMeshes[q].boundingSphereCenter = source_mesh.SubMeshes[q].boundingSphere;
-			ret[i].SubMeshes[q].boundingSphereRadius = source_mesh.SubMeshes[q].boundingSphereRadius;
-
-			ret[i].SubMeshes[q].rejectionConeCenter = source_mesh.SubMeshes[q].rejectionConeCenter;
-			ret[i].SubMeshes[q].rejectionConeDirection = source_mesh.SubMeshes[q].rejectionConeDirection;
-			ret[i].SubMeshes[q].rejectionConeCutoff = source_mesh.SubMeshes[q].rejectionConeCutoff;
-
-			for( uint lod = 0 ; lod < 4; ++lod )
-				{
-				ret[i].SubMeshes[q].LODIndexCounts[lod] = source_mesh.SubMeshes[q].LODTriangleCounts[lod] * 3;
-				ret[i].SubMeshes[q].LODQuantizeBits[lod] = source_mesh.SubMeshes[q].LODQuantizeBits[lod];
-				}
-
-			// squash vertex data into render vertex struct
-			vector<Vertex> renderVertices( source_mesh.SubMeshes[q].compressed_vertices.size() );
-			for( size_t v = 0 ; v < source_mesh.SubMeshes[q].compressed_vertices.size() ; ++v )
-				{
-				renderVertices[v].Coords[0] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[0];
-				renderVertices[v].Coords[1] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[1];
-				renderVertices[v].Coords[2] = source_mesh.SubMeshes[q].compressed_vertices[v].Coords[2];
-				renderVertices[v]._buffer = 0;
-				renderVertices[v].Normals = source_mesh.SubMeshes[q].compressed_vertices[v].Normals;
-				renderVertices[v].TexCoords = source_mesh.SubMeshes[q].compressed_vertices[v].TexCoords;
-				}
-			
-			vector<uint16_t> renderIndices( source_mesh.SubMeshes[q].indices.size() );
-			for( size_t t = 0 ; t < source_mesh.SubMeshes[q].indices.size() ; ++t )
-				{
-				renderIndices[t] = (uint16_t)source_mesh.SubMeshes[q].indices[t];
-				}
-
-			// append to buffers
-			vertices.insert( vertices.end(), renderVertices.begin(), renderVertices.end() );
-			indices.insert( indices.end(), renderIndices.begin(), renderIndices.end() );
+			mesh.SubMeshes[q].VertexOffset += (uint)MeshVertexBase;
+			mesh.SubMeshes[q].IndexOffset += (uint)MeshIndexBase;
 			}
 		}
 
@@ -105,7 +79,7 @@ std::vector<ZeptoMesh> ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, 
 			)
 		);
 		
-	return ret;
+	return true;
 	}
 
 ZeptoMeshAllocator::~ZeptoMeshAllocator()
@@ -117,4 +91,5 @@ void ZeptoMeshAllocator::Clear()
 	{
 	if( vertexBuffer ) { delete vertexBuffer; vertexBuffer = nullptr; }
 	if( indexBuffer ) { delete indexBuffer; indexBuffer = nullptr; }
+	this->Meshes.clear();
 	}

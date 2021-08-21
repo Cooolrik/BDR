@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "Vertex.h"
+#include <Vertex.h>
+#include <Tool_Multimesh.h>
 
 namespace Vlk
 	{
@@ -10,67 +11,8 @@ namespace Vlk
 	class IndexBuffer;
 	};
 
-class SubMesh
-	{
-	private:
-		friend class ZeptoMeshAllocator;
-
-		unsigned int vertexOffset = {}; // offset into vertex buffer where mesh starts
-		unsigned int vertexCount = {}; // number of vertices
-
-		unsigned int indexOffset = {}; // offset into index buffer where mesh starts
-		unsigned int indexCount = {}; // number of indices (3 per triangle)
-
-		glm::vec3 boundingSphereCenter = {};
-		float boundingSphereRadius = {};
-
-		glm::vec3 rejectionConeCenter = {};
-		glm::vec3 rejectionConeDirection = {};
-		float rejectionConeCutoff = {};
-
-		unsigned int LODIndexCounts[4] = {};
-		unsigned int LODQuantizeBits[4] = {};
-
-	public:
-		unsigned int GetVertexOffset() const { return vertexOffset; }
-		unsigned int GetVertexCount() const { return vertexCount; }
-
-		unsigned int GetIndexOffset() const { return indexOffset; }
-		unsigned int GetIndexCount() const { return indexCount; }
-
-		glm::vec3 GetBoundingSphereCenter() const { return boundingSphereCenter; }
-		float GetBoundingSphereRadius() const { return boundingSphereRadius; }
-
-		glm::vec3 GetRejectionConeCenter() const { return rejectionConeCenter; }
-		glm::vec3 GetRejectionConeDirection() const { return rejectionConeDirection; }
-		float GetRejectionConeCutoff() const { return rejectionConeCutoff; }
-
-		const unsigned int* GetLODIndexCounts() const { return LODIndexCounts; }
-		const unsigned int* GetLODQuantizeBits() const { return LODQuantizeBits; }
-	};
-
-class ZeptoMesh
-	{
-	private:
-		friend class ZeptoMeshAllocator;
-
-		std::vector<SubMesh> SubMeshes = {};
-		glm::vec3 AABB[2] = {};
-
-		// apply this transform to all compressed vertices
-		glm::vec3 CompressedVertexScale;
-		glm::vec3 CompressedVertexTranslate;
-
-	public:
-		unsigned int GetSubMeshCount() const { return (unsigned int)this->SubMeshes.size(); }
-		const SubMesh& GetSubMesh( unsigned int index ) const {	return this->SubMeshes[index]; }
-
-		//const glm::vec3& GetAABBMin() const { return AABB[0]; }
-		//const glm::vec3& GetAABBMax() const { return AABB[1]; }
-
-		const glm::vec3& GetCompressedVertexScale() const { return CompressedVertexScale; }
-		const glm::vec3& GetCompressedVertexTranslate() const { return CompressedVertexTranslate; }
-	};
+typedef Tools::Multimesh ZeptoMesh;
+typedef Tools::Multimesh::Submesh ZeptoSubMesh;
 
 class ZeptoMeshAllocator
 	{
@@ -78,14 +20,25 @@ class ZeptoMeshAllocator
 		Vlk::VertexBuffer* vertexBuffer{};
 		Vlk::IndexBuffer* indexBuffer{};
 
+		// the currently loaded meshes in the allocator
+		std::vector<std::unique_ptr<ZeptoMesh>> Meshes;
+
 	public:
 		Vlk::VertexBuffer* GetVertexBuffer() const { return vertexBuffer; }
 		Vlk::IndexBuffer* GetIndexBuffer() const { return indexBuffer; }
 
 		// load in all meshes in one go from mmbin files
 		// TODO: make the allocator dynamic. right now only static allocation on setup
-		std::vector<ZeptoMesh> LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths );
+		bool LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths );
 
+		// get the number of ZeptoMeshes in the current allocation
+		unsigned int GetMeshCount() const { return (unsigned int)Meshes.size(); }
+
+		// get a ZeptoMesh from the allocator, to retreive data on the mesh and submeshes
+		// note that the vertices and indices lists are empty, as the data is uploaded to GPU buffers instead.
+		const ZeptoMesh* GetMesh( unsigned int index ) const { return this->Meshes[index].get(); }
+
+		// clear the allocator, release all memory
 		void Clear();
 
 		~ZeptoMeshAllocator();

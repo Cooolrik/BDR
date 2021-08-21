@@ -13,10 +13,10 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{12f4669b-6c44-4de0-90b2-6db5d2e74637}</ProjectGuid>
-    <RootNamespace>RenderExample</RootNamespace>
+    <ProjectGuid>{AB5D2DF2-E0C3-40B9-8ABE-419DE127D8B4}</ProjectGuid>
+    <RootNamespace>MeshViewer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Render</ProjectName>
+    <ProjectName>MeshViewer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -102,13 +102,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\Tools\Common\Tool_Multimesh.cpp" />
     <ClCompile Include="..\..\Tools\Common\Tool_Vertex.cpp" />
+    <ClCompile Include="..\Common\Application.cpp" />
     <ClCompile Include="..\Common\Camera.cpp" />
     <ClCompile Include="..\Common\Common.cpp" />
     <ClCompile Include="..\Common\ZeptoMesh.cpp" />
     <ClCompile Include="..\Common\Texture.cpp" />
     <ClCompile Include="..\Common\Vertex.cpp" />
-    <ClCompile Include="debugging.cpp" />
-    <ClCompile Include="Render.cpp" />
+    <ClCompile Include="MeshViewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BDR\BDR.vcxproj">
@@ -116,7 +116,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="shaders\fragShader.frag">
+    <CustomBuild Include="shaders\Render.frag">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -125,79 +125,28 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
-    <CustomBuild Include="shaders\vertShader.vert">
+    <CustomBuild Include="shaders\Render.vert">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\common.glsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
-    </None>
-    <CustomBuild Include="shaders\instanceCull.comp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="shaders\depthReduce.comp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="shaders\debugShader.comp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="shaders\debugFragShader.frag">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="shaders\debugVertShader.vert">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Tools\Common\Tool_Multimesh.h" />
     <ClInclude Include="..\..\Tools\Common\Tool_Vertex.h" />
+    <ClInclude Include="..\Common\Application.h" />
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\Common.h" />
     <ClInclude Include="..\Common\ZeptoMesh.h" />
     <ClInclude Include="..\Common\Texture.h" />
     <ClInclude Include="..\Common\Vertex.h" />
-    <ClInclude Include="debugging.h" />
-    <ClInclude Include="RenderData.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Common\ShaderStructs.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

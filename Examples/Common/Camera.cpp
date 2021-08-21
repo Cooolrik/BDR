@@ -50,12 +50,12 @@ void Camera::key_callback(GLFWwindow* window, int key, int scancode, int action,
 
 void Camera::framebufferResizeCallback( GLFWwindow* window, int width, int height )
 	{
-	auto app = reinterpret_cast<Camera*>(glfwGetWindowUserPointer( window ));
-	app->framebufferResized = true;
-	app->ScreenW = width;
-	app->ScreenH = height;
-	app->aspectRatio = (float)width / (float)height;
-	app->render_dirty = true;
+	auto cam = reinterpret_cast<Camera*>(glfwGetWindowUserPointer( window ));
+	cam->framebufferResized = true;
+	cam->ScreenW = width;
+	cam->ScreenH = height;
+	cam->aspectRatio = (float)width / (float)height;
+	cam->render_dirty = true;
 	}
 
 void Camera::Setup(GLFWwindow* window)
