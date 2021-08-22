@@ -58,7 +58,9 @@ void MeshViewer::SetupPerFrameData()
 	vector<VkImage> swapChainImages = this->Renderer->GetSwapChainImages();
 
 	uint num_frames = (uint)framebuffers.size();
-	const uint max_stage_count = 20;
+
+	const uint max_set_count = 20;
+	const uint max_descriptor_count = 20;
 
 	this->PerFrameData.resize( num_frames );
 
@@ -71,7 +73,7 @@ void MeshViewer::SetupPerFrameData()
 		frame.DepthTarget = this->Renderer->GetColorTargetImage( f );
 			
 		frame.CommandPool = u_ptr(this->Renderer->CreateCommandPool( 1 ));
-		frame.RenderDescriptorPool = u_ptr(this->Renderer->CreateDescriptorPool( max_stage_count, max_stage_count, max_stage_count ));
+		frame.RenderDescriptorPool = u_ptr(this->Renderer->CreateDescriptorPool( Vlk::DescriptorPoolTemplate::General( max_set_count, max_descriptor_count ) ));
 		frame.SceneUBO = u_ptr(this->Renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( SceneRender ) ) ));
 		}
 

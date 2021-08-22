@@ -42,6 +42,7 @@
 
 #include "Texture.h"
 #include "Camera.h"
+#include "Widgets.h"
 
 class ApplicationBase
 	{
@@ -57,6 +58,7 @@ class ApplicationBase
 		uint InitialConsoleDimensions[2] = { 1600, 400 };
 		uint InitialConsolePosition[2] = { 50, 700 };
 		bool WaitInLoopForCameraDirty = true;
+		bool UseWidgets = true;
 
 		// set by init, freed by deinit
 		GLFWwindow* Window = nullptr;
@@ -66,6 +68,7 @@ class ApplicationBase
 		HWND ConsoleWindow = nullptr;
 		HANDLE ConsoleOutputHandle = nullptr;
 		CONSOLE_SCREEN_BUFFER_INFO ConsoleBufferInfo = {};
+		UIWidgets* UIWidgets = nullptr;
 
 		uint CurrentFrameIndex = 0;
 

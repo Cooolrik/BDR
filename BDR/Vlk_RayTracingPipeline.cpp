@@ -6,7 +6,7 @@
 #include "Vlk_DescriptorSetLayout.h"
 #include "Vlk_RayTracingShaderBindingTable.h"
 
-using namespace std;
+using std::vector;
 
 void Vlk::RayTracingPipeline::SetRaygenShader( const ShaderModule* shader )
 	{

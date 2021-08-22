@@ -502,9 +502,12 @@ class VulkanRenderTest
 			{
 			clearFramePools();
 
-			descriptorPool = renderer->CreateDescriptorPool( (uint)framebuffers.size(), (uint)framebuffers.size(), (uint)framebuffers.size()*3 );
-			RTDescriptorPool = renderer->CreateDescriptorPool( (uint)framebuffers.size(), (uint)framebuffers.size(), (uint)framebuffers.size() * 3 );
-			QRDescriptorPool = renderer->CreateDescriptorPool( (uint)framebuffers.size(), (uint)framebuffers.size(), (uint)framebuffers.size() * 3 );
+			const uint max_set_count = 20;
+			const uint max_descriptor_count = 20;
+
+			descriptorPool = renderer->CreateDescriptorPool( Vlk::DescriptorPoolTemplate::General( max_set_count, max_descriptor_count ) );
+			RTDescriptorPool = renderer->CreateDescriptorPool( Vlk::DescriptorPoolTemplate::General( max_set_count, max_descriptor_count ) );
+			QRDescriptorPool = renderer->CreateDescriptorPool( Vlk::DescriptorPoolTemplate::General( max_set_count, max_descriptor_count ) );
 
 			// create one command pool and descriptor set for each frame
 			commandPools.resize( framebuffers.size() );

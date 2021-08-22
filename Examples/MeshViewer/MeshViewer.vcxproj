@@ -56,7 +56,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)Dependencies\VulkanMemoryAllocator\include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\ddspp;$(SolutionDir)Dependencies\stb;$(SolutionDir)BDR;$(SolutionDir)Examples\Common;$(SolutionDir)Tools\Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)Dependencies\VulkanMemoryAllocator\include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\ddspp;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\stb;$(SolutionDir)BDR;$(SolutionDir)Examples\Common;$(SolutionDir)Tools\Common</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)Dependencies\VulkanMemoryAllocator\include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\ddspp;$(SolutionDir)Dependencies\stb;$(SolutionDir)BDR;$(SolutionDir)Examples\Common;$(SolutionDir)Tools\Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir)Dependencies\VulkanMemoryAllocator\include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\ddspp;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\stb;$(SolutionDir)BDR;$(SolutionDir)Examples\Common;$(SolutionDir)Tools\Common</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -105,6 +105,7 @@
     <ClCompile Include="..\Common\Application.cpp" />
     <ClCompile Include="..\Common\Camera.cpp" />
     <ClCompile Include="..\Common\Common.cpp" />
+    <ClCompile Include="..\Common\Widgets.cpp" />
     <ClCompile Include="..\Common\ZeptoMesh.cpp" />
     <ClCompile Include="..\Common\Texture.cpp" />
     <ClCompile Include="..\Common\Vertex.cpp" />
@@ -142,10 +143,12 @@
     <ClInclude Include="..\Common\Application.h" />
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\Common.h" />
+    <ClInclude Include="..\Common\Widgets.h" />
     <ClInclude Include="..\Common\ZeptoMesh.h" />
     <ClInclude Include="..\Common\Texture.h" />
     <ClInclude Include="..\Common\Vertex.h" />
     <ClInclude Include="MeshViewer.h" />
+    <ClInclude Include="Widgets.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\ShaderStructs.inl" />

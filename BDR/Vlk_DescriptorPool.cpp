@@ -7,8 +7,15 @@
 #include "Vlk_RayTracingAccelerationStructure.h"
 #include "Vlk_Buffer.h"
 
-using namespace std;
+using std::vector;
 
+Vlk::DescriptorPool::~DescriptorPool()
+	{
+	if( this->Pool )
+		{
+		vkDestroyDescriptorPool( this->Module->GetDevice(), this->Pool, nullptr );
+		}
+	}
 
 VkDescriptorSet Vlk::DescriptorPool::BeginDescriptorSet( DescriptorSetLayout *descriptorLayout )
 	{
@@ -21,7 +28,7 @@ VkDescriptorSet Vlk::DescriptorPool::BeginDescriptorSet( DescriptorSetLayout *de
 	descriptorSetAllocateInfo.descriptorSetCount = 1;
 	descriptorSetAllocateInfo.pSetLayouts = layouts;
 
-	VLK_CALL( vkAllocateDescriptorSets( this->Parent->GetDevice(), &descriptorSetAllocateInfo, &descriptorSet ) );
+	VLK_CALL( vkAllocateDescriptorSets( this->Module->GetDevice(), &descriptorSetAllocateInfo, &descriptorSet ) );
 
 	// allocate the bindings descriptors
 	std::vector<VkDescriptorSetLayoutBinding> Bindings = descriptorLayout->GetBindings();
@@ -142,16 +149,55 @@ void Vlk::DescriptorPool::SetAccelerationStructureInArray( uint bindingIndex, ui
 
 void Vlk::DescriptorPool::EndDescriptorSet()
 	{
-	vkUpdateDescriptorSets( this->Parent->GetDevice(), (uint32_t)this->WriteDescriptorSets.size(), this->WriteDescriptorSets.data(), 0, nullptr );
+	vkUpdateDescriptorSets( this->Module->GetDevice(), (uint32_t)this->WriteDescriptorSets.size(), this->WriteDescriptorSets.data(), 0, nullptr );
 	}
 
 
 void Vlk::DescriptorPool::ResetDescriptorPool()
 	{
-	vkResetDescriptorPool( this->Parent->GetDevice(), this->Pool , 0 );
+	vkResetDescriptorPool( this->Module->GetDevice(), this->Pool , 0 );
 	}
 
-Vlk::DescriptorPool::~DescriptorPool()
+////////////////////////////////////////////////
+
+Vlk::DescriptorPoolTemplate Vlk::DescriptorPoolTemplate::General( unsigned int maxDescriptorSets, unsigned int maxDescriptorCount )
 	{
-	vkDestroyDescriptorPool( this->Parent->GetDevice(), this->Pool, nullptr );
+	DescriptorPoolTemplate ret;
+	
+	ret.DescriptorPoolCreateInfo.maxSets = maxDescriptorSets;
+
+	ret.DescriptorPoolSizes = 
+		{
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, maxDescriptorCount },
+		};
+
+	return ret;
+	}
+
+Vlk::DescriptorPoolTemplate Vlk::DescriptorPoolTemplate::Maximized( unsigned int maxDescriptorSets, unsigned int maxDescriptorCount )
+	{
+	DescriptorPoolTemplate ret;
+
+	ret.DescriptorPoolCreateInfo.maxSets = maxDescriptorSets;
+
+	ret.DescriptorPoolSizes =
+		{
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, maxDescriptorCount },
+			{ VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, maxDescriptorCount },
+		};
+
+	return ret;
 	}

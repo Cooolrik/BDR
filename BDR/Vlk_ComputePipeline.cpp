@@ -5,7 +5,7 @@
 #include "Vlk_VertexBuffer.h"
 #include "Vlk_DescriptorSetLayout.h"
 
-using namespace std;
+using std::vector;
 
 void Vlk::ComputePipeline::SetShaderModule( const Vlk::ShaderModule* shader )
 	{

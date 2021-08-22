@@ -13,7 +13,7 @@
 	public:\
 		~_classname();\
 	protected:\
-		_classname( _mainmodule* _module ) : _parentclass( _module ) {};\
+		_classname( const _mainmodule* _module ) : _parentclass( _module ) {};\
 		_classname( const _classname& other );\
 		friend class _mainmodule;\
 
@@ -22,12 +22,12 @@
 	class _classname\
 		{\
 		protected:\
-			_mainmodule* Module = nullptr;\
+			const _mainmodule* Module = nullptr;\
 		public:\
 			~_classname() {};\
 			const _mainmodule* GetModule() const { return this->Module; };\
 		protected:\
-			_classname( _mainmodule* _module ) { this->Module = _module; };\
+			_classname( const _mainmodule* _module ) { this->Module = _module; };\
 			_classname( const _classname& other );\
 			friend class _mainmodule;\
 		};
@@ -47,15 +47,17 @@ namespace Vlk
 	class VertexBufferTemplate;
 	class IndexBuffer;
 	class IndexBufferTemplate;
-
+	
 	class DescriptorSetLayout;
 	class DescriptorSetLayoutTemplate;
 
+	class DescriptorPool;
+	class DescriptorPoolTemplate;
 
 	class GraphicsPipeline;
 	class ComputePipeline;
 	class CommandPool;
-	class DescriptorPool;
+	
 	class VertexBufferDescription;
 	class Image;
 	class ImageTemplate;
@@ -158,8 +160,8 @@ namespace Vlk
 			/// create base vulkan buffer
 			template<class B,class BT> B* NewBuffer( const BT& bt );
 
-			VkCommandBuffer BeginInternalCommandBuffer();
-			void EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer );
+			VkCommandBuffer BeginInternalCommandBuffer() const;
+			void EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer ) const;
 
 		public:
 
@@ -229,8 +231,8 @@ namespace Vlk
 			/// (temporary) create descriptor layout
 			DescriptorSetLayout* CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst );
 
-			/// (temporary) create descriptor pool (allocates for uniform buffers and samplers)
-			DescriptorPool* CreateDescriptorPool( uint descriptorSetCount, uint uniformBufferCount, uint samplersCount );
+			/// Create a descriptor pool 
+			DescriptorPool* CreateDescriptorPool( const DescriptorPoolTemplate& dpt ) const;
 
 			// create image
 			Image* CreateImage( const ImageTemplate& it );

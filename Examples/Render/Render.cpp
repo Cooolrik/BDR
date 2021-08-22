@@ -332,8 +332,10 @@ void createPerFrameData()
 
 	// create one command pool and descriptor set for each frame
 	uint frame_count = (uint)renderData->renderFrames.size();
-	const uint max_stage_count = 20;
 	
+	const uint max_set_count = 20;
+	const uint max_descriptor_count = 20;
+		
 	for( uint i = 0; i < frame_count; ++i )
 		{
 		PerFrameData &frame = renderData->renderFrames[i];
@@ -350,7 +352,7 @@ void createPerFrameData()
 		frame.depthImageView = renderer->GetDepthTargetImage( i )->GetImageView();
 
 		frame.commandPool = renderer->CreateCommandPool( 1 );
-		frame.descriptorPool = renderer->CreateDescriptorPool( max_stage_count, max_stage_count, max_stage_count );
+		frame.descriptorPool = renderer->CreateDescriptorPool( Vlk::DescriptorPoolTemplate::General( max_set_count , max_descriptor_count ) );
 
 		frame.uniformBuffer = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( UniformBufferObject ) ) );
 		frame.cullingUBO = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( CullingSettingsUBO ) ) );

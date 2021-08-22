@@ -86,7 +86,7 @@ inline void _vkDestroyDebugUtilsMessengerEXT( VkInstance instance, VkDebugUtilsM
 		}
 	}
 
-VkCommandBuffer Vlk::Renderer::BeginInternalCommandBuffer()
+VkCommandBuffer Vlk::Renderer::BeginInternalCommandBuffer() const
 	{
 	VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
 	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -105,7 +105,7 @@ VkCommandBuffer Vlk::Renderer::BeginInternalCommandBuffer()
 	return commandBuffer;
 	}
 
-void Vlk::Renderer::EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer )
+void Vlk::Renderer::EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer ) const
 	{
 	vkEndCommandBuffer( buffer );
 
@@ -1185,24 +1185,13 @@ void Vlk::Renderer::WaitForDeviceIdle()
 	vkDeviceWaitIdle( this->Device );
 	}
 
-
-Vlk::DescriptorPool* Vlk::Renderer::CreateDescriptorPool( uint descriptorSetCount, uint uniformBufferCount, uint samplersCount )
+Vlk::DescriptorPool* Vlk::Renderer::CreateDescriptorPool( const DescriptorPoolTemplate& dpt ) const
 	{
-	DescriptorPool* pool = new DescriptorPool();
-	pool->Parent = this;
+	DescriptorPool* pool = new DescriptorPool( this );
 
-	VkDescriptorPoolSize descriptorPoolSizes[2];
-	descriptorPoolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	descriptorPoolSizes[0].descriptorCount = static_cast<uint32_t>( uniformBufferCount );
-	descriptorPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorPoolSizes[1].descriptorCount = static_cast<uint32_t>( samplersCount );
-
-	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
-	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>( 2 );
-	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes;
-	descriptorPoolCreateInfo.maxSets = static_cast<uint32_t>( descriptorSetCount );
-
+	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = dpt.DescriptorPoolCreateInfo;
+	descriptorPoolCreateInfo.poolSizeCount = (uint32_t)dpt.DescriptorPoolSizes.size();
+	descriptorPoolCreateInfo.pPoolSizes = dpt.DescriptorPoolSizes.data();
 	VLK_CALL( vkCreateDescriptorPool( this->Device, &descriptorPoolCreateInfo, nullptr, &pool->Pool ) );
 
 	return pool;

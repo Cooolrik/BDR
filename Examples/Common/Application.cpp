@@ -73,11 +73,21 @@ void ApplicationBase::Init()
 
 	this->ConsoleOutputHandle = GetStdHandle( STD_OUTPUT_HANDLE );
 	GetConsoleScreenBufferInfo( this->ConsoleOutputHandle, &this->ConsoleBufferInfo );
+
+	if( this->UseWidgets )
+		{
+		this->UIWidgets = new ::UIWidgets();
+		}
 	}
 
 void ApplicationBase::Deinit()
 	{
 	this->Renderer->WaitForDeviceIdle();
+
+	if( this->UIWidgets )
+		{
+		delete this->UIWidgets;
+		}
 
 	delete this->Renderer;
 

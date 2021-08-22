@@ -10,14 +10,11 @@ namespace Vlk
     class Texture;
     class RayTracingAccelerationStructure;
 
-    class DescriptorPool
+    class DescriptorPool : public RendererSubmodule
         {
         private:
-            DescriptorPool() = default;
-            DescriptorPool( const DescriptorPool& other );
-            friend class Renderer;
+            BDSubmoduleMacro( DescriptorPool, RendererSubmodule, Renderer );
 
-            Renderer* Parent = nullptr;
             VkDescriptorPool Pool = nullptr;
 
             class DescriptorInfo
@@ -49,17 +46,43 @@ namespace Vlk
             void SetImage( uint bindingIndex, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout );
             void SetImageInArray( uint bindingIndex, uint arrayIndex, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout );
 
-            void SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccelerationStructure* accelerationStructure );
-
             // Sets the acceleration structure bound to the descriptor
             void SetAccelerationStructure( uint bindingIndex, RayTracingAccelerationStructure* accelerationStructure );
+            void SetAccelerationStructureInArray( uint bindingIndex, uint arrayIndex, RayTracingAccelerationStructure* accelerationStructure );
 
             // update and finalize the descriptor set
             void EndDescriptorSet();
 
             // resets the pool
             void ResetDescriptorPool();
-
-            ~DescriptorPool();
         };
+
+    class DescriptorPoolTemplate
+        {
+        public:
+            // initial create information
+            VkDescriptorPoolCreateInfo DescriptorPoolCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+
+            // the pool sizes of different descriptor types
+            std::vector<VkDescriptorPoolSize> DescriptorPoolSizes;
+
+            /////////////////////////////
+
+            // create general descriptor pool that supports most standard rendering scenarios
+            // and allocates descriptors for uniforms, storage images, storage buffers and combined samplers
+            static DescriptorPoolTemplate General( 
+                unsigned int maxDescriptorSets = 10, 
+                unsigned int maxDescriptorCount = 10
+                );
+
+            // create a maximized descriptor pool that allocates all types of descriptors
+            // dont overallocate! this is mainly used for GUIs such as ImGUI
+            static DescriptorPoolTemplate Maximized(
+                unsigned int maxDescriptorSets = 1000,
+                unsigned int maxDescriptorCount = 1000
+                );
+
+
+        };
+
     };
