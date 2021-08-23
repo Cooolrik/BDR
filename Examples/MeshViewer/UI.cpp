@@ -45,6 +45,8 @@
 #include "Camera.h"
 #include "ImGuiWidgets.h"
 
+#include "Zeptomesh.h"
+
 void UI::Update()
     {
 	static float window_width = { 400.f };
@@ -58,18 +60,53 @@ void UI::Update()
 	ImGui::Checkbox( "Camera Controls", &this->show_camera_controls );
 	if( show_camera_controls )
 		{
-		ImGui::SliderFloat3( "Target", &this->mv->Camera.cameraTarget.x, -100.f, 100.f );
-		ImGui::SliderFloat2( "Rotation", &this->mv->Camera.cameraRot.x, -100.f, 100.f );
-		ImGui::SliderFloat( "Dist", &this->mv->Camera.cameraDist, 0.f, 1000.f );
+		ImGui::Indent( 10 );
+		ImGui::SliderFloat3( "Target", &this->mv->Camera.cameraTarget.x, -100.f, 100.f, "%.1f" );
+		ImGui::SliderAngle( "Orbit H", &this->mv->Camera.cameraRot.x, -360.f, 360.f );
+		ImGui::SliderAngle( "Orbit V", &this->mv->Camera.cameraRot.y, -89.f, 89.f );
+		ImGui::SliderFloat( "Dist", &this->mv->Camera.cameraDist, 0.f, 1000.f, "%.1f", ImGuiSliderFlags_Logarithmic);
+		ImGui::Indent( -10 );
 		}
 
+	ImGui::Checkbox( "Select Submesh", &this->select_a_zeptomesh );
+	if( select_a_zeptomesh )
+		{
+		ImGui::Indent( 10 );
 
+		int mesh_count = (int)this->mv->MeshAlloc->GetMeshCount();
+		if( mesh_count > 0 )
+			{
+			if( this->selected_zeptomesh_index < 0 )
+				this->selected_zeptomesh_index = 0;
+			if( this->selected_zeptomesh_index >= mesh_count )
+				this->selected_zeptomesh_index = mesh_count - 1;
 
+			if( mesh_count > 1 )
+				{
+				ImGui::SliderInt( "Zeptomesh Id", &this->selected_zeptomesh_index, 0, mesh_count - 1 );
+				}
+
+			const ZeptoMesh* zm = this->mv->MeshAlloc->GetMesh( selected_zeptomesh_index );
+			int submesh_count = (int)zm->SubMeshes.size();
+			if( submesh_count > 0 )
+				{
+				if( this->selected_submesh_index < 0 )
+					this->selected_submesh_index = 0;
+				if( this->selected_submesh_index >= submesh_count )
+					this->selected_submesh_index = submesh_count - 1;
+
+				if( submesh_count > 1 )
+					{
+					ImGui::SliderInt( "Submesh Id", &this->selected_submesh_index, 0, submesh_count - 1 );
+					}
+				}
+			}
+
+		ImGui::Indent( -10 );
+		}
 
 	ImVec2 window_pos = ImGui::GetWindowPos();
 	window_width = main_viewport->WorkPos.x + main_viewport->WorkSize.x - 5 - window_pos.x;
 
 	ImGui::End();
-
-
     }

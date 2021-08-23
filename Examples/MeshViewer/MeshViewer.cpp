@@ -169,7 +169,15 @@ VkCommandBuffer MeshViewer::DrawScene()
 			uint g = (uint)( sm / 16 ) % 16;
 			uint b = (uint)sm % 16;
 
-			pc.Color = glm::vec3( 1, 1, 1 ); // glm::vec3( float( r ) / 256.f, float( g ) / 256.f, float( b ) / 256.f );
+			if( this->ui.select_a_zeptomesh && (int)m == this->ui.selected_zeptomesh_index && (int)sm == this->ui.selected_submesh_index )
+				{
+				pc.Color = glm::vec3( 1, 0, 0 );
+				}
+			else
+				{
+				pc.Color = glm::vec3( 1, 1, 1 ); 
+				}
+						
 			pc.materialID = 0;
 			pc.vertexCutoffIndex = submesh.VertexOffset + submesh.LockedVertexCount;
 			pc.quantizationMask = 0xffffffff << quantization;
