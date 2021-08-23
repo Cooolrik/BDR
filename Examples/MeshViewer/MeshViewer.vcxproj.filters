@@ -46,8 +46,11 @@
     <ClCompile Include="App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Widgets.cpp">
+    <ClCompile Include="..\Common\ImGuiWidgets.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,11 +89,11 @@
     <ClInclude Include="MeshViewer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Widgets.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Widgets.h">
+    <ClInclude Include="..\Common\ImGuiWidgets.h">
       <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

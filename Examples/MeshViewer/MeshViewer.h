@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "ZeptoMesh.h"
+#include "UI.h"
 
 class SceneRender
 	{
@@ -44,6 +45,8 @@ struct PerFrameData
 class MeshViewer
 	{
 	private:
+		friend class UI;
+
 		// from application class
 		ApplicationBase& app;
 		Vlk::Renderer* Renderer;
@@ -63,6 +66,8 @@ class MeshViewer
 		unique_ptr<Vlk::ShaderModule> vertexRenderShader = nullptr;
 		unique_ptr<Vlk::ShaderModule> fragmentRenderShader = nullptr;
 
+		UI ui;
+
 	public:
 		MeshViewer( ApplicationBase& _app ) :
 			app( _app ),
@@ -71,7 +76,7 @@ class MeshViewer
 			{}
 
 		void SetupScene();
-
 		void SetupPerFrameData();
+		void UpdateScene();
 		VkCommandBuffer DrawScene();
 	};

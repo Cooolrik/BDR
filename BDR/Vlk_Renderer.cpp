@@ -1285,6 +1285,18 @@ Vlk::Sampler* Vlk::Renderer::CreateSampler( const SamplerTemplate& _st )
 	return sampler;
 	}
 
+void Vlk::Renderer::RunBlockingCommandBuffer( std::function<void( VkCommandBuffer cmd )> fp ) const
+	{
+	// allocate a command buffer
+	VkCommandBuffer buf = this->BeginInternalCommandBuffer();
+
+	// call the lambda to fill the command
+	fp( buf );
+
+	// done filling, submit and wait for it to run
+	this->EndAndSubmitInternalCommandBuffer( buf );
+	}
+
 Vlk::Renderer::~Renderer()
 	{
 	// remove all extensions

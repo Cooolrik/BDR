@@ -14,6 +14,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 void ApplicationBase::Init()
 	{
+	if( this->UseWidgets && this->WaitInLoopForCameraDirty )
+		{
+		throw std::runtime_error( "Error: UseWidgets and WaitInLoopForCameraDirty are mutually exclusive" );
+		}
+
 	glfwInit();
 	glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 	this->Window = glfwCreateWindow( this->InitialWindowDimensions[0], this->InitialWindowDimensions[1], this->WindowTitle.c_str(), nullptr, nullptr );
@@ -67,7 +72,7 @@ void ApplicationBase::Init()
 	glfwGetFramebufferSize( this->Window, &width, &height );
 	Vlk::Renderer::CreateSwapChainParameters createSwapChainParameters;
 	createSwapChainParameters.SurfaceFormat = this->Renderer->GetSurfaceFormat();
-	createSwapChainParameters.PresentMode = this->Renderer->GetPresentMode();
+	createSwapChainParameters.PresentMode = ( this->UseTripleBuffering ) ? VK_PRESENT_MODE_FIFO_KHR : this->Renderer->GetPresentMode(); // VK_PRESENT_MODE_FIFO_KHR is always available, so we can safely choose it
 	createSwapChainParameters.RenderExtent = { static_cast<uint32_t>( width ), static_cast<uint32_t>( height ) };
 	this->Renderer->CreateSwapChainAndFramebuffers( createSwapChainParameters );
 
@@ -76,7 +81,7 @@ void ApplicationBase::Init()
 
 	if( this->UseWidgets )
 		{
-		this->UIWidgets = new ::UIWidgets();
+		this->UIWidgets = new ::ImGuiWidgets( this->Renderer , this->Window );
 		}
 	}
 

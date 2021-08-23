@@ -55,6 +55,9 @@ namespace Vlk
 
             // resets the pool
             void ResetDescriptorPool();
+
+            // get the vulkan object
+            BDGetCustomNameMacro( VkDescriptorPool, DescriptorPool, Pool );
         };
 
     class DescriptorPoolTemplate
@@ -76,7 +79,7 @@ namespace Vlk
                 );
 
             // create a maximized descriptor pool that allocates all types of descriptors
-            // dont overallocate! this is mainly used for GUIs such as ImGUI
+            // dont overallocate! this is mainly used for GUIs such as ImGui 
             static DescriptorPoolTemplate Maximized(
                 unsigned int maxDescriptorSets = 1000,
                 unsigned int maxDescriptorCount = 1000

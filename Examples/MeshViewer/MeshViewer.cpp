@@ -48,6 +48,9 @@ void MeshViewer::SetupScene()
 
 	// create a standard linear shader for texture mapping
 	this->LinearSampler = u_ptr(this->Renderer->CreateSampler( Vlk::SamplerTemplate::Linear() ));
+
+	// add a pointer to the ui
+	ui.mv = this;
 	}
 
 void MeshViewer::SetupPerFrameData()
@@ -77,6 +80,16 @@ void MeshViewer::SetupPerFrameData()
 		frame.SceneUBO = u_ptr(this->Renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( SceneRender ) ) ));
 		}
 
+	}
+
+void MeshViewer::UpdateScene()
+	{
+	if( this->app.UIWidgets )
+		{
+		this->app.UIWidgets->NewFrame();
+		this->ui.Update();
+		this->app.UIWidgets->EndFrameAndRender();
+		}
 	}
 
 VkCommandBuffer MeshViewer::DrawScene()
@@ -167,6 +180,13 @@ VkCommandBuffer MeshViewer::DrawScene()
 			}
 		}
 
+	// draw gui
+	if( this->app.UIWidgets )
+		{
+		this->app.UIWidgets->Draw( buffer );
+		}
+
+	// done with the rendering
 	pool->EndRenderPass();
 
 	// prepare the color target and swap chain image for transfer

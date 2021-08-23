@@ -42,7 +42,7 @@
 
 #include "Texture.h"
 #include "Camera.h"
-#include "Widgets.h"
+#include "ImGuiWidgets.h"
 
 class ApplicationBase
 	{
@@ -57,7 +57,8 @@ class ApplicationBase
 		bool ShowConsole = true;
 		uint InitialConsoleDimensions[2] = { 1600, 400 };
 		uint InitialConsolePosition[2] = { 50, 700 };
-		bool WaitInLoopForCameraDirty = true;
+		bool UseTripleBuffering = true;
+		bool WaitInLoopForCameraDirty = false; // mutually exclusive with UseWidgets, as ImGUI need to continuously update
 		bool UseWidgets = true;
 
 		// set by init, freed by deinit
@@ -68,7 +69,7 @@ class ApplicationBase
 		HWND ConsoleWindow = nullptr;
 		HANDLE ConsoleOutputHandle = nullptr;
 		CONSOLE_SCREEN_BUFFER_INFO ConsoleBufferInfo = {};
-		UIWidgets* UIWidgets = nullptr;
+		ImGuiWidgets* UIWidgets = nullptr;
 
 		uint CurrentFrameIndex = 0;
 
@@ -129,8 +130,9 @@ template<class T> class Application : public ApplicationBase
 				{
 				glfwPollEvents();
 
-				// update camera 
+				// update camera & scene
 				this->Camera.UpdateInput( this->Window );
+				this->Scene->UpdateScene();
 
 				// if we should wait for camera to be dirty
 				if( this->WaitInLoopForCameraDirty && !this->Camera.render_dirty )

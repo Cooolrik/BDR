@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <functional>
 
 // include Vulkan.h and VMA memory allocator
 #pragma warning( push )
@@ -240,11 +241,18 @@ namespace Vlk
 			// create sampler
 			Sampler* CreateSampler( const SamplerTemplate& st );
 
+			// Create and submit synchronously a command buffer with the internal command pool.
+			// The call is blocking until the command has been run, so only use during inits.
+			void RunBlockingCommandBuffer( std::function<void (VkCommandBuffer cmd)> fp ) const;
+
 			~Renderer();
 
 			// public get methods
 			BDGetMacro( VkInstance, Instance );
+			BDGetMacro( VkPhysicalDevice, PhysicalDevice );
 			BDGetMacro( VkDevice, Device );
+			BDGetMacro( VkQueue, GraphicsQueue );
+			BDGetMacro( VkQueue, PresentQueue );
 			BDGetMacro( std::vector<VkSurfaceFormatKHR>, AvailableSurfaceFormats );
 			BDGetMacro( std::vector<VkPresentModeKHR>, AvailablePresentModes );
 			BDGetMacro( VkPhysicalDeviceFeatures2, PhysicalDeviceFeatures );
@@ -254,6 +262,7 @@ namespace Vlk
 			BDGetMacro( VkExtent2D, RenderExtent );
 			BDGetMacro( std::vector<VkFramebuffer>, Framebuffers );
 			BDGetMacro( std::vector<VkImage>, SwapChainImages );
+			BDGetMacro( VkRenderPass, RenderPass );
 			BDGetMacro( VmaAllocator, MemoryAllocator );
 
 			const Image* GetColorTargetImage( uint index ) const { return this->TargetImages[index].Color.get(); }
