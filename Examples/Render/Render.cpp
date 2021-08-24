@@ -93,7 +93,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 		pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT );
 		pool->PipelineBarrier( VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
 
-		pool->BindComputePipeline( renderData->cullingPipeline );
+		pool->BindPipeline( renderData->cullingPipeline );
 		pool->BindDescriptorSet( renderData->cullingPipeline, currentFrame->cullingDescriptorSet );
 		pool->DispatchCompute( (renderData->scene_objects / 256) + 1 );
 
@@ -108,7 +108,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	pool->BeginRenderPass( currentFrame->framebuffer );
 	pool->BindVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
 	pool->BindIndexBuffer( renderData->MeshAlloc->GetIndexBuffer() );
-	pool->BindGraphicsPipeline( renderData->renderPipeline );
+	pool->BindPipeline( renderData->renderPipeline );
 	pool->BindDescriptorSet( renderData->renderPipeline, currentFrame->renderDescriptorSet );
 	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
 	//debugDrawGraphicsPipeline( pool );
@@ -118,7 +118,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	pool->QueueUpImageMemoryBarrier( currentFrame->depthImage , VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT|VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
 	pool->PipelineBarrier( VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
 
-	pool->BindComputePipeline( renderData->depthReducePipeline );
+	pool->BindPipeline( renderData->depthReducePipeline );
 	for(size_t i = 0; i < currentFrame->depthReduceDescriptorSets.size(); ++i)
 		{
 		DepthReducePushConstants pc;
@@ -741,10 +741,10 @@ void SetupScene()
 	cdlt.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		 // 5 - depthPyramid texture
 	renderData->cullingDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( cdlt );
 
-	renderData->cullingPipeline = renderData->renderer->CreateComputePipeline();
-	renderData->cullingPipeline->SetShaderModule( renderData->cullingShader );
-	renderData->cullingPipeline->SetDescriptorSetLayout( renderData->cullingDescriptorLayout );
-	renderData->cullingPipeline->BuildPipeline();
+	std::unique_ptr<Vlk::ComputePipelineTemplate> cullt = u_ptr( new Vlk::ComputePipelineTemplate() );
+	cullt->SetShaderModule( renderData->cullingShader );
+	cullt->AddDescriptorSetLayout( renderData->cullingDescriptorLayout );
+	renderData->cullingPipeline = renderData->renderer->CreateComputePipeline( *cullt );
 
 	// render pipeline
 	Vlk::DescriptorSetLayoutTemplate rdlt;
@@ -770,11 +770,11 @@ void SetupScene()
 	drdlt.AddStoredImageBinding( VK_SHADER_STAGE_COMPUTE_BIT );	// 1 - destination image
 	renderData->depthReduceDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( drdlt );
 
-	renderData->depthReducePipeline = renderData->renderer->CreateComputePipeline();
-	renderData->depthReducePipeline->SetShaderModule( renderData->depthReduceShader );
-	renderData->depthReducePipeline->SetDescriptorSetLayout( renderData->depthReduceDescriptorLayout );
-	renderData->depthReducePipeline->SetSinglePushConstantRange( sizeof( DepthReducePushConstants ), VK_SHADER_STAGE_COMPUTE_BIT );
-	renderData->depthReducePipeline->BuildPipeline();
+	std::unique_ptr<Vlk::ComputePipelineTemplate> drt = u_ptr( new Vlk::ComputePipelineTemplate() );
+	drt->SetShaderModule( renderData->depthReduceShader );
+	drt->AddDescriptorSetLayout( renderData->depthReduceDescriptorLayout );
+	drt->AddPushConstantRange( VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof( DepthReducePushConstants ) );
+	renderData->depthReducePipeline = renderData->renderer->CreateComputePipeline( *drt );
 	}
 
 void run()

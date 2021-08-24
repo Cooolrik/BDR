@@ -164,13 +164,13 @@ class RenderData
 
 		Vlk::Renderer* renderer{};
 		
-		Vlk::GraphicsPipeline* renderPipeline = nullptr;
+		Vlk::Pipeline* renderPipeline = nullptr;
 		Vlk::DescriptorSetLayout* renderDescriptorLayout = nullptr;
 
-		Vlk::ComputePipeline* cullingPipeline = nullptr;
+		Vlk::Pipeline* cullingPipeline = nullptr;
 		Vlk::DescriptorSetLayout* cullingDescriptorLayout = nullptr;
 
-		Vlk::ComputePipeline* depthReducePipeline = nullptr;
+		Vlk::Pipeline* depthReducePipeline = nullptr;
 		Vlk::DescriptorSetLayout* depthReduceDescriptorLayout = nullptr;
 
 		Vlk::Sampler* depthSampler = nullptr;

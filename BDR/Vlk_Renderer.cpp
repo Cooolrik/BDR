@@ -994,9 +994,10 @@ Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
 	return pool;
 	}
 
-Vlk::GraphicsPipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt )
+Vlk::Pipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt )
 	{
-	GraphicsPipeline* pipeline = new GraphicsPipeline(this);
+	Pipeline* pipeline = new Pipeline(this);
+	pipeline->PipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
 	// setup the shader stages
 	uint shaderStageCount = (uint)gpt.ShaderModules.size();
@@ -1031,7 +1032,7 @@ Vlk::GraphicsPipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipe
 	pipelineInfo.stageCount = (uint32_t)pipelineShaderStageCreateInfos.size();
 	pipelineInfo.pStages = pipelineShaderStageCreateInfos.data();
 	pipelineInfo.renderPass = this->RenderPass;
-	VLK_CALL( vkCreateGraphicsPipelines( this->Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline->Pipeline ) );
+	VLK_CALL( vkCreateGraphicsPipelines( this->Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline->PipelineHandle ) );
 
 	// remove the temporary shader module objects
 	for( shaderIndex = 0; shaderIndex < shaderStageCount; ++shaderIndex )
@@ -1042,12 +1043,39 @@ Vlk::GraphicsPipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipe
 	return pipeline;
 	}
 
-
-
-Vlk::ComputePipeline* Vlk::Renderer::CreateComputePipeline()
+Vlk::Pipeline* Vlk::Renderer::CreateComputePipeline( const ComputePipelineTemplate& cpt )
 	{
-	ComputePipeline* pipeline = new ComputePipeline();
-	pipeline->Parent = this;
+	Pipeline* pipeline = new Pipeline( this );
+	pipeline->PipelineBindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	// create a shader module wrap around the shader
+	VkShaderModule shaderModule;
+	VkShaderModuleCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = cpt.Shader->Shader.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>( cpt.Shader->Shader.data() );
+	VLK_CALL( vkCreateShaderModule( this->Device, &createInfo, nullptr, &shaderModule ) );
+
+	// add module to stage info
+	VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo;
+	pipelineShaderStageCreateInfo = {};
+	pipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	pipelineShaderStageCreateInfo.stage = cpt.Shader->Stage;
+	pipelineShaderStageCreateInfo.module = shaderModule;
+	pipelineShaderStageCreateInfo.pName = cpt.Shader->Entrypoint;
+
+	// create the layout first
+	VLK_CALL( vkCreatePipelineLayout( this->Device, &cpt.PipelineLayoutCreateInfo, nullptr, &pipeline->PipelineLayout ) );
+
+	// now create the pipeline
+	VkComputePipelineCreateInfo pipelineInfo = cpt.ComputePipelineCreateInfo;
+	pipelineInfo.layout = pipeline->PipelineLayout;
+	pipelineInfo.stage = pipelineShaderStageCreateInfo;
+	VLK_CALL( vkCreateComputePipelines( this->Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline->PipelineHandle ) );
+
+	// remove the temporary shader module object
+	vkDestroyShaderModule( this->Device, shaderModule, nullptr );
+
 	return pipeline;
 	}
 

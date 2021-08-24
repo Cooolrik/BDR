@@ -55,10 +55,10 @@ namespace Vlk
 	class DescriptorPool;
 	class DescriptorPoolTemplate;
 
-	class GraphicsPipeline;
+	class Pipeline;
 	class GraphicsPipelineTemplate;
+	class ComputePipelineTemplate;
 
-	class ComputePipeline;
 	class CommandPool;
 	
 	class VertexBufferDescription;
@@ -207,11 +207,11 @@ namespace Vlk
 			/// wait for device to idle, for synching, eg shutting down
 			void WaitForDeviceIdle();
 
-			/// create a GraphicsPipeline object based on template
-			GraphicsPipeline* CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt );
+			/// create a Graphics Pipeline object based on template
+			Pipeline* CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt );
 
-			/// (temporary) create a ComputePipeline object
-			ComputePipeline* CreateComputePipeline();
+			/// create a Compute Pipeline object based on template
+			Pipeline* CreateComputePipeline( const ComputePipelineTemplate& cpt );
 
 			/// create a CommandPool object. set number of buffers to allocate
 			CommandPool* CreateCommandPool( uint bufferCount );

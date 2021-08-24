@@ -9,7 +9,7 @@
 namespace Vlk
     {
     class RayTracingShaderBindingTable;
-    class GraphicsPipeline;
+    class Pipeline;
     class VertexBuffer;
     class IndexBuffer;
     class RayTracingPipeline;
@@ -40,21 +40,18 @@ namespace Vlk
             void BeginRenderPass( VkFramebuffer destFramebuffer );
             void EndRenderPass();
 
-            void BindGraphicsPipeline( GraphicsPipeline* pipeline );
-            void BindComputePipeline( ComputePipeline* pipeline );
+            void BindPipeline( Pipeline* pipeline );
             void BindRayTracingPipeline( RayTracingPipeline* pipeline );
 
             void BindVertexBuffer( VertexBuffer* buffer );
             void BindIndexBuffer( IndexBuffer* buffer );
 
-            void BindDescriptorSet( GraphicsPipeline* pipeline, VkDescriptorSet set );
+            void BindDescriptorSet( Pipeline* pipeline, VkDescriptorSet set );
             void BindDescriptorSet( RayTracingPipeline* pipeline, VkDescriptorSet set );
-            void BindDescriptorSet( ComputePipeline* pipeline, VkDescriptorSet set );
-
-            void PushConstants( GraphicsPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
+ 
+            void PushConstants( Pipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
             void PushConstants( RayTracingPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
-            void PushConstants( ComputePipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
-
+ 
             void SetViewport( VkViewport viewport );
             void SetViewport( float x, float y, float width, float height, float minDepth = 0.f, float maxDepth = 1.f );
 

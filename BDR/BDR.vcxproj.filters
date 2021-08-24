@@ -88,6 +88,9 @@
     <ClCompile Include="Vlk_Extension.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Vlk_Pipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vlk_CommandPool.h">
@@ -154,6 +157,9 @@
       <Filter>Source Files\Extensions\Vlk_RayTracingExtension</Filter>
     </ClInclude>
     <ClInclude Include="Vlk_Extension.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_Pipeline.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

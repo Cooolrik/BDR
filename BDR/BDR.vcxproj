@@ -93,6 +93,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Vlk_Pipeline.cpp" />
     <ClCompile Include="Vlk_vma_implementation.cpp" />
     <ClCompile Include="Vlk_Buffer.cpp" />
     <ClCompile Include="Vlk_BufferDeviceAddressExtension.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="Vlk_Helpers.h" />
     <ClInclude Include="Vlk_Image.h" />
     <ClInclude Include="Vlk_IndexBuffer.h" />
+    <ClInclude Include="Vlk_Pipeline.h" />
     <ClInclude Include="Vlk_RayTracingBLASEntry.h" />
     <ClInclude Include="Vlk_RayTracingAccelerationStructure.h" />
     <ClInclude Include="Vlk_RayTracingExtension.h" />

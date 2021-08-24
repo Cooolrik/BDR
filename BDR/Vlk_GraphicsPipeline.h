@@ -4,6 +4,7 @@
 #pragma warning( disable : 26812 )
 
 #include "Vlk_Renderer.h"
+#include "Vlk_Pipeline.h"
 
 namespace Vlk
     {
@@ -11,25 +12,12 @@ namespace Vlk
     class VertexBuffer;
     class DescriptorSetLayout;
 
-    class GraphicsPipeline : public RendererSubmodule
-        {
-        private:
-            BDSubmoduleMacro( GraphicsPipeline, RendererSubmodule, Renderer );
-
-            VkPipeline Pipeline = nullptr;
-            VkPipelineLayout PipelineLayout = nullptr;
-
-        public:
-            BDGetMacro( VkPipeline, Pipeline );
-            BDGetMacro( VkPipelineLayout, PipelineLayout );
-        };
-
     class GraphicsPipelineTemplate
         {
         private:
-            // template cannot be copied by value because of inter-struct links
-            GraphicsPipelineTemplate( const GraphicsPipelineTemplate& other ) { other; };
-            const GraphicsPipelineTemplate& operator = ( const GraphicsPipelineTemplate& other ) { other; };
+            // dont allow copy-by-value, because of inter-struct links
+            GraphicsPipelineTemplate( const GraphicsPipelineTemplate& other );
+            const GraphicsPipelineTemplate& operator = ( const GraphicsPipelineTemplate& other );
 
         public:
             // the shader modules to use

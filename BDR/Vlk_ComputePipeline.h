@@ -4,54 +4,46 @@
 #pragma warning( disable : 26812 )
 
 #include "Vlk_Renderer.h"
+#include "Vlk_Pipeline.h"
 
 namespace Vlk
     {
     class ShaderModule;
 
-    class ComputePipeline
+    class ComputePipelineTemplate
         {
         private:
-            ComputePipeline() = default;
-            ComputePipeline( const ComputePipeline& other );
-            friend class Renderer;
-
-            Renderer* Parent = nullptr;
-            const ShaderModule* Shader = nullptr;
-            VkPipeline Pipeline = nullptr;
-            VkPipelineLayout PipelineLayout = nullptr;
-
-            VkDescriptorSetLayout DescriptorSetLayoutHandle = nullptr;
-            std::vector<VkPushConstantRange> PushConstantRanges{};
+            // dont allow copy-by-value, because of inter-struct links
+            ComputePipelineTemplate( const ComputePipelineTemplate& other );
+            const ComputePipelineTemplate& operator = ( const ComputePipelineTemplate& other );
 
         public:
+            // the shader module to use
+            const ShaderModule* Shader = nullptr;
 
-            // set the shader of the pipeline
+            // pipeline layout structures
+            std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+            std::vector<VkPushConstantRange> PushConstantRanges;
+            VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+
+            // pipeline create info
+            VkComputePipelineCreateInfo ComputePipelineCreateInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+
+            //////////////////////////////////////
+
+             // creates an initial pipeline. 
+            ComputePipelineTemplate();
+
+            // set the shader stage to the pipeline
             void SetShaderModule( const ShaderModule* shader );
 
-            // sets the descriptor set layout for the uniform buffers and texture samplers
-            void SetVkDescriptorSetLayout( VkDescriptorSetLayout descriptorSetLayout );
-            void SetDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout );
+            // adds a descriptor set layout. returns the index of the set in the list of layouts
+            unsigned int AddDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout );
 
-            // sets the push constant ranges
-            void SetSinglePushConstantRange( uint32_t buffersize, VkShaderStageFlags stageFlags );
-            void SetPushConstantRanges( const std::vector<VkPushConstantRange>& ranges );
+            // adds a push constant range. returns the index of the range in the list of layouts
+            unsigned int AddPushConstantRange( VkPushConstantRange range );
+            unsigned int AddPushConstantRange( VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size );
 
-            // returns true if pipeline needs to be built
-            bool PipelineNotBuilt() const { return (this->Pipeline == nullptr); };
-
-            // build vulkan pipeline
-            void BuildPipeline();
-
-            // cleanup allocated pipeline, remove vulkan objects
-            void CleanupPipeline();
-
-            ~ComputePipeline();
-
-            BDGetMacro( Renderer*, Parent );
-            BDGetMacro( VkPipeline, Pipeline );
-            BDGetMacro( VkPipelineLayout, PipelineLayout );
-            BDGetMacro( ShaderModule*, Shader );
         };
     };
 

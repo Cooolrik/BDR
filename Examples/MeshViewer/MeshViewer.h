@@ -55,7 +55,7 @@ class MeshViewer
 		// application data
 		vector<PerFrameData> PerFrameData;
 
-		unique_ptr<Vlk::GraphicsPipeline> RenderPipeline = nullptr;
+		unique_ptr<Vlk::Pipeline> RenderPipeline = nullptr;
 		unique_ptr<Vlk::DescriptorSetLayout> RenderPipelineDescriptorSetLayout = nullptr;
 
 		vector<unique_ptr<Texture>> Textures = {}; // all textures

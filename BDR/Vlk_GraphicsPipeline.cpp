@@ -7,18 +7,6 @@
 
 using std::vector;
 
-Vlk::GraphicsPipeline::~GraphicsPipeline()
-	{
-	if( this->Pipeline )
-		{
-		vkDestroyPipeline( this->Module->GetDevice(), this->Pipeline, nullptr );
-		}
-	if( this->PipelineLayout )
-		{
-		vkDestroyPipelineLayout( this->Module->GetDevice(), this->PipelineLayout, nullptr );
-		}
-	}
-
 Vlk::GraphicsPipelineTemplate::GraphicsPipelineTemplate()
 	{
 	// pipeline layout is initially empty

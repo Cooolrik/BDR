@@ -271,8 +271,8 @@ class VulkanRenderTest
 		Vlk::DescriptorPool* QRDescriptorPool = nullptr;
 		std::vector<VkDescriptorSet> QRDescriptorSets{};
 
-		Vlk::GraphicsPipeline* graphics_pipeline{};
-		Vlk::GraphicsPipeline* quadrender_pipeline{};
+		Vlk::Pipeline* graphics_pipeline{};
+		Vlk::Pipeline* quadrender_pipeline{};
 
 		Vlk::VertexBuffer* quadBuffer{};
 
@@ -563,7 +563,7 @@ class VulkanRenderTest
 				pool->TraceRays( sbt, 2048, 1024 );
 
 				pool->BeginRenderPass( framebuffers[frame] );
-				pool->BindGraphicsPipeline( quadrender_pipeline );
+				pool->BindPipeline( quadrender_pipeline );
 				pool->BindVertexBuffer( quadBuffer );
 				pool->BindDescriptorSet( quadrender_pipeline, QRDescriptorSets[frame] );
 				pool->Draw( (uint)quad.size() );
