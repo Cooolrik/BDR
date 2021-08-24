@@ -55,6 +55,12 @@ namespace Vlk
             void PushConstants( RayTracingPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
             void PushConstants( ComputePipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
 
+            void SetViewport( VkViewport viewport );
+            void SetViewport( float x, float y, float width, float height, float minDepth = 0.f, float maxDepth = 1.f );
+
+            void SetScissorRectangle( VkRect2D scissorRectangle );
+            void SetScissorRectangle( int32_t x, int32_t y, uint32_t width, uint32_t height );
+
             void UpdateBuffer( Buffer* buffer, VkDeviceSize dstOffset, uint32_t dataSize, const void* pData );
 
             void Draw( uint vertexCount );

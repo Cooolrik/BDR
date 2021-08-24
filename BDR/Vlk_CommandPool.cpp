@@ -173,6 +173,42 @@ void Vlk::CommandPool::PushConstants( ComputePipeline* pipeline, VkShaderStageFl
 	vkCmdPushConstants( this->Buffers[this->CurrentBufferIndex], pipeline->GetPipelineLayout(), stageFlags, offset, size, pValues );
 	}
 
+void Vlk::CommandPool::SetViewport( VkViewport viewport )
+	{
+	ASSERT_RECORDING();
+
+	vkCmdSetViewport( this->Buffers[this->CurrentBufferIndex], 0, 1, &viewport );
+	}
+
+void Vlk::CommandPool::SetViewport( float x, float y, float width, float height, float minDepth, float maxDepth )
+	{
+	VkViewport viewport;
+	viewport.x = x;
+	viewport.y = y;
+	viewport.width = width;
+	viewport.height = height;
+	viewport.minDepth = minDepth;
+	viewport.maxDepth = maxDepth;
+	this->SetViewport( viewport );
+	}
+
+void Vlk::CommandPool::SetScissorRectangle( VkRect2D scissorRectangle )
+	{
+	ASSERT_RECORDING();
+
+	vkCmdSetScissor( this->Buffers[this->CurrentBufferIndex], 0, 1, &scissorRectangle );
+	}
+
+void Vlk::CommandPool::SetScissorRectangle( int32_t x, int32_t y, uint32_t width, uint32_t height )
+	{
+	VkRect2D scissorRectangle;
+	scissorRectangle.offset.x = x;
+	scissorRectangle.offset.y = y;
+	scissorRectangle.extent.width = width;
+	scissorRectangle.extent.height = height;
+	this->SetScissorRectangle( scissorRectangle );
+	}
+
 void Vlk::CommandPool::UpdateBuffer( Buffer* buffer, VkDeviceSize dstOffset, uint32_t dataSize, const void* pData )
 	{
 	ASSERT_RECORDING();

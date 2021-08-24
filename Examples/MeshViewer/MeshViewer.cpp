@@ -128,23 +128,9 @@ VkCommandBuffer MeshViewer::DrawScene()
 	pool->BeginRenderPass( currentFrame.Framebuffer );
 	pool->BindVertexBuffer( this->MeshAlloc->GetVertexBuffer() );
 	pool->BindIndexBuffer( this->MeshAlloc->GetIndexBuffer() );
-
-	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)this->Camera.ScreenW;
-	viewport.height = (float)this->Camera.ScreenH;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport( buffer, 0, 1, &viewport );
-	
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = { (uint)viewport.width, (uint)viewport.height };
-	vkCmdSetScissor( buffer, 0, 1, &scissor );
-
+	pool->SetViewport( 0, 0, (float)this->Camera.ScreenW, (float)this->Camera.ScreenH );
+	pool->SetScissorRectangle( 0, 0, this->Camera.ScreenW, this->Camera.ScreenH );
 	pool->BindGraphicsPipeline( this->RenderPipeline.get() );
-
 	pool->BindDescriptorSet( this->RenderPipeline.get(), currentFrame.RenderDescriptorSet );
 
 	// update and render each submesh
