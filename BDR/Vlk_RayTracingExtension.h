@@ -6,9 +6,11 @@
 namespace Vlk
     {
     class RayTracingPipeline;
+    class RayTracingPipelineTemplate;
     class RayTracingAccelerationStructure;
     class RayTracingBLASEntry;
     class RayTracingTLASEntry;
+    class RayTracingShaderBindingTable;
 
     BDSubmoduleBaseMacro( RayTracingExtensionSubmodule , RayTracingExtension );
 
@@ -59,7 +61,10 @@ namespace Vlk
             RayTracingAccelerationStructure* GetTLAS();
 
             // create a ray tracing pipeline object
-            RayTracingPipeline* CreateRayTracingPipeline();
+            RayTracingPipeline* CreateRayTracingPipeline( const RayTracingPipelineTemplate& rtt );
+
+            // create a shader binding table for a created pipeline
+            RayTracingShaderBindingTable* CreateShaderBindingTable( const RayTracingPipelineTemplate& rtt, const RayTracingPipeline* pipeline );
 
             // ####################################
             //

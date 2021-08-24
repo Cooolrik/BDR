@@ -11,8 +11,7 @@ namespace Vlk
     class RayTracingShaderBindingTable : public RayTracingExtensionSubmodule
         {
         BDSubmoduleMacro( RayTracingShaderBindingTable, RayTracingExtensionSubmodule, RayTracingExtension );
-        friend class RayTracingPipeline;
-
+        
         private:
             std::unique_ptr<Buffer> BufferPtr;
 

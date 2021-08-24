@@ -1,68 +1,64 @@
 #pragma once
 
 #include "Vlk_RayTracingExtension.h"
+#include "Vlk_Pipeline.h"
 
 namespace Vlk
     {
     class ShaderModule;
     class RayTracingShaderBindingTable;
 
-    class RayTracingPipeline
+    class RayTracingPipeline : public Pipeline
+        {
+        BDSubmoduleMacro( RayTracingPipeline, Pipeline, Renderer );
+        friend class RayTracingExtension;
+
+        private:
+            
+
+        public:
+            
+        };
+
+    class RayTracingPipelineTemplate
         {
         private:
-            RayTracingPipeline() = default;
-            RayTracingPipeline( const RayTracingPipeline& other );
-            friend class RayTracingExtension;
+            // dont allow copy-by-value, because of inter-struct links
+            RayTracingPipelineTemplate( const RayTracingPipelineTemplate& other );
+            const RayTracingPipelineTemplate& operator = ( const RayTracingPipelineTemplate& other );
 
-            RayTracingExtension* Parent = nullptr;
-
+        public:
+            // the shader modules to use
             const ShaderModule* RaygenShader = nullptr;
             std::vector<const ShaderModule*> MissShaders{};
             std::vector<const ShaderModule*> ClosestHitShaders{};
-            
 
-            //VkStridedDeviceAddressRegionKHR
+            // pipeline layout structures
+            std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
+            std::vector<VkPushConstantRange> PushConstantRanges;
+            VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 
-            VkPipeline Pipeline = nullptr;
-            VkPipelineLayout PipelineLayout = nullptr;
-            VkDescriptorSetLayout DescriptorSetLayoutHandle = nullptr;
-            std::vector<VkPushConstantRange> PushConstantRanges{};
+            // pipeline create info
+            VkRayTracingPipelineCreateInfoKHR RayTracingPipelineCreateInfo = { VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
 
-        public:
+            //////////////////////////////////////
+
+             // creates an initial pipeline. 
+            RayTracingPipelineTemplate();
 
             // add a shader module to the pipeline
-            void SetRaygenShader( const ShaderModule* shader );
-            uint AddMissShader( const ShaderModule* shader );
-            uint AddClosestHitShader( const ShaderModule* shader );
+            void SetRaygenShaderModule( const ShaderModule* shader );
+            uint AddMissShaderModule( const ShaderModule* shader );
+            uint AddClosestHitShaderModule( const ShaderModule* shader );
 
-            // sets the descriptor set layout for the uniform buffers and texture samplers
-            void SetVkDescriptorSetLayout( VkDescriptorSetLayout descriptorSetLayout );
-            void SetDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout );
+            // adds a descriptor set layout. returns the index of the set in the list of layouts
+            unsigned int AddDescriptorSetLayout( const DescriptorSetLayout* descriptorLayout );
 
-            // sets the push constant ranges
-            void SetSinglePushConstantRange( uint32_t buffersize, VkShaderStageFlags stageFlags );
-            void SetPushConstantRanges( const std::vector<VkPushConstantRange>& ranges );
+            // adds a push constant range. returns the index of the range in the list of layouts
+            unsigned int AddPushConstantRange( VkPushConstantRange range );
+            unsigned int AddPushConstantRange( VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size );
 
-            // returns true if pipeline needs to be built
-            bool IsPipelineBuilt() const { return (this->Pipeline != nullptr); };
-
-            // build vulkan pipeline
-            void BuildPipeline();
-
-            // cleanup allocated pipeline, remove vulkan objects
-            void CleanupPipeline();
-
-            // create a Shader Binding Table for the built pipeline
-            RayTracingShaderBindingTable* CreateShaderBindingTable();
-
-            ~RayTracingPipeline();
-
-            BDGetMacro( RayTracingExtension*, Parent );
-            BDGetMacro( VkPipeline, Pipeline );
-            BDGetMacro( VkPipelineLayout, PipelineLayout );
-            BDGetMacro( ShaderModule*, RaygenShader );
-            BDGetMacro( std::vector<const ShaderModule*>, MissShaders );
-            BDGetMacro( std::vector<const ShaderModule*>, ClosestHitShaders );
         };
+
     };
 

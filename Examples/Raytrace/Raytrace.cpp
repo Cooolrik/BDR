@@ -803,15 +803,14 @@ class VulkanRenderTest
 			rtdslt.AddStorageBufferBinding( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 6 - instances
 			RTDescriptorLayout = renderer->CreateDescriptorSetLayout( rtdslt );
 
-			raytracing_pipeline = rayTracing->CreateRayTracingPipeline();
-			raytracing_pipeline->SetRaygenShader( raygen_shader );
-			raytracing_pipeline->AddMissShader( miss_shader );
-			raytracing_pipeline->AddMissShader( shadowmiss_shader );
-			raytracing_pipeline->AddClosestHitShader( chit_shader );
-			raytracing_pipeline->SetDescriptorSetLayout( RTDescriptorLayout );
-			raytracing_pipeline->BuildPipeline();
-
-			sbt = raytracing_pipeline->CreateShaderBindingTable();
+			std::unique_ptr<Vlk::RayTracingPipelineTemplate> rtt = std::unique_ptr<Vlk::RayTracingPipelineTemplate>( new Vlk::RayTracingPipelineTemplate() );
+			rtt->SetRaygenShaderModule( raygen_shader );
+			rtt->AddMissShaderModule( miss_shader );
+			rtt->AddMissShaderModule( shadowmiss_shader );
+			rtt->AddClosestHitShaderModule( chit_shader );
+			rtt->AddDescriptorSetLayout( RTDescriptorLayout );
+			raytracing_pipeline = rayTracing->CreateRayTracingPipeline( *rtt );
+			sbt = rayTracing->CreateShaderBindingTable( *rtt , raytracing_pipeline );
 
 			Vlk::DescriptorSetLayoutTemplate qrdslt;
 			qrdslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 0 - texture sampler
