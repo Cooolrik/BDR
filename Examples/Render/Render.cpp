@@ -450,6 +450,17 @@ void recreateSwapChain()
 	createSwapChainParameters.RenderExtent = { static_cast<uint32_t>( width ), static_cast<uint32_t>( height ) };
 	renderData->renderer->RecreateSwapChain( createSwapChainParameters );
 
+	// recreate graphics pipeline
+	delete renderData->renderPipeline;
+	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr( new Vlk::GraphicsPipelineTemplate() );
+	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->AddShaderModule( renderData->vertexRenderShader );
+	gpt->AddShaderModule( renderData->fragmentRenderShader );
+	gpt->AddDescriptorSetLayout( renderData->renderDescriptorLayout );
+	gpt->SetStaticViewport( 0, 0, (float)renderData->camera.ScreenW, (float)renderData->camera.ScreenH );
+	gpt->SetStaticScissorRectangle( 0, 0, renderData->camera.ScreenW, renderData->camera.ScreenH );
+	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline( *gpt );
+
 	createPerFrameData();
 
 	//debugRecreateSwapChain();
@@ -744,12 +755,14 @@ void SetupScene()
 	rdlt.AddStorageBufferBinding( VK_SHADER_STAGE_VERTEX_BIT );									// 4 - MeshBuffer
 	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( rdlt );
 	
-	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline();
-	renderData->renderPipeline->SetVertexDataTemplateFromVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
-	renderData->renderPipeline->AddShaderModule( renderData->vertexRenderShader );
-	renderData->renderPipeline->AddShaderModule( renderData->fragmentRenderShader );
-	renderData->renderPipeline->SetDescriptorSetLayout( renderData->renderDescriptorLayout );
-	renderData->renderPipeline->BuildPipeline();
+	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr( new Vlk::GraphicsPipelineTemplate() );
+	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->AddShaderModule( renderData->vertexRenderShader );
+	gpt->AddShaderModule( renderData->fragmentRenderShader );
+	gpt->AddDescriptorSetLayout( renderData->renderDescriptorLayout );
+	gpt->SetStaticViewport( 0, 0, (float)renderData->camera.ScreenW, (float)renderData->camera.ScreenH );
+	gpt->SetStaticScissorRectangle( 0, 0, renderData->camera.ScreenW, renderData->camera.ScreenH );
+	renderData->renderPipeline = renderData->renderer->CreateGraphicsPipeline( *gpt );
 
 	// depth reduce compute pipeline
 	Vlk::DescriptorSetLayoutTemplate drdlt;

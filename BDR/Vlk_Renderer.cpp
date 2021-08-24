@@ -15,6 +15,7 @@
 #include "Vlk_BufferDeviceAddressExtension.h"
 #include "Vlk_DescriptorIndexingExtension.h"
 #include "Vlk_Helpers.h"
+#include "Vlk_ShaderModule.h"
 
 #include <map>
 
@@ -944,22 +945,10 @@ void Vlk::Renderer::RecreateSwapChain( const CreateSwapChainParameters& paramete
 	this->DeleteSwapChain();
 
 	this->CreateSwapChainAndFramebuffers( parameters );
-
-	// if we have registered pipelines, they need to be regenerated
-	for( GraphicsPipeline* pipeline : this->GraphicsPipelines )
-		{
-		pipeline->BuildPipeline();
-		}
 	}
 
 void Vlk::Renderer::DeleteSwapChain()
 	{
-	// tell all registered pipelines to clean up objects, they need to be recreated
-	for( GraphicsPipeline* pipeline : this->GraphicsPipelines )
-		{
-		pipeline->CleanupPipeline();
-		}
-
 	for( size_t i = 0; i < this->Framebuffers.size(); ++i )
 		{
 		vkDestroyFramebuffer( this->Device, Framebuffers[i], nullptr );
@@ -981,21 +970,10 @@ void Vlk::Renderer::DeleteSwapChain()
 		}
 	}
 
-void Vlk::Renderer::RemoveCommandPool( CommandPool* pool )
-	{
-	auto it = this->CommandPools.find( pool );
-	if( it == this->CommandPools.end() )
-		{
-		throw runtime_error( "Error: RemoveCommandPool() pool is not registered with the renderer, have you already removed it?" );
-		}
-	this->CommandPools.erase( it );
-	}
-
 Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
 	{
 	CommandPool* pool = new CommandPool();
 	pool->Parent = this;
-	this->CommandPools.insert( pool );
 
 	// create the command pool vulkan object
 	VkCommandPoolCreateInfo poolInfo{};
@@ -1016,39 +994,60 @@ Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
 	return pool;
 	}
 
-void Vlk::Renderer::RemoveGraphicsPipeline( GraphicsPipeline* pipeline )
+Vlk::GraphicsPipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt )
 	{
-	auto it = this->GraphicsPipelines.find( pipeline );
-	if( it == this->GraphicsPipelines.end() )
-		{
-		throw runtime_error( "Error: RemoveGraphicsPipeline() pipeline is not registered with the renderer, have you already removed it?" );
-		}
-	this->GraphicsPipelines.erase( it );
-	}
+	GraphicsPipeline* pipeline = new GraphicsPipeline(this);
 
-void Vlk::Renderer::RemoveComputePipeline( ComputePipeline* pipeline )
-	{
-	auto it = this->ComputePipelines.find( pipeline );
-	if( it == this->ComputePipelines.end() )
+	// setup the shader stages
+	uint shaderStageCount = (uint)gpt.ShaderModules.size();
+	vector<VkShaderModule> shaderStages( shaderStageCount );
+	vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos( shaderStageCount );
+	uint shaderIndex = 0;
+	for( const ShaderModule* shader : gpt.ShaderModules )
 		{
-		throw runtime_error( "Error: RemoveComputePipeline() pipeline is not registered with the renderer, have you already removed it?" );
-		}
-	this->ComputePipelines.erase( it );
-	}
+		// create a shader module wrap around the shader
+		VkShaderModuleCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = shader->Shader.size();
+		createInfo.pCode = reinterpret_cast<const uint32_t*>( shader->Shader.data() );
+		VLK_CALL( vkCreateShaderModule( this->Device, &createInfo, nullptr, &shaderStages[shaderIndex] ) );
 
-Vlk::GraphicsPipeline* Vlk::Renderer::CreateGraphicsPipeline()
-	{
-	GraphicsPipeline* pipeline = new GraphicsPipeline();
-	pipeline->Parent = this;
-	this->GraphicsPipelines.insert( pipeline );
+		// add module to stage info
+		pipelineShaderStageCreateInfos[shaderIndex] = {};
+		pipelineShaderStageCreateInfos[shaderIndex].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		pipelineShaderStageCreateInfos[shaderIndex].stage = shader->Stage;
+		pipelineShaderStageCreateInfos[shaderIndex].module = shaderStages[shaderIndex];
+		pipelineShaderStageCreateInfos[shaderIndex].pName = shader->Entrypoint;
+
+		++shaderIndex;
+		}
+
+	// create the layout first
+	VLK_CALL( vkCreatePipelineLayout( this->Device, &gpt.PipelineLayoutCreateInfo, nullptr, &pipeline->PipelineLayout ) );
+
+	// now create the pipeline
+	VkGraphicsPipelineCreateInfo pipelineInfo = gpt.GraphicsPipelineCreateInfo;
+	pipelineInfo.layout = pipeline->PipelineLayout;
+	pipelineInfo.stageCount = (uint32_t)pipelineShaderStageCreateInfos.size();
+	pipelineInfo.pStages = pipelineShaderStageCreateInfos.data();
+	pipelineInfo.renderPass = this->RenderPass;
+	VLK_CALL( vkCreateGraphicsPipelines( this->Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline->Pipeline ) );
+
+	// remove the temporary shader module objects
+	for( shaderIndex = 0; shaderIndex < shaderStageCount; ++shaderIndex )
+		{
+		vkDestroyShaderModule( this->Device, shaderStages[shaderIndex], nullptr );
+		}
+
 	return pipeline;
 	}
+
+
 
 Vlk::ComputePipeline* Vlk::Renderer::CreateComputePipeline()
 	{
 	ComputePipeline* pipeline = new ComputePipeline();
 	pipeline->Parent = this;
-	this->ComputePipelines.insert( pipeline );
 	return pipeline;
 	}
 

@@ -116,7 +116,4 @@ Vlk::ComputePipeline::~ComputePipeline()
 	{
 	// remove objects
 	this->CleanupPipeline();
-
-	// unregister from parent
-	this->Parent->RemoveComputePipeline( this );
 	}

@@ -12,8 +12,8 @@ namespace Vlk
         private:
             ShaderModule() = default;
             ShaderModule( const ShaderModule& other );
-            friend class GraphicsPipeline;
             friend class ComputePipeline;
+            friend class Renderer;
 
             VkShaderStageFlagBits Stage{};
             char* Name = nullptr;

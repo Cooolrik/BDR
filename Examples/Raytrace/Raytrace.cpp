@@ -639,6 +639,33 @@ class VulkanRenderTest
 			createSwapChainParameters.RenderExtent = { static_cast<uint32_t>( width ), static_cast<uint32_t>( height ) };
 			renderer->RecreateSwapChain( createSwapChainParameters );
 			framebuffers = renderer->GetFramebuffers();
+			colorTargets.resize( framebuffers.size() );
+			for( size_t i = 0; i < framebuffers.size(); ++i )
+				{
+				colorTargets[i] = renderer->GetColorTargetImage( (uint)i )->GetImage();
+				}
+			swapChainImages = renderer->GetSwapChainImages();
+
+			delete graphics_pipeline;
+			std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+			gpt->AddShaderModule( vertex_shader );
+			gpt->AddShaderModule( fragment_shader );
+			gpt->AddDescriptorSetLayout( descriptorLayout );
+			gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
+			gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
+
+			delete quadrender_pipeline;
+			std::unique_ptr<Vlk::GraphicsPipelineTemplate> qpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			qpt->SetVertexDataTemplateFromVertexBuffer( quadBuffer );
+			qpt->AddShaderModule( quad_vertex_shader );
+			qpt->AddShaderModule( quad_fragment_shader );
+			qpt->AddDescriptorSetLayout( quadrender_descriptorLayout );
+			qpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			qpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			quadrender_pipeline = renderer->CreateGraphicsPipeline( *qpt );
 
 			createPerFrameData();
 
@@ -756,13 +783,15 @@ class VulkanRenderTest
 			dslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 1 - texture
 			descriptorLayout = renderer->CreateDescriptorSetLayout( dslt );
 
-			graphics_pipeline = renderer->CreateGraphicsPipeline();
-			graphics_pipeline->SetVertexDataTemplateFromVertexBuffer( this->RenderMeshes[0]->vertexBuffer );
-			graphics_pipeline->AddShaderModule( vertex_shader );
-			graphics_pipeline->AddShaderModule( fragment_shader );
-			graphics_pipeline->SetDescriptorSetLayout( descriptorLayout );
-			graphics_pipeline->SetSinglePushConstantRange( sizeof( PushConstants ), VK_SHADER_STAGE_VERTEX_BIT );
-			graphics_pipeline->BuildPipeline();
+			std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+			gpt->AddShaderModule( vertex_shader );
+			gpt->AddShaderModule( fragment_shader );
+			gpt->AddDescriptorSetLayout( descriptorLayout );
+			gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
+			gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
 
 			Vlk::DescriptorSetLayoutTemplate rtdslt;
 			rtdslt.AddAccelerationStructureBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 0 - TLAS
@@ -788,12 +817,14 @@ class VulkanRenderTest
 			qrdslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 0 - texture sampler
 			quadrender_descriptorLayout = renderer->CreateDescriptorSetLayout( qrdslt );
 
-			quadrender_pipeline = renderer->CreateGraphicsPipeline();
-			quadrender_pipeline->SetVertexDataTemplateFromVertexBuffer( quadBuffer );
-			quadrender_pipeline->AddShaderModule( quad_vertex_shader );
-			quadrender_pipeline->AddShaderModule( quad_fragment_shader );
-			quadrender_pipeline->SetDescriptorSetLayout( quadrender_descriptorLayout );
-			quadrender_pipeline->BuildPipeline();
+			std::unique_ptr<Vlk::GraphicsPipelineTemplate> qpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			qpt->SetVertexDataTemplateFromVertexBuffer( quadBuffer );
+			qpt->AddShaderModule( quad_vertex_shader );
+			qpt->AddShaderModule( quad_fragment_shader );
+			qpt->AddDescriptorSetLayout( quadrender_descriptorLayout );
+			qpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			qpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			quadrender_pipeline = renderer->CreateGraphicsPipeline( *qpt );
 			}
 
 		void LoadTexture( const char* path )
@@ -940,6 +971,7 @@ class VulkanRenderTest
 				delete i;
 				}
 
+			delete quadrender_pipeline;
 			delete linearSampler;
 			delete instanceBuffer;
 			delete quadBuffer;

@@ -56,6 +56,8 @@ namespace Vlk
 	class DescriptorPoolTemplate;
 
 	class GraphicsPipeline;
+	class GraphicsPipelineTemplate;
+
 	class ComputePipeline;
 	class CommandPool;
 	
@@ -77,10 +79,8 @@ namespace Vlk
 		private:
 			Renderer() = default;
 			Renderer( const Renderer& other );
-			friend class GraphicsPipeline;
 			friend class ComputePipeline;
 			friend class CommandPool;
-			friend class Image;
 			friend class RayTracingExtension;
 			friend class RayTracingPipeline;
 			
@@ -129,10 +129,6 @@ namespace Vlk
 
 			VkCommandPool InternalCommandPool = nullptr; 
 
-			std::set<GraphicsPipeline*> GraphicsPipelines;
-			std::set<ComputePipeline*> ComputePipelines;
-			std::set<CommandPool*> CommandPools;
-
 			std::vector<VkSemaphore> ImageAvailableSemaphores;
 			std::vector<VkSemaphore> RenderFinishedSemaphores;
 			std::vector<VkFence> InFlightFences;
@@ -150,10 +146,6 @@ namespace Vlk
 			bool ValidatePhysicalDeviceRequiredExtensionsSupported();
 
 			void DeleteSwapChain();
-
-			void RemoveGraphicsPipeline( GraphicsPipeline *pipeline );
-			void RemoveComputePipeline( ComputePipeline* pipeline );
-			void RemoveCommandPool( CommandPool* pool );
 
 			// generic functions to create vulkan device buffer 
 			VkBuffer CreateVulkanBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, VmaAllocation& deviceMemory ) const;
@@ -215,10 +207,10 @@ namespace Vlk
 			/// wait for device to idle, for synching, eg shutting down
 			void WaitForDeviceIdle();
 
-			/// create a GraphicsPipeline object
-			GraphicsPipeline* CreateGraphicsPipeline();
+			/// create a GraphicsPipeline object based on template
+			GraphicsPipeline* CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt );
 
-			///  create a ComputePipeline object
+			/// (temporary) create a ComputePipeline object
 			ComputePipeline* CreateComputePipeline();
 
 			/// create a CommandPool object. set number of buffers to allocate

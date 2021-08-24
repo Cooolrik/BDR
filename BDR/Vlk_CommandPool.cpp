@@ -22,9 +22,6 @@ Vlk::CommandPool::~CommandPool()
 	{
 	// the allocated buffers will be automatically deallocated
 	vkDestroyCommandPool( this->Parent->GetDevice(), Pool, nullptr );
-
-	// unregister from parent
-	this->Parent->RemoveCommandPool( this );
 	}
 
 void Vlk::CommandPool::ResetCommandPool()
@@ -262,14 +259,17 @@ void Vlk::CommandPool::PipelineBarrier( VkPipelineStageFlags srcStageMask, VkPip
 	{
 	ASSERT_RECORDING();
 
+	VkBufferMemoryBarrier* pbuf = this->BufferMemoryBarriers.data();
+	VkImageMemoryBarrier* pimg = this->ImageMemoryBarriers.data();
+
 	vkCmdPipelineBarrier( 
 		this->Buffers[this->CurrentBufferIndex], 
 		srcStageMask, 
 		dstStageMask, 
 		VK_DEPENDENCY_BY_REGION_BIT,
 		0, nullptr, 
-		(uint)this->BufferMemoryBarriers.size(), this->BufferMemoryBarriers.data(), 
-		(uint)this->ImageMemoryBarriers.size(), this->ImageMemoryBarriers.data()
+		(uint)this->BufferMemoryBarriers.size(), pbuf,
+		(uint)this->ImageMemoryBarriers.size(), pimg
 		);
 
 	BufferMemoryBarriers.clear();

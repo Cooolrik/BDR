@@ -38,13 +38,13 @@ void MeshViewer::SetupScene()
 	rdlt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT , 16 );								// 1 - color texture, 16 textures
 	this->RenderPipelineDescriptorSetLayout = u_ptr(this->Renderer->CreateDescriptorSetLayout( rdlt ));
 
-	this->RenderPipeline = u_ptr(this->Renderer->CreateGraphicsPipeline());
-	this->RenderPipeline->SetVertexDataTemplateFromVertexBuffer( this->MeshAlloc->GetVertexBuffer() );
-	this->RenderPipeline->AddShaderModule( vertexRenderShader.get() );
-	this->RenderPipeline->AddShaderModule( fragmentRenderShader.get() );
-	this->RenderPipeline->SetDescriptorSetLayout( this->RenderPipelineDescriptorSetLayout.get() );
-	this->RenderPipeline->SetSinglePushConstantRange( sizeof( ObjectRender ), VK_SHADER_STAGE_VERTEX_BIT );
-	this->RenderPipeline->BuildPipeline();
+	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr(new Vlk::GraphicsPipelineTemplate());
+	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->AddShaderModule( vertexRenderShader.get() );
+	gpt->AddShaderModule( fragmentRenderShader.get() );
+	gpt->AddDescriptorSetLayout( this->RenderPipelineDescriptorSetLayout.get() );
+	gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( ObjectRender ) );
+	this->RenderPipeline = u_ptr( this->Renderer->CreateGraphicsPipeline( *gpt ) );
 
 	// create a standard linear shader for texture mapping
 	this->LinearSampler = u_ptr(this->Renderer->CreateSampler( Vlk::SamplerTemplate::Linear() ));
@@ -128,7 +128,23 @@ VkCommandBuffer MeshViewer::DrawScene()
 	pool->BeginRenderPass( currentFrame.Framebuffer );
 	pool->BindVertexBuffer( this->MeshAlloc->GetVertexBuffer() );
 	pool->BindIndexBuffer( this->MeshAlloc->GetIndexBuffer() );
+
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)this->Camera.ScreenW;
+	viewport.height = (float)this->Camera.ScreenH;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport( buffer, 0, 1, &viewport );
+	
+	VkRect2D scissor{};
+	scissor.offset = { 0, 0 };
+	scissor.extent = { (uint)viewport.width, (uint)viewport.height };
+	vkCmdSetScissor( buffer, 0, 1, &scissor );
+
 	pool->BindGraphicsPipeline( this->RenderPipeline.get() );
+
 	pool->BindDescriptorSet( this->RenderPipeline.get(), currentFrame.RenderDescriptorSet );
 
 	// update and render each submesh
