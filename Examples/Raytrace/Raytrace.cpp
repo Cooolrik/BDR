@@ -558,7 +558,7 @@ class VulkanRenderTest
 
 			if( raytrace )
 				{
-				pool->BindRayTracingPipeline( raytracing_pipeline );
+				pool->BindPipeline( raytracing_pipeline );
 				pool->BindDescriptorSet( raytracing_pipeline, RTDescriptorSets[frame] );
 				pool->TraceRays( sbt, 2048, 1024 );
 
@@ -810,7 +810,7 @@ class VulkanRenderTest
 			rtt->AddClosestHitShaderModule( chit_shader );
 			rtt->AddDescriptorSetLayout( RTDescriptorLayout );
 			raytracing_pipeline = rayTracing->CreateRayTracingPipeline( *rtt );
-			sbt = rayTracing->CreateShaderBindingTable( *rtt , raytracing_pipeline );
+			sbt = rayTracing->CreateShaderBindingTable( raytracing_pipeline );
 
 			Vlk::DescriptorSetLayoutTemplate qrdslt;
 			qrdslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 0 - texture sampler

@@ -32,7 +32,19 @@
 			_classname( const _classname& other );\
 			friend class _mainmodule;\
 		};
-		
+
+// used if a submodule is part of an extension but derives from one of the main classes
+#define BDExtensionSubmoduleMacro( _classname , _parentclass , _exmodule )\
+	protected:\
+		const _exmodule* ExModule = nullptr;\
+	public:\
+		~_classname();\
+		const _exmodule* GetExModule() const { return this->ExModule; };\
+	protected:\
+		_classname( const _exmodule* _exmodule ) : _parentclass( _exmodule->GetModule() ) {};\
+		_classname( const _classname& other );\
+		friend class _exmodule;
+
 
 #define BDGetMacro( type , name ) const type Get##name() const { return this->name; }
 #define BDGetCustomNameMacro( type , publicname , privatename ) const type Get##publicname() const { return this->privatename; }
@@ -151,7 +163,7 @@ namespace Vlk
 			VkBuffer CreateVulkanBuffer( VkBufferUsageFlags bufferUsageFlags, VmaMemoryUsage memoryPropertyFlags, VkDeviceSize deviceSize, VmaAllocation& deviceMemory ) const;
 
 			/// create base vulkan buffer
-			template<class B,class BT> B* NewBuffer( const BT& bt );
+			template<class B,class BT> B* NewBuffer( const BT& bt ) const;
 
 			VkCommandBuffer BeginInternalCommandBuffer() const;
 			void EndAndSubmitInternalCommandBuffer( VkCommandBuffer buffer ) const;
@@ -217,9 +229,9 @@ namespace Vlk
 			CommandPool* CreateCommandPool( uint bufferCount );
 
 			/// create buffers based on templates
-			Buffer* CreateBuffer( const BufferTemplate &bt );
-			VertexBuffer* CreateVertexBuffer( const VertexBufferTemplate& bt );
-			IndexBuffer* CreateIndexBuffer( const IndexBufferTemplate& bt );
+			Buffer* CreateBuffer( const BufferTemplate &bt ) const;
+			VertexBuffer* CreateVertexBuffer( const VertexBufferTemplate& bt ) const;
+			IndexBuffer* CreateIndexBuffer( const IndexBufferTemplate& bt ) const;
 			
 			/// (temporary) create descriptor layout
 			DescriptorSetLayout* CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst );

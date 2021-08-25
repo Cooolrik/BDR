@@ -10,14 +10,18 @@ namespace Vlk
 
     class RayTracingPipeline : public Pipeline
         {
-        BDSubmoduleMacro( RayTracingPipeline, Pipeline, Renderer );
-        friend class RayTracingExtension;
+        BDExtensionSubmoduleMacro( RayTracingPipeline, Pipeline, RayTracingExtension );
 
         private:
-            
+            friend class RayTracingExtension;
+
+            // number of miss and closest hit shaders (there is always a single "gen" shader, at slot 0)
+            unsigned int MissShadersCount = 0;
+            unsigned int ClosestHitShadersCount = 0;
 
         public:
-            
+            BDGetMacro( unsigned int, MissShadersCount );
+            BDGetMacro( unsigned int, ClosestHitShadersCount );
         };
 
     class RayTracingPipelineTemplate

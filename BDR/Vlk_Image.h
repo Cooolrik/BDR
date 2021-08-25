@@ -8,8 +8,9 @@ namespace Vlk
 
     class Image : public RendererSubmodule
         {
+        BDSubmoduleMacro( Image, RendererSubmodule, Renderer );
+
         private:
-            BDSubmoduleMacro( Image, RendererSubmodule, Renderer );
 
             VkImage ImageHandle = nullptr;
             VkImageView ImageView = nullptr;
