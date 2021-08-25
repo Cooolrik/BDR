@@ -16,12 +16,9 @@ namespace Vlk
 
     class RayTracingExtension : public Extension
         {
-        private:
-            RayTracingExtension() = default;
-            RayTracingExtension( const RayTracingExtension& other );
-            friend class Renderer;
-            friend class RayTracingPipeline;
+        BDSubmoduleMacro( RayTracingExtension, Extension, Renderer );
 
+        private:
             VkPhysicalDeviceAccelerationStructureFeaturesKHR AccelerationStructureFeaturesQuery{};
             VkPhysicalDeviceRayTracingPipelineFeaturesKHR RayTracingPipelineFeaturesQuery{};
             VkPhysicalDeviceHostQueryResetFeatures HostQueryResetFeaturesQuery{};
@@ -64,7 +61,7 @@ namespace Vlk
             RayTracingPipeline* CreateRayTracingPipeline( const RayTracingPipelineTemplate& rtt );
 
             // create a shader binding table for a created pipeline
-            RayTracingShaderBindingTable* CreateShaderBindingTable( const RayTracingPipelineTemplate& rtt, const RayTracingPipeline* pipeline );
+            RayTracingShaderBindingTable* CreateShaderBindingTable( const RayTracingPipeline* pipeline );
 
             // ####################################
             //
@@ -98,9 +95,6 @@ namespace Vlk
 
             // called before any extension is deleted. makes it possible to remove data that is dependent on some other extension
             virtual VkResult Cleanup();
-
-            // dtor, removes any allocated data
-            virtual ~RayTracingExtension();
 
             BDGetConstRefMacro( VkPhysicalDeviceAccelerationStructurePropertiesKHR, AccelerationStructureProperties );
             BDGetConstRefMacro( VkPhysicalDeviceRayTracingPipelinePropertiesKHR, RayTracingPipelineProperties );

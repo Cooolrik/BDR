@@ -7,10 +7,9 @@ namespace Vlk
     {
     class DescriptorIndexingExtension : public Extension
         {
+        BDSubmoduleMacro( DescriptorIndexingExtension, Extension, Renderer );
+
         private:
-            DescriptorIndexingExtension() = default;
-            DescriptorIndexingExtension( const DescriptorIndexingExtension& other );
-            friend class Renderer;
 
             VkPhysicalDeviceDescriptorIndexingFeatures DescriptorIndexingFeaturesQuery{};
             VkPhysicalDeviceDescriptorIndexingFeatures DescriptorIndexingFeaturesCreate{};

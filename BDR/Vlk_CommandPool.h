@@ -12,16 +12,12 @@ namespace Vlk
     class Pipeline;
     class VertexBuffer;
     class IndexBuffer;
-    class RayTracingPipeline;
 
-    class CommandPool
+    class CommandPool : public RendererSubmodule
         {
-        private:
-            CommandPool() = default;
-            CommandPool( const CommandPool& other );
-            friend class Renderer;
+        BDSubmoduleMacro( CommandPool, RendererSubmodule, Renderer );
 
-            Renderer* Parent = nullptr;
+        private:
             VkCommandPool Pool = nullptr; 
             std::vector<VkCommandBuffer> Buffers;
             int CurrentBufferIndex = -1;
@@ -41,16 +37,13 @@ namespace Vlk
             void EndRenderPass();
 
             void BindPipeline( Pipeline* pipeline );
-            void BindRayTracingPipeline( RayTracingPipeline* pipeline );
 
             void BindVertexBuffer( VertexBuffer* buffer );
             void BindIndexBuffer( IndexBuffer* buffer );
 
             void BindDescriptorSet( Pipeline* pipeline, VkDescriptorSet set );
-            void BindDescriptorSet( RayTracingPipeline* pipeline, VkDescriptorSet set );
  
             void PushConstants( Pipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
-            void PushConstants( RayTracingPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues );
  
             void SetViewport( VkViewport viewport );
             void SetViewport( float x, float y, float width, float height, float minDepth = 0.f, float maxDepth = 1.f );
@@ -128,7 +121,5 @@ namespace Vlk
             BDGetMacro( int, CurrentBufferIndex );
             BDGetMacro( bool, IsRecordingBuffer );
             BDGetMacro( std::vector<VkCommandBuffer>, Buffers );
-
-            ~CommandPool();
         };
     };

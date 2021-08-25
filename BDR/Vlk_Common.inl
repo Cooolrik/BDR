@@ -39,7 +39,7 @@ static void throw_vulkan_error( VkResult errorvalue, const char* errorstr )
 	}
 #pragma warning( pop )
 
-#define VR_GET_EXTENSION_FUNCTION_ADDRESS( func ) func = (PFN_##func)vkGetInstanceProcAddr( this->Parent->GetInstance(), #func ); if( !func ) { throw std::runtime_error( "vkGetInstanceProcAddr failed, could not retreive address for " #func ); }
+#define VR_GET_EXTENSION_FUNCTION_ADDRESS( func ) func = (PFN_##func)vkGetInstanceProcAddr( this->GetModule()->GetInstance(), #func ); if( !func ) { throw std::runtime_error( "vkGetInstanceProcAddr failed, could not retreive address for " #func ); }
 
 #define VR_ADD_STRUCT_TO_VULKAN_LINKED_LIST( plist , strct , stype )\
 	strct = {};\

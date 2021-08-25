@@ -13,9 +13,9 @@ namespace Vlk
 
     class Pipeline : public RendererSubmodule
         {
-        private:
-            BDSubmoduleMacro( Pipeline, RendererSubmodule, Renderer );
+        BDSubmoduleMacro( Pipeline, RendererSubmodule, Renderer );
 
+        protected:
             VkPipeline PipelineHandle = nullptr;
             VkPipelineLayout PipelineLayout = nullptr;
             VkPipelineBindPoint PipelineBindPoint = {};

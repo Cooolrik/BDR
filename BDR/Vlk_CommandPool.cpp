@@ -21,7 +21,7 @@ using std::runtime_error;
 Vlk::CommandPool::~CommandPool()
 	{
 	// the allocated buffers will be automatically deallocated
-	vkDestroyCommandPool( this->Parent->GetDevice(), Pool, nullptr );
+	vkDestroyCommandPool( this->Module->GetDevice(), Pool, nullptr );
 	}
 
 void Vlk::CommandPool::ResetCommandPool()
@@ -32,7 +32,7 @@ void Vlk::CommandPool::ResetCommandPool()
 		throw runtime_error( "Error: ResetCommandPool(), currently recording buffer. End buffer before begin new or resetting." );
 		}
 
-	VLK_CALL( vkResetCommandPool( this->Parent->GetDevice(), this->Pool, 0 ) );
+	VLK_CALL( vkResetCommandPool( this->Module->GetDevice(), this->Pool, 0 ) );
 
 	// reset index
 	this->CurrentBufferIndex = -1;
@@ -71,11 +71,11 @@ void Vlk::CommandPool::BeginRenderPass( VkFramebuffer destFramebuffer )
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = this->Parent->RenderPass;
+	renderPassBeginInfo.renderPass = this->Module->RenderPass;
 	renderPassBeginInfo.framebuffer = destFramebuffer;
 
 	renderPassBeginInfo.renderArea.offset = { 0, 0 };
-	renderPassBeginInfo.renderArea.extent = this->Parent->RenderExtent;
+	renderPassBeginInfo.renderArea.extent = this->Module->RenderExtent;
 
 	VkClearValue clearValues[2]{};
 	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -100,14 +100,6 @@ void Vlk::CommandPool::BindPipeline( Pipeline* pipeline )
 	vkCmdBindPipeline( this->Buffers[this->CurrentBufferIndex], pipeline->GetPipelineBindPoint(), pipeline->GetPipeline() );
 	}
 
-void Vlk::CommandPool::BindRayTracingPipeline( RayTracingPipeline* pipeline )
-	{
-	ASSERT_RECORDING();
-
-	vkCmdBindPipeline( this->Buffers[this->CurrentBufferIndex], VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipeline->GetPipeline() );
-	}
-
-
 void Vlk::CommandPool::BindVertexBuffer( VertexBuffer* buffer )
 	{
 	ASSERT_RECORDING();
@@ -131,21 +123,7 @@ void Vlk::CommandPool::BindDescriptorSet( Pipeline* pipeline, VkDescriptorSet se
 	vkCmdBindDescriptorSets( this->Buffers[this->CurrentBufferIndex], pipeline->GetPipelineBindPoint(), pipeline->GetPipelineLayout(), 0, 1, &set, 0, nullptr );
 	}
 
-void Vlk::CommandPool::BindDescriptorSet( RayTracingPipeline* pipeline, VkDescriptorSet set )
-	{
-	ASSERT_RECORDING();
-
-	vkCmdBindDescriptorSets( this->Buffers[this->CurrentBufferIndex], VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipeline->GetPipelineLayout(), 0, 1, &set, 0, nullptr );
-	}
-
 void Vlk::CommandPool::PushConstants( Pipeline* pipeline , VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues )
-	{
-	ASSERT_RECORDING();
-
-	vkCmdPushConstants( this->Buffers[this->CurrentBufferIndex], pipeline->GetPipelineLayout(), stageFlags, offset, size, pValues );
-	}
-
-void Vlk::CommandPool::PushConstants( RayTracingPipeline* pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues )
 	{
 	ASSERT_RECORDING();
 

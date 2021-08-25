@@ -142,7 +142,7 @@ VkBuffer Vlk::Renderer::CreateVulkanBuffer( VkBufferUsageFlags bufferUsageFlags,
 	return buffer;
 	}
 
-template<class B, class BT> B* Vlk::Renderer::NewBuffer( const BT& bt )
+template<class B, class BT> B* Vlk::Renderer::NewBuffer( const BT& bt ) const
 	{
 	B* buffer = new B( this );
 
@@ -256,18 +256,15 @@ Vlk::Renderer* Vlk::Renderer::Create( const CreateParameters& createParameters )
 		}
 
 	// enable additional extensions
-	pThis->BufferDeviceAddressEXT = new BufferDeviceAddressExtension();
-	pThis->BufferDeviceAddressEXT->Parent = pThis;
+	pThis->BufferDeviceAddressEXT = new BufferDeviceAddressExtension( pThis );
 	pThis->EnabledExtensions.push_back( pThis->BufferDeviceAddressEXT );
 
-	pThis->DescriptorIndexingEXT = new DescriptorIndexingExtension();
-	pThis->DescriptorIndexingEXT->Parent = pThis;
+	pThis->DescriptorIndexingEXT = new DescriptorIndexingExtension( pThis );
 	pThis->EnabledExtensions.push_back( pThis->DescriptorIndexingEXT );
 
 	if( createParameters.EnableRayTracingExtension )
 		{
-		pThis->RayTracingEXT = new RayTracingExtension();
-		pThis->RayTracingEXT->Parent = pThis;
+		pThis->RayTracingEXT = new RayTracingExtension( pThis );
 		pThis->EnabledExtensions.push_back( pThis->RayTracingEXT );
 		}
 
@@ -972,8 +969,7 @@ void Vlk::Renderer::DeleteSwapChain()
 
 Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
 	{
-	CommandPool* pool = new CommandPool();
-	pool->Parent = this;
+	CommandPool* pool = new CommandPool(this);
 
 	// create the command pool vulkan object
 	VkCommandPoolCreateInfo poolInfo{};
@@ -1161,19 +1157,19 @@ VkResult Vlk::Renderer::SubmitRenderCommandBuffersAndPresent( const std::vector<
 	return VK_SUCCESS;
 	}
 
-Vlk::Buffer* Vlk::Renderer::CreateBuffer( const BufferTemplate& bt )
+Vlk::Buffer* Vlk::Renderer::CreateBuffer( const BufferTemplate& bt ) const
 	{
 	return NewBuffer<Buffer, BufferTemplate>( bt );
 	}
 
-Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferTemplate& bt )
+Vlk::VertexBuffer* Vlk::Renderer::CreateVertexBuffer( const VertexBufferTemplate& bt ) const
 	{
 	VertexBuffer* vbuffer = NewBuffer<VertexBuffer, VertexBufferTemplate>( bt );
 	vbuffer->Description = bt.Description;
 	return vbuffer;
 	}
 
-Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( const IndexBufferTemplate& bt )
+Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( const IndexBufferTemplate& bt ) const
 	{
 	if( bt.IndexType != VK_INDEX_TYPE_UINT32 &&
 		bt.IndexType != VK_INDEX_TYPE_UINT16 &&

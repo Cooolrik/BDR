@@ -5,6 +5,6 @@ Vlk::RayTracingAccelerationStructure::~RayTracingAccelerationStructure()
 	{
 	if( this->AccelerationStructure != nullptr )
 		{
-		RayTracingExtension::vkDestroyAccelerationStructureKHR( this->Module->GetParent()->GetDevice(), this->AccelerationStructure, nullptr );
+		RayTracingExtension::vkDestroyAccelerationStructureKHR( this->Module->GetModule()->GetDevice(), this->AccelerationStructure, nullptr );
 		}
 	}

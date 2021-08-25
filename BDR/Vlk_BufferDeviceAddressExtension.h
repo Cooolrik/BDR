@@ -7,10 +7,9 @@ namespace Vlk
     {
     class BufferDeviceAddressExtension : public Extension
         {
+        BDSubmoduleMacro( BufferDeviceAddressExtension, Extension, Renderer );
+
         private:
-            BufferDeviceAddressExtension() = default;
-            BufferDeviceAddressExtension( const BufferDeviceAddressExtension& other );
-            friend class Renderer;
 
             VkPhysicalDeviceBufferDeviceAddressFeaturesKHR BufferDeviceAddressFeaturesQuery{};
             VkPhysicalDeviceBufferDeviceAddressFeaturesKHR BufferDeviceAddressFeaturesCreate{};

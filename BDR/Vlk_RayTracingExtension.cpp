@@ -30,7 +30,7 @@ Vlk::RayTracingAccelerationStructure* Vlk::RayTracingExtension::CreateAccBuffer(
 
 	// allocate the buffer memory
 	buffer->ASBuffer = std::unique_ptr<Buffer>( 
-		this->Parent->CreateBuffer( 
+		this->Module->CreateBuffer( 
 			BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
@@ -41,7 +41,7 @@ Vlk::RayTracingAccelerationStructure* Vlk::RayTracingExtension::CreateAccBuffer(
 
 	// create the acceleration struct
 	createInfo.buffer = buffer->ASBuffer->GetBuffer();
-	VLK_CALL( vkCreateAccelerationStructureKHR( this->Parent->GetDevice(), &createInfo, nullptr, &buffer->AccelerationStructure ) );
+	VLK_CALL( vkCreateAccelerationStructureKHR( this->Module->GetDevice(), &createInfo, nullptr, &buffer->AccelerationStructure ) );
 
 	return buffer;
 	}
@@ -51,9 +51,9 @@ VkCommandPool Vlk::RayTracingExtension::CreateInternalCommandPool()
 	VkCommandPool cmdPool{};
 	VkCommandPoolCreateInfo commandPoolCreateInfo{};
 	commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	commandPoolCreateInfo.queueFamilyIndex = this->Parent->PhysicalDeviceQueueGraphicsFamily;
+	commandPoolCreateInfo.queueFamilyIndex = this->Module->PhysicalDeviceQueueGraphicsFamily;
 	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-	VLK_CALL( vkCreateCommandPool( this->Parent->Device, &commandPoolCreateInfo, nullptr, &cmdPool ) );
+	VLK_CALL( vkCreateCommandPool( this->Module->Device, &commandPoolCreateInfo, nullptr, &cmdPool ) );
 	return cmdPool;
 	}
 
@@ -64,7 +64,7 @@ void Vlk::RayTracingExtension::CreateInternalCommandBuffers( VkCommandPool cmdPo
 	commandBufferAllocateInfo.commandPool = cmdPool;
 	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferAllocateInfo.commandBufferCount = num_entries;
-	VLK_CALL( vkAllocateCommandBuffers( this->Parent->Device, &commandBufferAllocateInfo, cmdBuffers ) );
+	VLK_CALL( vkAllocateCommandBuffers( this->Module->Device, &commandBufferAllocateInfo, cmdBuffers ) );
 	}
 
 void Vlk::RayTracingExtension::SubmitAndFreeInternalCommandBuffers( VkCommandPool cmdPool, uint32_t num_entries, VkCommandBuffer* cmdBuffers )
@@ -73,9 +73,9 @@ void Vlk::RayTracingExtension::SubmitAndFreeInternalCommandBuffers( VkCommandPoo
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = num_entries;
 	submitInfo.pCommandBuffers = cmdBuffers;
-	VLK_CALL( vkQueueSubmit( this->Parent->GraphicsQueue, 1, &submitInfo, nullptr ) );
-	VLK_CALL( vkQueueWaitIdle( this->Parent->GraphicsQueue ) );
-	vkFreeCommandBuffers( this->Parent->Device, cmdPool, (uint32_t)num_entries, cmdBuffers );
+	VLK_CALL( vkQueueSubmit( this->Module->GraphicsQueue, 1, &submitInfo, nullptr ) );
+	VLK_CALL( vkQueueWaitIdle( this->Module->GraphicsQueue ) );
+	vkFreeCommandBuffers( this->Module->Device, cmdPool, (uint32_t)num_entries, cmdBuffers );
 	}
 
 VkResult Vlk::RayTracingExtension::BeginInternalCommandBuffer( VkCommandBuffer cmdBuffer )
@@ -139,7 +139,7 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 		// poll the size info for the structure and needed scratch space
 		VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
 		buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-		this->vkGetAccelerationStructureBuildSizesKHR( this->Parent->GetDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildGeometryInfo[i], maxPrimitiveCount.data(), &buildSizesInfo );
+		this->vkGetAccelerationStructureBuildSizesKHR( this->Module->GetDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildGeometryInfo[i], maxPrimitiveCount.data(), &buildSizesInfo );
 
 		// Create acceleration structure object to receive the acceleration data
 		// set the worst case memory size to allocate. this will be compacted later
@@ -158,7 +158,7 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 		}
 
 	// Allocate the scrach space. It is sized to be able to handle any of the entries
-	Buffer* scratchBuffer = this->Parent->CreateBuffer(
+	Buffer* scratchBuffer = this->Module->CreateBuffer(
 		BufferTemplate::ManualBuffer(
 			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 			VMA_MEMORY_USAGE_GPU_ONLY,
@@ -173,8 +173,8 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 	queryPoolCreateInfo.queryCount = (uint32_t)num_entries;
 	queryPoolCreateInfo.queryType = VK_QUERY_TYPE_ACCELERATION_STRUCTURE_COMPACTED_SIZE_KHR;
 	VkQueryPool queryPool;
-	VLK_CALL( vkCreateQueryPool( this->Parent->GetDevice(), &queryPoolCreateInfo, nullptr, &queryPool ) );
-	vkResetQueryPool( this->Parent->GetDevice(), queryPool, 0, (uint32_t)num_entries );
+	VLK_CALL( vkCreateQueryPool( this->Module->GetDevice(), &queryPoolCreateInfo, nullptr, &queryPool ) );
+	vkResetQueryPool( this->Module->GetDevice(), queryPool, 0, (uint32_t)num_entries );
 
 	// Create a command pool to generate the structures. Allocate one command buffer per entry, as to not time out the driver.
 	VkCommandPool cmdPool = this->CreateInternalCommandPool();
@@ -233,7 +233,7 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 
 	// get the compacted sizes
 	vkGetQueryPoolResults( 
-		this->Parent->Device, 
+		this->Module->Device, 
 		queryPool, 0, 
 		(uint32_t)compactedSizes.size(), compactedSizes.size() * sizeof( VkDeviceSize ), compactedSizes.data(), sizeof( VkDeviceSize ), 
 		VK_QUERY_RESULT_WAIT_BIT 
@@ -274,8 +274,8 @@ void Vlk::RayTracingExtension::BuildBLAS( const std::vector<RayTracingBLASEntry*
 		}
 
 	// done with the pools and scratch buffer
-	vkDestroyCommandPool( this->Parent->Device, cmdPool, nullptr );
-	vkDestroyQueryPool( this->Parent->GetDevice(), queryPool, nullptr );
+	vkDestroyCommandPool( this->Module->Device, cmdPool, nullptr );
+	vkDestroyQueryPool( this->Module->GetDevice(), queryPool, nullptr );
 	delete scratchBuffer;
 	}
 
@@ -296,7 +296,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 
 	// set up a staging buffer with the TLAS instances
 	VkDeviceSize tlas_buffer_size = num_entries * sizeof( VkAccelerationStructureInstanceKHR );
-	Buffer* stagingBuffer = this->Parent->CreateBuffer(
+	Buffer* stagingBuffer = this->Module->CreateBuffer(
 		BufferTemplate::ManualBuffer( 
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VMA_MEMORY_USAGE_CPU_ONLY,
@@ -322,12 +322,12 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 		VkAccelerationStructureDeviceAddressInfoKHR deviceAddressInfo{};
 		deviceAddressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
 		deviceAddressInfo.accelerationStructure = BLASes[entry->BlasId]->GetAccelerationStructure();
-		instance.accelerationStructureReference = vkGetAccelerationStructureDeviceAddressKHR( this->Parent->GetDevice(), &deviceAddressInfo );
+		instance.accelerationStructureReference = vkGetAccelerationStructureDeviceAddressKHR( this->Module->GetDevice(), &deviceAddressInfo );
 		}
 	stagingBuffer->UnmapMemory();
 
 	// set up a copy on the gpu to copy to
-	Buffer* TLASInstancesBuffer = this->Parent->CreateBuffer(
+	Buffer* TLASInstancesBuffer = this->Module->CreateBuffer(
 		BufferTemplate::ManualBuffer(
 			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 			VMA_MEMORY_USAGE_GPU_ONLY,
@@ -376,7 +376,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	uint32_t count = (uint32_t)num_entries;
 	VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo{};
 	buildSizesInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-	vkGetAccelerationStructureBuildSizesKHR( this->Parent->GetDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildGeometryInfo, &count, &buildSizesInfo );
+	vkGetAccelerationStructureBuildSizesKHR( this->Module->GetDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildGeometryInfo, &count, &buildSizesInfo );
 
 	// allocate the TLAS
 	VkAccelerationStructureCreateInfoKHR createInfo{};
@@ -386,7 +386,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	this->TLAS = this->CreateAccBuffer( createInfo );
 
 	// allocate the scratch buffer
-	Buffer* scratchBuffer = this->Parent->CreateBuffer(
+	Buffer* scratchBuffer = this->Module->CreateBuffer(
 		BufferTemplate::ManualBuffer(
 			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
 			VMA_MEMORY_USAGE_GPU_ONLY,
@@ -410,7 +410,7 @@ void Vlk::RayTracingExtension::BuildTLAS( const std::vector<RayTracingTLASEntry*
 	// submit the copy commands
 	VLK_CALL( vkEndCommandBuffer( cmdBuffer ) );
 	this->SubmitAndFreeInternalCommandBuffers( cmdPool, 1, &cmdBuffer );
-	vkDestroyCommandPool( this->Parent->Device, cmdPool, nullptr );
+	vkDestroyCommandPool( this->Module->Device, cmdPool, nullptr );
 
 	// delete temp memorys
 	delete scratchBuffer;
@@ -514,10 +514,13 @@ Vlk::_RayTracingPipelineBuilder::~_RayTracingPipelineBuilder()
 
 Vlk::RayTracingPipeline* Vlk::RayTracingExtension::CreateRayTracingPipeline( const RayTracingPipelineTemplate& rtt )
 	{
-	RayTracingPipeline* pipeline = new RayTracingPipeline( this->Parent );
+	RayTracingPipeline* pipeline = new RayTracingPipeline( this );
+	pipeline->PipelineBindPoint = VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
+	pipeline->MissShadersCount = (uint)rtt.MissShaders.size();
+	pipeline->ClosestHitShadersCount = (uint)rtt.ClosestHitShaders.size();
 
 	_RayTracingPipelineBuilder pipelineBuilder;
-	pipelineBuilder.Device = this->Parent->GetDevice();
+	pipelineBuilder.Device = this->Module->GetDevice();
 
 	// add the raygen shader
 	if( rtt.RaygenShader == nullptr || rtt.RaygenShader->GetStage() != VK_SHADER_STAGE_RAYGEN_BIT_KHR )
@@ -548,7 +551,7 @@ Vlk::RayTracingPipeline* Vlk::RayTracingExtension::CreateRayTracingPipeline( con
 
 
 	// create the layout first
-	VLK_CALL( vkCreatePipelineLayout( this->Parent->GetDevice(), &rtt.PipelineLayoutCreateInfo, nullptr, &pipeline->PipelineLayout ) );
+	VLK_CALL( vkCreatePipelineLayout( this->Module->GetDevice(), &rtt.PipelineLayoutCreateInfo, nullptr, &pipeline->PipelineLayout ) );
 
 	// then create the pipeline
 	VkRayTracingPipelineCreateInfoKHR pipelineInfo = rtt.RayTracingPipelineCreateInfo;
@@ -558,7 +561,8 @@ Vlk::RayTracingPipeline* Vlk::RayTracingExtension::CreateRayTracingPipeline( con
 	pipelineInfo.pGroups = pipelineBuilder.shaderGroupCreateInfos.data();
 	pipelineInfo.maxPipelineRayRecursionDepth = 2;
 	pipelineInfo.layout = pipeline->PipelineLayout;
-	VLK_CALL( RayTracingExtension::vkCreateRayTracingPipelinesKHR( this->Parent->GetDevice(), nullptr, nullptr, 1, &pipelineInfo, nullptr, &pipeline->PipelineHandle ) );
+	VLK_CALL( RayTracingExtension::vkCreateRayTracingPipelinesKHR( this->Module->GetDevice(), nullptr, nullptr, 1, &pipelineInfo, nullptr, &pipeline->PipelineHandle ) );
+
 
 	return pipeline;
 	}
@@ -746,7 +750,7 @@ static void CopyGroupDataAndUpdateStridedRange( VkStridedDeviceAddressRegionKHR&
 	base_index += group_count;
 	}
 
-Vlk::RayTracingShaderBindingTable* Vlk::RayTracingExtension::CreateShaderBindingTable( const RayTracingPipelineTemplate& rtt , const RayTracingPipeline *pipeline )
+Vlk::RayTracingShaderBindingTable* Vlk::RayTracingExtension::CreateShaderBindingTable( const RayTracingPipeline *pipeline )
 	{
 	RayTracingShaderBindingTable* btable = new RayTracingShaderBindingTable( this );
 
@@ -756,23 +760,23 @@ Vlk::RayTracingShaderBindingTable* Vlk::RayTracingExtension::CreateShaderBinding
 	uint32_t alignedGroupBaseSize = this->GetRayTracingPipelineProperties().shaderGroupBaseAlignment;
 
 	// raygen + misses + closest hits
-	uint groupCount = 1 + (uint)rtt.MissShaders.size() + (uint)rtt.ClosestHitShaders.size();
+	uint groupCount = 1 + pipeline->GetMissShadersCount() + pipeline->GetClosestHitShadersCount();
 
 	// retrieve the shader handles from the pipeline
 	vector<uint8_t> shaderHandleStorage( (size_t)handleSize * (size_t)groupCount );
-	VLK_CALL( RayTracingExtension::vkGetRayTracingShaderGroupHandlesKHR( this->GetParent()->GetDevice(), pipeline->GetPipeline(), 0, groupCount, (size_t)shaderHandleStorage.size(), shaderHandleStorage.data() ) );
+	VLK_CALL( RayTracingExtension::vkGetRayTracingShaderGroupHandlesKHR( this->GetModule()->GetDevice(), pipeline->GetPipeline(), 0, groupCount, (size_t)shaderHandleStorage.size(), shaderHandleStorage.data() ) );
 
 	// calculate the ranges of the handles
 	uint32_t index = 0;
 	btable->RaygenDeviceAddress = GetGroupAddress( index, 1, alignedHandleSize, alignedGroupBaseSize );
-	btable->MissDeviceAddress = GetGroupAddress( index, (uint)rtt.MissShaders.size(), alignedHandleSize, alignedGroupBaseSize );
-	btable->ClosestHitDeviceAddress = GetGroupAddress( index, (uint)rtt.ClosestHitShaders.size(), alignedHandleSize, alignedGroupBaseSize );
+	btable->MissDeviceAddress = GetGroupAddress( index, pipeline->GetMissShadersCount(), alignedHandleSize, alignedGroupBaseSize );
+	btable->ClosestHitDeviceAddress = GetGroupAddress( index, pipeline->GetClosestHitShadersCount(), alignedHandleSize, alignedGroupBaseSize );
 	btable->CallableDeviceAddress = GetGroupAddress( index, 0, alignedHandleSize, alignedGroupBaseSize );
 	VkDeviceSize bufferSize = index;
 
 	// allocate the btable memory
 	btable->BufferPtr = std::unique_ptr<Buffer>(
-		this->Parent->CreateBuffer(
+		this->Module->CreateBuffer(
 			BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 				VMA_MEMORY_USAGE_CPU_ONLY,
@@ -786,8 +790,8 @@ Vlk::RayTracingShaderBindingTable* Vlk::RayTracingExtension::CreateShaderBinding
 
 	uint base_index = 0; // is updated by the methods
 	CopyGroupDataAndUpdateStridedRange( btable->RaygenDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 1, handleSize );
-	CopyGroupDataAndUpdateStridedRange( btable->MissDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)rtt.MissShaders.size(), handleSize );
-	CopyGroupDataAndUpdateStridedRange( btable->ClosestHitDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, (uint)rtt.ClosestHitShaders.size(), handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->MissDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, pipeline->GetMissShadersCount(), handleSize );
+	CopyGroupDataAndUpdateStridedRange( btable->ClosestHitDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, pipeline->GetClosestHitShadersCount(), handleSize );
 	CopyGroupDataAndUpdateStridedRange( btable->CallableDeviceAddress, buffer_address, shaderHandleStorage, mapptr, base_index, 0, handleSize );
 
 	btable->BufferPtr->UnmapMemory();

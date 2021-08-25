@@ -7,19 +7,14 @@
 
 namespace Vlk
     {
-    class Extension
+    class Extension : public RendererSubmodule
         {
-        protected:
-            Extension() = default;
-            Extension( const RayTracingExtension& other );
-            friend class Renderer;
+        BDSubmoduleMacro( Extension, RendererSubmodule, Renderer );
 
-            Renderer* Parent = nullptr;
-            
+        protected:
             static void AddExtensionToList( std::vector<const char*>* extensionList, const char* extensionName );
  
         public:
-
             // called before instance is created
             virtual VkResult CreateInstance( VkInstanceCreateInfo* instanceCreateInfo, std::vector<const char*>* extensionList );
 
@@ -51,10 +46,7 @@ namespace Vlk
             // called before any extension is deleted. makes it possible to remove data that is dependent on some other extension
             virtual VkResult Cleanup();
 
-            // dtor, removes any allocated data
-            virtual ~Extension();
-
             // get the parent renderer
-            BDGetMacro( Renderer*, Parent );
+            BDGetMacro( Renderer*, Module );
         };
     };
