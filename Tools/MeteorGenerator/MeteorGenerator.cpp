@@ -35,7 +35,7 @@ const uint PlaneQuadTesselation = 32; // 16*16*2 = 512 tris
 const uint MeshTesselation = 8;
 const uint NumberOfMeshesToGenerate = 6;
 const bool LockBorderVertices = true;
-const bool SaveUncompressedVertices = false;
+const bool SaveUncompressedVertices = true;
 const bool RandomizeScale = true;
 const bool DeformSurface = true;
 

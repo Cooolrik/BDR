@@ -10,15 +10,18 @@ void MeshViewer::SetupScene()
 		};
 	std::vector<const char*> source_tex_names =
 		{
-		"../Assets/image1.dds",
-		"../Assets/image2.dds",
-		"../Assets/image3.dds",
-		"../Assets/image4.dds",
+		"../Assets/image7.dds",
+		//"../Assets/image2.dds",
+		//"../Assets/image3.dds",
+		//"../Assets/image4.dds",
 		};
 
 	// allocate, read in the meshes
 	this->MeshAlloc = u_ptr( new ZeptoMeshAllocator );
 	this->MeshAlloc->LoadMeshes( this->Renderer, source_mesh_names );
+
+	//this->MeshAlloc = u_ptr( new RenderMesh );
+	//this->MeshAlloc->LoadMesh( this->Renderer, source_mesh_names[0] );
 
 	// read in textures
 	this->Textures.resize( source_tex_names.size() );
@@ -29,8 +32,10 @@ void MeshViewer::SetupScene()
 		}
 
 	// load the shaders
-	vertexRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_VERTEX_BIT, "shaders/Render.vert.spv" ));
-	fragmentRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/Render.frag.spv" ));
+	//vertexRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_VERTEX_BIT, "shaders/MeshRender.vert.spv" ));
+	//fragmentRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/MeshRender.frag.spv" ));
+	vertexRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_VERTEX_BIT, "shaders/ZeptoRender.vert.spv" ));
+	fragmentRenderShader = u_ptr(Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/ZeptoRender.frag.spv" ));
 
 	// setup the render pipeline
 	Vlk::DescriptorSetLayoutTemplate rdlt;
@@ -39,7 +44,7 @@ void MeshViewer::SetupScene()
 	this->RenderPipelineDescriptorSetLayout = u_ptr(this->Renderer->CreateDescriptorSetLayout( rdlt ));
 
 	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr(new Vlk::GraphicsPipelineTemplate());
-	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->SetVertexDataTemplateFromVertexBuffer( this->MeshAlloc->GetVertexBuffer() );
 	gpt->AddShaderModule( vertexRenderShader.get() );
 	gpt->AddShaderModule( fragmentRenderShader.get() );
 	gpt->AddDescriptorSetLayout( this->RenderPipelineDescriptorSetLayout.get() );
@@ -138,25 +143,25 @@ VkCommandBuffer MeshViewer::DrawScene()
 		{
 		if( this->MeshAlloc->GetMesh( m ) == nullptr )
 			continue;
-
+	
 		const ZeptoMesh& zmesh = *(this->MeshAlloc->GetMesh(m));
-
+	
 		ObjectRender pc;
-
+	
 		pc.CompressedVertexTranslate = zmesh.CompressedVertexTranslate;
 		pc.CompressedVertexScale = zmesh.CompressedVertexScale;
-
+	
 		for( size_t sm = 0; sm < zmesh.SubMeshes.size(); ++sm )
 			{
 			const ZeptoSubMesh& submesh = zmesh.SubMeshes[sm];
-
+	
 			// calc quantization of the submesh
 			uint quantization = uint( this->Camera.debug_float_value1 );
 			if( (int)quantization < 0 )
 				quantization = 0;
 			if( quantization > 16 )
 				quantization = 16;
-
+	
 			// calc the lod of the submesh
 			uint lod = 0;
 			while( lod < 3 )
@@ -165,15 +170,22 @@ VkCommandBuffer MeshViewer::DrawScene()
 					break; // found it
 				++lod;
 				}
-
-			// set the relevant info
-			uint r = (uint)( sm / 256 );
-			uint g = (uint)( sm / 16 ) % 16;
-			uint b = (uint)sm % 16;
-
+	
 			if( this->ui.select_a_zeptomesh && (int)m == this->ui.selected_zeptomesh_index && (int)sm == this->ui.selected_submesh_index )
 				{
 				pc.Color = glm::vec3( 1, 0, 0 );
+				Widgets.RenderSphere( submesh.BoundingSphere, submesh.BoundingSphereRadius );
+				Widgets.RenderConeWithAngle( submesh.RejectionConeCenter, submesh.RejectionConeCenter + (submesh.RejectionConeDirection*20.f), acosf(submesh.RejectionConeCutoff) );
+				Widgets.RenderAABB( submesh.AABB[0] , submesh.AABB[1] );
+
+				glm::vec3 dir = normalize(this->Camera.cameraPosition - submesh.RejectionConeCenter);
+	
+				this->ui.viewDot = glm::dot( dir, submesh.RejectionConeDirection );
+				if( this->ui.viewDot < submesh.RejectionConeCutoff )
+					this->ui.visible = true;
+				else
+					this->ui.visible = false;
+	
 				}
 			else
 				{
@@ -184,11 +196,25 @@ VkCommandBuffer MeshViewer::DrawScene()
 			pc.vertexCutoffIndex = submesh.VertexOffset + submesh.LockedVertexCount;
 			pc.quantizationMask = 0xffffffff << quantization;
 			pc.quantizationRound = ( 0x1 << quantization ) >> 1;
-
+	
 			pool->PushConstants( this->RenderPipeline.get(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( ObjectRender ), &pc );
 			pool->DrawIndexed( submesh.LODIndexCounts[lod], 1, submesh.IndexOffset, submesh.VertexOffset, 0 );
 			}
+	
+		if( !this->ui.select_a_zeptomesh )
+			{
+			Widgets.RenderSphere( zmesh.BoundingSphere , zmesh.BoundingSphereRadius );
+			Widgets.RenderAABB( zmesh.AABB[0] , zmesh.AABB[1] );
+			}
 		}
+
+
+	this->Widgets.RenderWidget( DebugWidgets::CoordinateAxies, glm::mat4( 1 ) );
+
+	// draw debug stuff
+	this->Widgets.SetViewport( 0, 0, (float)this->Camera.ScreenW, (float)this->Camera.ScreenH );
+	this->Widgets.SetScissorRectangle( 0, 0, this->Camera.ScreenW, this->Camera.ScreenH );
+	this->Widgets.Draw( pool );
 
 	// draw gui
 	if( this->app.UIWidgets )

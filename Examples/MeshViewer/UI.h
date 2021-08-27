@@ -15,6 +15,13 @@ class UI
         int max_submesh_index = 0;
 
 
+        float coneAngle = 1.f;
+        //float coneYaw = 0.f;
+        //float coneTilt = 0.f;
+        glm::vec3 coneDir = glm::vec3(1,0,0);
+
+        float viewDot;
+        bool visible;
 
         void Update();
     };

@@ -106,7 +106,6 @@
     <ClCompile Include="..\Common\Common.cpp" />
     <ClCompile Include="..\Common\ZeptoMesh.cpp" />
     <ClCompile Include="..\Common\Texture.cpp" />
-    <ClCompile Include="..\Common\Vertex.cpp" />
     <ClCompile Include="debugging.cpp" />
     <ClCompile Include="Render.cpp" />
   </ItemGroup>
@@ -195,7 +194,6 @@
     <ClInclude Include="..\Common\Common.h" />
     <ClInclude Include="..\Common\ZeptoMesh.h" />
     <ClInclude Include="..\Common\Texture.h" />
-    <ClInclude Include="..\Common\Vertex.h" />
     <ClInclude Include="debugging.h" />
     <ClInclude Include="RenderData.h" />
   </ItemGroup>

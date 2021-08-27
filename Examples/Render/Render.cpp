@@ -453,7 +453,7 @@ void recreateSwapChain()
 	// recreate graphics pipeline
 	delete renderData->renderPipeline;
 	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr( new Vlk::GraphicsPipelineTemplate() );
-	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->SetVertexDataTemplateFromVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
 	gpt->AddShaderModule( renderData->vertexRenderShader );
 	gpt->AddShaderModule( renderData->fragmentRenderShader );
 	gpt->AddDescriptorSetLayout( renderData->renderDescriptorLayout );
@@ -491,6 +491,7 @@ void SetupScene()
 
 	std::vector<const char*> source_tex_names =
 		{
+		"../Assets/image7.dds",
 		"../Assets/image1.dds",
 		"../Assets/image2.dds",
 		"../Assets/image3.dds",
@@ -503,7 +504,7 @@ void SetupScene()
 	const uint unique_meshes_count = 1;
 	const uint megamesh_max_objects_cnt = 1; // number of megamesh objects in scene (not same as scene_objects)
 #else
-	const uint unique_meshes_count = 160;
+	const uint unique_meshes_count = 80;
 	const uint megamesh_max_objects_cnt = 20; // number of megamesh objects in scene (not same as scene_objects)
 #endif
 
@@ -513,6 +514,7 @@ void SetupScene()
 	// to not cheat, we will load in the mesh data for every mesh
 	std::vector<const char*> meshnames;
 	std::vector<uint> objects_per_mesh;
+	LoadTexture( source_tex_names[0] );
 	for( uint m = 0; m < unique_meshes_count; ++m )
 		{
 		meshnames.push_back( source_mesh_names[irand( 0, (uint)source_mesh_names.size() - 1 )] );
@@ -699,7 +701,7 @@ void SetupScene()
 
 		uint64_t mesh_size_bytes = 
 			( num_tris * 3 * sizeof( uint16_t ) ) +
-			( num_verts * sizeof( Vertex ) ) +
+			( num_verts * sizeof( ZeptoVertex ) ) +
 			( num_batches * num_mesh_lods * sizeof( BatchData ) );
 
 		total_size_all += mesh_size_bytes;
@@ -756,7 +758,7 @@ void SetupScene()
 	renderData->renderDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( rdlt );
 	
 	unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = u_ptr( new Vlk::GraphicsPipelineTemplate() );
-	gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+	gpt->SetVertexDataTemplateFromVertexBuffer( renderData->MeshAlloc->GetVertexBuffer() );
 	gpt->AddShaderModule( renderData->vertexRenderShader );
 	gpt->AddShaderModule( renderData->fragmentRenderShader );
 	gpt->AddDescriptorSetLayout( renderData->renderDescriptorLayout );

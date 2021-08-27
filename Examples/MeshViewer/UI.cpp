@@ -1,5 +1,6 @@
-#include "UI.h"
+
 #include "MeshViewer.h"
+#include "UI.h"
 
 // disable warning for "enum class" since we can't modify Vulcan SDK
 #pragma warning( disable : 26812 4100 4201 4127 4189 )
@@ -68,6 +69,7 @@ void UI::Update()
 		ImGui::Indent( -10 );
 		}
 
+
 	ImGui::Checkbox( "Select Submesh", &this->select_a_zeptomesh );
 	if( select_a_zeptomesh )
 		{
@@ -80,12 +82,12 @@ void UI::Update()
 				this->selected_zeptomesh_index = 0;
 			if( this->selected_zeptomesh_index >= mesh_count )
 				this->selected_zeptomesh_index = mesh_count - 1;
-
+		
 			if( mesh_count > 1 )
 				{
 				ImGui::SliderInt( "Zeptomesh Id", &this->selected_zeptomesh_index, 0, mesh_count - 1 );
 				}
-
+		
 			const ZeptoMesh* zm = this->mv->MeshAlloc->GetMesh( selected_zeptomesh_index );
 			int submesh_count = (int)zm->SubMeshes.size();
 			if( submesh_count > 0 )
@@ -94,13 +96,16 @@ void UI::Update()
 					this->selected_submesh_index = 0;
 				if( this->selected_submesh_index >= submesh_count )
 					this->selected_submesh_index = submesh_count - 1;
-
+		
 				if( submesh_count > 1 )
 					{
 					ImGui::SliderInt( "Submesh Id", &this->selected_submesh_index, 0, submesh_count - 1 );
 					}
 				}
 			}
+
+		ImGui::SliderFloat("viewDot", &this->viewDot, -1, 1);
+		ImGui::Checkbox( "visible", &this->visible );
 
 		ImGui::Indent( -10 );
 		}

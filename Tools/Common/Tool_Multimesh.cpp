@@ -82,7 +82,7 @@ void Tools::Multimesh::CalcSubmeshBoundingVolumesAndRejectionCone( unsigned int 
 	mesh.BoundingSphereRadius = 0;
 	for( size_t i = BeginVertex; i < EndVertex; ++i )
 		{
-		float l = glm::length( BoundingSphere - Vertices[i].Coords );
+		float l = glm::length( mesh.BoundingSphere - Vertices[i].Coords );
 		if( l > mesh.BoundingSphereRadius )
 			{
 			mesh.BoundingSphereRadius = l;
@@ -109,7 +109,7 @@ void Tools::Multimesh::CalcSubmeshBoundingVolumesAndRejectionCone( unsigned int 
 
 	mesh.RejectionConeCenter = center;
 	mesh.RejectionConeDirection = dir;
-	mesh.RejectionConeCutoff = 0.0f;
+	mesh.RejectionConeCutoff = 0.4f;
 	}
 
 void Tools::Multimesh::Serialize( std::fstream& fs, bool reading )

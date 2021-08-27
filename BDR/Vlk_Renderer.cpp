@@ -967,7 +967,7 @@ void Vlk::Renderer::DeleteSwapChain()
 		}
 	}
 
-Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
+Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount ) const
 	{
 	CommandPool* pool = new CommandPool(this);
 
@@ -990,7 +990,7 @@ Vlk::CommandPool* Vlk::Renderer::CreateCommandPool( uint bufferCount )
 	return pool;
 	}
 
-Vlk::Pipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt )
+Vlk::Pipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt ) const
 	{
 	Pipeline* pipeline = new Pipeline(this);
 	pipeline->PipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -1039,7 +1039,7 @@ Vlk::Pipeline* Vlk::Renderer::CreateGraphicsPipeline( const GraphicsPipelineTemp
 	return pipeline;
 	}
 
-Vlk::Pipeline* Vlk::Renderer::CreateComputePipeline( const ComputePipelineTemplate& cpt )
+Vlk::Pipeline* Vlk::Renderer::CreateComputePipeline( const ComputePipelineTemplate& cpt ) const
 	{
 	Pipeline* pipeline = new Pipeline( this );
 	pipeline->PipelineBindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
@@ -1183,7 +1183,7 @@ Vlk::IndexBuffer* Vlk::Renderer::CreateIndexBuffer( const IndexBufferTemplate& b
 	return ibuffer;
 	}
 
-Vlk::DescriptorSetLayout* Vlk::Renderer::CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst )
+Vlk::DescriptorSetLayout* Vlk::Renderer::CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst ) const
 	{
 	DescriptorSetLayout* dsl = new DescriptorSetLayout(this);
 

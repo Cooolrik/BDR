@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "ZeptoMesh.h"
+#include "RenderMesh.h"
 #include "UI.h"
 
 class SceneRender
@@ -51,6 +52,7 @@ class MeshViewer
 		ApplicationBase& app;
 		Vlk::Renderer* Renderer;
 		Camera& Camera;
+		DebugWidgets& Widgets;
 
 		// application data
 		vector<PerFrameData> PerFrameData;
@@ -62,6 +64,7 @@ class MeshViewer
 		unique_ptr<Vlk::Sampler> LinearSampler = nullptr; // standard bilinear sampler 
 
 		unique_ptr<ZeptoMeshAllocator> MeshAlloc = nullptr;
+		//unique_ptr<RenderMesh> MeshAlloc = nullptr;
 
 		unique_ptr<Vlk::ShaderModule> vertexRenderShader = nullptr;
 		unique_ptr<Vlk::ShaderModule> fragmentRenderShader = nullptr;
@@ -72,7 +75,8 @@ class MeshViewer
 		MeshViewer( ApplicationBase& _app ) :
 			app( _app ),
 			Renderer( _app.Renderer ),
-			Camera( _app.Camera )
+			Camera( _app.Camera ),
+			Widgets( *_app.DebugWidgets )
 			{}
 
 		void SetupScene();

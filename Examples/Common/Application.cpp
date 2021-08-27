@@ -82,6 +82,7 @@ void ApplicationBase::Init()
 	if( this->UseWidgets )
 		{
 		this->UIWidgets = new ::ImGuiWidgets( this->Renderer , this->Window );
+		this->DebugWidgets = new ::DebugWidgets( this->Renderer );
 		}
 	}
 
@@ -92,6 +93,10 @@ void ApplicationBase::Deinit()
 	if( this->UIWidgets )
 		{
 		delete this->UIWidgets;
+		}
+	if( this->DebugWidgets )
+		{
+		delete this->DebugWidgets;
 		}
 
 	delete this->Renderer;

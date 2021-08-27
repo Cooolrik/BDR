@@ -81,6 +81,9 @@ namespace Vlk
             unsigned int AddPushConstantRange( VkPushConstantRange range );
             unsigned int AddPushConstantRange( VkShaderStageFlags stageFlags, uint32_t offset , uint32_t size );
 
+            // sets input assembly to list of lines.
+            void SetInputAssemblyToListOfLines();
+
             // set a single static viewport value, and removes the viewport data from the list of dynamic values
             // this renders faster, but requires the pipeline to be rebuild if the screen is resized
             void SetStaticViewport( VkViewport viewport );

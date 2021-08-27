@@ -87,6 +87,8 @@ namespace Vlk
 	class Sampler;
 	class SamplerTemplate;
 
+	class ShaderModule;
+
 	BDSubmoduleBaseMacro( RendererSubmodule , Renderer );
 
 	class Renderer
@@ -223,13 +225,13 @@ namespace Vlk
 			void WaitForDeviceIdle();
 
 			/// create a Graphics Pipeline object based on template
-			Pipeline* CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt );
+			Pipeline* CreateGraphicsPipeline( const GraphicsPipelineTemplate& gpt ) const;
 
 			/// create a Compute Pipeline object based on template
-			Pipeline* CreateComputePipeline( const ComputePipelineTemplate& cpt );
+			Pipeline* CreateComputePipeline( const ComputePipelineTemplate& cpt ) const;
 
 			/// create a CommandPool object. set number of buffers to allocate
-			CommandPool* CreateCommandPool( uint bufferCount );
+			CommandPool* CreateCommandPool( uint bufferCount ) const;
 
 			/// create buffers based on templates
 			Buffer* CreateBuffer( const BufferTemplate &bt ) const;
@@ -237,7 +239,7 @@ namespace Vlk
 			IndexBuffer* CreateIndexBuffer( const IndexBufferTemplate& bt ) const;
 			
 			/// (temporary) create descriptor layout
-			DescriptorSetLayout* CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst );
+			DescriptorSetLayout* CreateDescriptorSetLayout( const DescriptorSetLayoutTemplate& dst ) const;
 
 			/// Create a descriptor pool 
 			DescriptorPool* CreateDescriptorPool( const DescriptorPoolTemplate& dpt ) const;

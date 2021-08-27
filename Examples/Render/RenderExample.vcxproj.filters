@@ -37,9 +37,6 @@
     <ClCompile Include="..\Common\Texture.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Vertex.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
     <ClCompile Include="debugging.cpp">
       <Filter>Source Files\debugging</Filter>
     </ClCompile>
@@ -89,9 +86,6 @@
       <Filter>Source Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Texture.h">
-      <Filter>Source Files\Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Vertex.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="debugging.h">

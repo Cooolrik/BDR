@@ -12,10 +12,10 @@ int main( int argc, char argv[] )
 	app.ShowConsole = false;
 #endif
 
-	app.InitialWindowPosition[0] = 30;
-	app.InitialWindowPosition[1] = 60;
-	app.InitialWindowDimensions[0] = 1800;
-	app.InitialWindowDimensions[1] = 900;
+	app.InitialWindowPosition[0] = 0;
+	app.InitialWindowPosition[1] = 30;
+	app.InitialWindowDimensions[0] = 1920;
+	app.InitialWindowDimensions[1] = 1000;
 
 	return app.Run();
 	}

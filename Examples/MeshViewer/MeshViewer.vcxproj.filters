@@ -28,7 +28,7 @@
     <ClCompile Include="..\Common\Texture.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Vertex.cpp">
+    <ClCompile Include="..\Common\GenericVertex.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Tools\Common\Tool_Multimesh.cpp">
@@ -52,12 +52,30 @@
     <ClCompile Include="UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\RenderMesh.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\DebugWidgets.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="shaders\Render.frag">
+    <CustomBuild Include="shaders\ZeptoRender.frag">
       <Filter>Source Files\shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="shaders\Render.vert">
+    <CustomBuild Include="shaders\ZeptoRender.vert">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\MeshRender.frag">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\MeshRender.vert">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\DebugRender.vert">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\DebugRender.frag">
       <Filter>Source Files\shaders</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -71,7 +89,7 @@
     <ClInclude Include="..\Common\Texture.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\Vertex.h">
+    <ClInclude Include="..\Common\GenericVertex.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Tools\Common\Tool_Multimesh.h">
@@ -94,6 +112,12 @@
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\RenderMesh.h">
+      <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\DebugWidgets.h">
+      <Filter>Source Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

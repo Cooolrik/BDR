@@ -1,8 +1,11 @@
 #pragma once
 
 #include <vector>
-#include <Vertex.h>
 #include <Tool_Multimesh.h>
+
+#include "Vlk_VertexBuffer.h"
+#include <Tool_Vertex.h>
+#include <glm/glm.hpp>
 
 namespace Vlk
 	{
@@ -13,6 +16,20 @@ namespace Vlk
 
 typedef Tools::Multimesh ZeptoMesh;
 typedef Tools::Multimesh::Submesh ZeptoSubMesh;
+
+class ZeptoVertex : public Tools::Compressed16Vertex
+	{
+	public:
+		static Vlk::VertexBufferDescription GetVertexBufferDescription()
+			{
+			Vlk::VertexBufferDescription desc;
+			desc.SetVertexInputBindingDescription( 0, sizeof( ZeptoVertex ), VK_VERTEX_INPUT_RATE_VERTEX );
+			desc.AddVertexInputAttributeDescription( 0, 0, VK_FORMAT_R16G16B16A16_UINT, offsetof( ZeptoVertex, Coords ) );
+			desc.AddVertexInputAttributeDescription( 0, 1, VK_FORMAT_R16G16_SNORM, offsetof( ZeptoVertex, Normal ) );
+			desc.AddVertexInputAttributeDescription( 0, 2, VK_FORMAT_R16G16_SFLOAT, offsetof( ZeptoVertex, TexCoords ) );
+			return desc;
+			}
+	};
 
 class ZeptoMeshAllocator
 	{

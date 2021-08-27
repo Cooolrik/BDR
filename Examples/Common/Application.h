@@ -43,6 +43,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "ImGuiWidgets.h"
+#include "DebugWidgets.h"
 
 class ApplicationBase
 	{
@@ -70,6 +71,7 @@ class ApplicationBase
 		HANDLE ConsoleOutputHandle = nullptr;
 		CONSOLE_SCREEN_BUFFER_INFO ConsoleBufferInfo = {};
 		ImGuiWidgets* UIWidgets = nullptr;
+		DebugWidgets* DebugWidgets = nullptr;
 
 		uint CurrentFrameIndex = 0;
 
@@ -110,6 +112,12 @@ template<class T> class Application : public ApplicationBase
 			// update view 
 			this->Camera.UpdateFrame();
 
+			if( this->DebugWidgets )
+				{
+				this->DebugWidgets->UpdateSceneData( this->Camera );
+				this->DebugWidgets->BeginFrame( this->CurrentFrameIndex );
+				}
+
 			// call the implementation to create a command buffer and draw the scene
 			VkCommandBuffer buffer = this->Scene->DrawScene();
 			std::vector<VkCommandBuffer> buffers = { buffer };
@@ -117,6 +125,11 @@ template<class T> class Application : public ApplicationBase
 			if( result == VK_ERROR_OUT_OF_DATE_KHR )
 				{
 				return false;
+				}
+
+			if( this->DebugWidgets )
+				{
+				this->DebugWidgets->EndFrame();
 				}
 
 			// we are done, render is not dirty anymore

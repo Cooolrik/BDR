@@ -108,7 +108,7 @@ void main()
 		float radius = boundingSphere.w;
 	
 		// get the direction in world space to the object
-		vec3 object_direction = normalize(sceneObjectsBuffer.objects[objectID].rejectionConeCenter - cullingSettings.viewPosition);
+		vec3 object_direction = normalize(cullingSettings.viewPosition - sceneObjectsBuffer.objects[objectID].rejectionConeCenter);
 		vec3 object_rejection_direction = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.xyz;
 		float object_rejection_cutoff = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.w;
 
@@ -120,7 +120,7 @@ void main()
 		isVisible = isVisible && center.z * cullingSettings.frustumXz - abs(center.x) * cullingSettings.frustumXx > -radius; // +-x planes
 		isVisible = isVisible && center.z * cullingSettings.frustumYz - abs(center.y) * cullingSettings.frustumYy > -radius; // +-y planes
 		isVisible = isVisible && center.z - radius < -cullingSettings.nearZ && center.z + radius > -cullingSettings.farZ; // depth
-		isVisible = isVisible && dot(object_direction,object_rejection_direction) > object_rejection_cutoff;
+		isVisible = isVisible && dot(object_direction,object_rejection_direction) < object_rejection_cutoff;
 
 		uint quantization_level = 0;
 

@@ -15,21 +15,48 @@ layout(location = 0) out vec4 outColor;
 
 layout(set = 0, binding = 1) uniform sampler2D texSamplers[256];
 
+// Converts a color from sRGB gamma to linear light gamma
+vec4 toLinear(vec4 sRGB)
+	{
+    bvec4 cutoff = lessThan(sRGB, vec4(0.04045));
+    vec4 higher = pow((sRGB + vec4(0.055))/vec4(1.055), vec4(2.4));
+    vec4 lower = sRGB/vec4(12.92);
+    return mix(higher, lower, cutoff);
+	}
+
+mat3 compute_tangent_frame()
+	{
+	// get edge vectors
+    vec3 dp1 = dFdx( worldPos );
+    vec3 dp2 = dFdy( worldPos );
+    vec2 duv1 = dFdx( fragTexCoord );
+    vec2 duv2 = dFdy( fragTexCoord );
+
+	// solve the linear system
+    vec3 dp2perp = cross( dp2, fragNormal );
+    vec3 dp1perp = cross( fragNormal, dp1 );
+    vec3 tangent = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 binormal = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	// construct a scale-invariant frame 
+    float invmax = inversesqrt( max( dot(tangent,tangent), dot(binormal,binormal) ) );
+    return mat3( tangent * invmax, binormal * invmax, fragNormal );
+	}
+
 void main() 
 	{
 	vec3 N = normalize(fragNormal);
+	vec3 V = normalize(viewDir);
 
-	float light = (dot(N,vec3(0.7f,0.7f,0.7f)) + 2.f)/3.f;
+	mat3 TBN = compute_tangent_frame();
 
-	vec3 base_color = texture(texSamplers[materialID],fragTexCoord).rgb;
-	//vec3 base_color = vec3(fragTexCoord.x,0,fragTexCoord.y);
-	//
-	//uint r = (gl_PrimitiveID >> 6) & 0xff;
-	//uint g = (materialID ) & 0xff;
-	//uint b = (gl_PrimitiveID << 2) & 0xff;
-	//
-	//outColor = vec4( float(r/256.0), float(g/256.0), float(b/256.0), 1.0 );
+	vec3 normal =  toLinear(texture(texSamplers[0],fragTexCoord*20.f)).rgb;
 
-	outColor = vec4(light*base_color,1); 
-	//outColor = vec4(base_color,1); 
+	normal = normalize(TBN * normal);
+
+	float light = dot(normal,normalize(vec3(0.7f,0.7f,0.7f))) / 2 + 0.5; 
+	vec3 base_color = toLinear(texture(texSamplers[materialID],fragTexCoord)).rgb;
+	
+	outColor = vec4(light * base_color , 1 );
+
 	}

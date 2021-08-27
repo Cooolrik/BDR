@@ -5,8 +5,6 @@
 #include <fstream>
 #include <unordered_map>
 
-#include "Vertex.h"
-
 #include "Vlk_VertexBuffer.h"
 #include "Vlk_IndexBuffer.h"
 
@@ -17,7 +15,7 @@ using std::vector;
 
 bool ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const char*> paths )
 	{
-	std::vector<Vertex> vertices;
+	std::vector<ZeptoVertex> vertices;
 	std::vector<uint16_t> indices;
 
 	// clear any current allocation
@@ -46,7 +44,7 @@ bool ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const 
 
 		// copy into the arrays
 		vertices.resize( MeshVertexBase + MeshVertexCount );
-		memcpy( &( vertices.data()[MeshVertexBase] ), mesh.CompressedVertices.data(), sizeof( Vertex ) * MeshVertexCount );
+		memcpy( &( vertices.data()[MeshVertexBase] ), mesh.CompressedVertices.data(), sizeof( ZeptoVertex ) * MeshVertexCount );
 		indices.resize( MeshIndexBase + MeshIndexCount );
 		memcpy( &( indices.data()[MeshIndexBase] ), mesh.Indices.data(), sizeof( uint16_t ) * MeshIndexCount );
 
@@ -66,7 +64,7 @@ bool ZeptoMeshAllocator::LoadMeshes( Vlk::Renderer* renderer, std::vector<const 
 	// setup gpu buffers
 	vertexBuffer = renderer->CreateVertexBuffer( 
 		Vlk::VertexBufferTemplate::VertexBuffer(
-			Vertex::GetVertexBufferDescription(), 
+			ZeptoVertex::GetVertexBufferDescription(),
 			(uint)vertices.size(), 
 			vertices.data() 
 			)

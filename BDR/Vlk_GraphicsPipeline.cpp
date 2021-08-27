@@ -135,6 +135,14 @@ unsigned int Vlk::GraphicsPipelineTemplate::AddPushConstantRange( VkShaderStageF
 	return AddPushConstantRange( range );
 	}
 
+void Vlk::GraphicsPipelineTemplate::SetInputAssemblyToListOfLines()
+	{
+	// define the input assembly, set to list of lines
+	this->PipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+	this->PipelineInputAssemblyStateCreateInfo.flags = 0; // reserved 
+	this->PipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+	}
+
 void Vlk::GraphicsPipelineTemplate::SetStaticViewport( VkViewport viewport )
 	{
 	this->RemoveDynamicState( VK_DYNAMIC_STATE_VIEWPORT );
