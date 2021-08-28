@@ -33,7 +33,7 @@ namespace Tools
 				}
 
 			// create a compressed vertex. the inverted scale and translate transforms will be applied to the 3d coordinate before storing
-			Compressed16Vertex Compress( glm::vec3& scale, glm::vec3& translate );
+			Compressed16Vertex Compress( float scale, glm::vec3& translate );
 		};
 
 	};

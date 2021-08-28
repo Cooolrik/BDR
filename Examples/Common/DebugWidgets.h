@@ -23,6 +23,7 @@ class DebugWidgets
         struct PushConstants
             {
             glm::mat4 Transform;
+            glm::vec3 Color;
             };
 
         struct SceneUniforms
@@ -45,6 +46,7 @@ class DebugWidgets
             {
             unsigned int MeshID = 0;
             glm::mat4 Transform = {};
+            glm::vec3 Color = glm::vec3( 1 );
             };
 
         const Vlk::Renderer* Renderer = nullptr;
@@ -94,10 +96,10 @@ class DebugWidgets
         void SetScissorRectangle( int32_t x, int32_t y, uint32_t width, uint32_t height );
 
         // add an item
-        void RenderWidget( WidgetTypes type, glm::mat4 transform );
+        void RenderWidget( WidgetTypes type, glm::mat4 transform, glm::vec3 color = glm::vec3(1) );
         void RenderSphere( glm::vec3 world_pos, float radius );
-        void RenderCone( glm::vec3 world_pos, glm::vec3 direction , float radiusA, float radiusB, float length );
-        void RenderConeWithAngle( glm::vec3 world_pos, glm::vec3 world_target, float angle_rads );
+        void RenderCone( glm::vec3 world_pos, glm::vec3 direction , float radiusA, float radiusB, float length, glm::vec3 color = glm::vec3(1) );
+        void RenderConeWithAngle( glm::vec3 world_pos, glm::vec3 world_target, float angle_rads, glm::vec3 color = glm::vec3(1) );
         void RenderAABB( glm::vec3 minv, glm::vec3 maxv );
 
 

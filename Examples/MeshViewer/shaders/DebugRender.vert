@@ -15,6 +15,7 @@ layout(std140, set = 0 , binding = 0) uniform SceneUniforms
 layout( push_constant ) uniform PushConstants
 	{
 	mat4 Transform;
+	vec3 Color;
 	} Object;
 
 layout(location = 0) in vec3 Coords;
@@ -26,5 +27,5 @@ void main()
 	{
 	vec3 worldPos = (Object.Transform * vec4(Coords, 1)).xyz;
 	gl_Position = Scene.Proj * Scene.View * vec4(worldPos, 1.0);
-	fragColor = Color;
+	fragColor = Color * Object.Color;
 	}

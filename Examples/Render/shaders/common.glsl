@@ -19,6 +19,7 @@ struct SceneObject
 	uint batchID;
 	uint vertexCutoffIndex;
 	uint LODQuantizations[4];
+	float bSphereRadiusCompressedScale;
 	};
 
 struct Instance
@@ -48,3 +49,15 @@ struct DrawCommand
     uint firstInstance;
 	};
 	
+struct DebugData
+	{	
+	vec3 center;
+	float rejectiondot;
+	float object_rejection_cutoff;
+	uint quantization_level;
+	int isvisible;
+
+	float temp[10];
+	};
+
+

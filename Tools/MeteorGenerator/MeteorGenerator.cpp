@@ -100,7 +100,7 @@ vector<glm::vec3> GlobalCoords{};
 std::unordered_map<glm::vec3, uint> GlobalCoordsMap{};
 vector<Submesh> Submeshes;
 
-glm::vec3 CompressedVertexScale;
+float CompressedVertexScale;
 glm::vec3 CompressedVertexTranslate;
 
 uint GetGlobalCoordId( glm::vec3 c )
@@ -809,7 +809,10 @@ int main( int argc, char argv[] )
 				}
 			}
 
-		CompressedVertexScale = ( maxv - minv ) / float( 0xffff ); // 0->0xffff maps to minv->maxv
+		glm::vec3 delta = (maxv - minv);
+		float longest_dimension = max(delta.x,max(delta.y,delta.z));
+		
+		CompressedVertexScale = longest_dimension / float( 0xffff ); // 0->0xffff maps to longest dimension
 		CompressedVertexTranslate = minv;
 
 		// update all normals:

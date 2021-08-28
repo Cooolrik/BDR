@@ -17,12 +17,9 @@ layout(set = 0, binding = 0) uniform CullingSettingsUBO
 	float nearZ; // near depth
 	float farZ; // far depth
 
-	// pyramid culling info
+	// quantization and zbuffer pyramid culling info
+	float screenHeightOverTanFovY;
 	bool pyramidCull; // is set, use depth pyramid to cull
-	float Proj00; // projection[0][0]
-	float Proj11; // projection[1][1]
-	float pyramidWidth; // width of the largest mip in the depth pyramid
-	float pyramidHeight; // height of the largest mip in the depth pyramid
 
 	// number of objects to consider in the renderObjectBuffer buffer
 	uint objectsCount; 
@@ -60,35 +57,10 @@ layout(set = 0, binding = 4)  buffer InstanceBuffer
 // depth pyramid to read depth from 
 layout(set = 0, binding = 5) uniform sampler2D depthPyramidSampler;
 
-// 2D Polyhedral Bounds of a Clipped, Perspective-Projected 3D Sphere. Michael Mara, Morgan McGuire. 2013
-vec4 projectSphere(vec3 C, float r )
+layout(set = 0, binding = 6) writeonly buffer DebugOut
 	{
-	vec2 cx = -C.xz;
-	vec2 vx = vec2(sqrt(dot(cx, cx) - r * r), r);
-	vec2 minx = mat2(vx.x, vx.y, -vx.y, vx.x) * cx;
-	vec2 maxx = mat2(vx.x, -vx.y, vx.y, vx.x) * cx;
-
-	vec2 cy = -C.yz;
-	vec2 vy = vec2(sqrt(dot(cy, cy) - r * r), r);
-	vec2 miny = mat2(vy.x, vy.y, -vy.y, vy.x) * cy;
-	vec2 maxy = mat2(vy.x, -vy.y, vy.y, vy.x) * cy;
-	
-	vec4 aabb = vec4(
-			minx.x / minx.y * cullingSettings.Proj00, 
-			miny.x / miny.y * cullingSettings.Proj11, 
-			maxx.x / maxx.y * cullingSettings.Proj00, 
-			maxy.x / maxy.y * cullingSettings.Proj11
-			);
-
-	if( isnan(aabb.x) || isnan(aabb.y) ||  isnan(aabb.z) ||  isnan(aabb.w) )
-		{
-		return vec4(0,0,1,1);
-		}
-
-	// clip space -> uv sample space, also flip because of right hand coords
-	aabb = (aabb.zyxw * -0.5f) + vec4(0.5f); 
-	return aabb;
-	}
+	DebugData data;
+	} debugOutput;
 
 void main() 
 	{		
@@ -117,39 +89,53 @@ void main()
 	
 		// frustrum culling using frustum data and depth values
 		// use mirror symmetry of x&y to test both sides at the same time by using abs value 
-		isVisible = isVisible && center.z * cullingSettings.frustumXz - abs(center.x) * cullingSettings.frustumXx > -radius; // +-x planes
-		isVisible = isVisible && center.z * cullingSettings.frustumYz - abs(center.y) * cullingSettings.frustumYy > -radius; // +-y planes
-		isVisible = isVisible && center.z - radius < -cullingSettings.nearZ && center.z + radius > -cullingSettings.farZ; // depth
+		isVisible = isVisible && ((center.z * cullingSettings.frustumXz) - (abs(center.x) * cullingSettings.frustumXx) > -radius); // +-x planes
+		isVisible = isVisible && ((center.z * cullingSettings.frustumYz) - (abs(center.y) * cullingSettings.frustumYy) > -radius); // +-y planes
+		isVisible = isVisible && ((center.z - radius) < -cullingSettings.nearZ) && ((center.z + radius) > -cullingSettings.farZ); // depth
 		isVisible = isVisible && dot(object_direction,object_rejection_direction) < object_rejection_cutoff;
 
+		// calculate the quantization of the object 
 		uint quantization_level = 0;
-
-		// project the object on-screen, calculate the quantization level and optionally check if the object is hidden
 		if( isVisible )
 			{
-			vec4 aabb = projectSphere( center, radius );
-			float width = (aabb.z - aabb.x) * cullingSettings.pyramidWidth;
-			float height = (aabb.w - aabb.y) * cullingSettings.pyramidHeight;
-			float pyramid_level = floor(log2(max(width, height)));
-
-			quantization_level = clamp(12-uint(pyramid_level),0,16);
-
-			// occlusion culling
-			if( cullingSettings.pyramidCull ) 
+			float distanceSquared = dot(center,center);
+			float distanceSquared_minus_radiusSquared = distanceSquared - (radius * radius);
+			
+			// only quantizise and do occulsion culling if outside of bounding sphere
+			if( distanceSquared_minus_radiusSquared > 0 )
 				{
-				float sampleDepth = textureLod(depthPyramidSampler, (aabb.xy + aabb.zw)/2, pyramid_level).x;
+				// calculate the radius of the sphere on-screen
+				float projected_radius = (cullingSettings.screenHeightOverTanFovY * radius) / sqrt(distanceSquared_minus_radiusSquared);
 
-				// calc the depths to compare
-				float near = cullingSettings.nearZ;
-				float far = cullingSettings.farZ;
-				sampleDepth = -(2.0 * near * far) / (far + near - sampleDepth * (far - near));
-				float sphereDepth = center.z + radius;
+				// calculate the size of one compressed unit on-screen
+				float unit_pixel_size = sceneObjectsBuffer.objects[objectID].bSphereRadiusCompressedScale / projected_radius;
+
+				// calculate the quantization that is still less than the allowed error (1 pixel)
+				quantization_level = clamp( uint(log2(unit_pixel_size)) , 0 , 16 );
+
+				// do occlusion culling
+				if( cullingSettings.pyramidCull ) 
+					{
+					// the culling pyramid level
+					float pyramid_level = floor(log2(projected_radius));
+
+					float centerScreenX = (((center.x * cullingSettings.frustumXx) / (center.z * cullingSettings.frustumXz)) + 1) / 2;
+					float centerScreenY = 1 - ((((center.y * cullingSettings.frustumYy) / (center.z * cullingSettings.frustumYz)) + 1) / 2);
+
+					float sampleDepth = textureLod(depthPyramidSampler, vec2(centerScreenX,centerScreenY), pyramid_level).x;
 		
-				isVisible = sphereDepth > sampleDepth;
+					// calc the depths to compare
+					float near = cullingSettings.nearZ;
+					float far = cullingSettings.farZ;
+					sampleDepth = -(2.0 * near * far) / (far + near - sampleDepth * (far - near));
+					float sphereDepth = center.z + radius;
+		
+					isVisible = sphereDepth > sampleDepth;
+					}
 				}
 			}
 
-		// if the object is visible, add it to the render batch, and retrieve an instanceID 
+		// if the object is still considered visible, add it to the render batch, and retrieve an instanceID 
 		if( isVisible )
 			{
 			// find the lod level
@@ -175,5 +161,29 @@ void main()
 			instanceBuffer.instances[instanceIndex].quantizationMask = 0xffffffff << quantization_level; 
 			instanceBuffer.instances[instanceIndex].quantizationRound = (1 << quantization_level) >> 1; 
 			}
+
+		// debug output
+		//if( renderIndex == 0 )
+		//	{
+		//	debugOutput.data.center = center;
+		//	debugOutput.data.rejectiondot = dot(object_direction,object_rejection_direction);
+		//	debugOutput.data.object_rejection_cutoff = object_rejection_cutoff;
+		//	debugOutput.data.quantization_level = quantization_level;	
+		//	debugOutput.data.isvisible = (isVisible)?1:0;
+		//				
+		//	debugOutput.data.temp[0] = centerScreenX;
+		//	debugOutput.data.temp[1] = centerScreenY;
+		//	debugOutput.data.temp[2] = pyramid_level;
+		//	debugOutput.data.temp[3] = sampleDepth;
+		//	debugOutput.data.temp[4] = sphereDepth;
+		//	}
+		//else
+		//	{
+		//	//isVisible = false;
+		//	}
+
 		}
+
+
+
 	}

@@ -58,8 +58,12 @@ void UI::Update()
 
 	ImGui::Begin( "Mesh Viewer", nullptr, ImGuiWindowFlags_NoMove );
 
-	ImGui::Checkbox( "Camera Controls", &this->show_camera_controls );
-	if( show_camera_controls )
+	ImGui::Checkbox( "AABB", &this->RenderAABB );
+	ImGui::Checkbox( "Bound Sphere", &this->RenderBoundingSphere );
+	ImGui::Checkbox( "Reject Cone", &this->RenderRejectionCone );
+
+	ImGui::Checkbox( "Camera Controls", &this->ShowCameraControls );
+	if( this->ShowCameraControls )
 		{
 		ImGui::Indent( 10 );
 		ImGui::SliderFloat3( "Target", &this->mv->Camera.cameraTarget.x, -100.f, 100.f, "%.1f" );
@@ -69,43 +73,32 @@ void UI::Update()
 		ImGui::Indent( -10 );
 		}
 
-
-	ImGui::Checkbox( "Select Submesh", &this->select_a_zeptomesh );
-	if( select_a_zeptomesh )
+	ImGui::Checkbox( "Select Submesh", &this->SelectSubmesh );
+	if( this->SelectSubmesh )
 		{
 		ImGui::Indent( 10 );
 
-		int mesh_count = (int)this->mv->MeshAlloc->GetMeshCount();
-		if( mesh_count > 0 )
+		const ZeptoMesh* zm = this->mv->MeshAlloc->GetMesh( 0 );
+		int submesh_count = (int)zm->SubMeshes.size();
+		if( submesh_count > 0 )
 			{
-			if( this->selected_zeptomesh_index < 0 )
-				this->selected_zeptomesh_index = 0;
-			if( this->selected_zeptomesh_index >= mesh_count )
-				this->selected_zeptomesh_index = mesh_count - 1;
+			if( this->SelectedSubmeshIndex < 0 )
+				this->SelectedSubmeshIndex = 0;
+			if( this->SelectedSubmeshIndex >= submesh_count )
+				this->SelectedSubmeshIndex = submesh_count - 1;
 		
-			if( mesh_count > 1 )
+			if( submesh_count > 1 )
 				{
-				ImGui::SliderInt( "Zeptomesh Id", &this->selected_zeptomesh_index, 0, mesh_count - 1 );
-				}
-		
-			const ZeptoMesh* zm = this->mv->MeshAlloc->GetMesh( selected_zeptomesh_index );
-			int submesh_count = (int)zm->SubMeshes.size();
-			if( submesh_count > 0 )
-				{
-				if( this->selected_submesh_index < 0 )
-					this->selected_submesh_index = 0;
-				if( this->selected_submesh_index >= submesh_count )
-					this->selected_submesh_index = submesh_count - 1;
-		
-				if( submesh_count > 1 )
-					{
-					ImGui::SliderInt( "Submesh Id", &this->selected_submesh_index, 0, submesh_count - 1 );
-					}
+				ImGui::SliderInt( "Submesh Id", &this->SelectedSubmeshIndex, 0, submesh_count - 1 );
+
+				uint quantization = this->mv->CalcSubmeshQuantization( *zm, this->SelectedSubmeshIndex );
+				uint lod = this->mv->GetLODOfQuantization( *zm, this->SelectedSubmeshIndex, quantization );
+
+				ImGui::TextDisabled( "Quantization: %d", quantization );
+				ImGui::TextDisabled( "LOD: %d", lod );
+				ImGui::TextDisabled( "Tris Count: %d", zm->SubMeshes[this->SelectedSubmeshIndex].LODIndexCounts[lod]/3 );
 				}
 			}
-
-		ImGui::SliderFloat("viewDot", &this->viewDot, -1, 1);
-		ImGui::Checkbox( "visible", &this->visible );
 
 		ImGui::Indent( -10 );
 		}

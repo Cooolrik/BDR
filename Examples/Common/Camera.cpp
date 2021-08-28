@@ -16,6 +16,14 @@ void Camera::key_callback(GLFWwindow* window, int key, int scancode, int action,
 		app->cameraDist = 50.f;
 		app->cameraRot = glm::vec2();
 		app->cameraTarget = glm::vec3();
+		app->debug_selection_target = glm::vec3();
+		app->debug_selection_dist = app->cameraDist;
+		app->render_dirty = true;
+		}
+	else if(key == GLFW_KEY_F)
+		{
+		app->cameraDist = app->debug_selection_dist;
+		app->cameraTarget = app->debug_selection_target;
 		app->render_dirty = true;
 		}
 	else if(key == GLFW_KEY_SPACE)
@@ -167,8 +175,10 @@ void Camera::UpdateFrame()
 
 	this->cameraPosition += this->cameraTarget;
 
+	this->aspectRatio = (float)this->ScreenW / (float)this->ScreenH;
+
 	this->view = glm::lookAt(this->cameraPosition, this->cameraTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-	this->proj = perspectiveProjection(glm::radians(45.0f), aspectRatio, nearZ, farZ);
+	this->proj = perspectiveProjection(glm::radians(this->fovY), aspectRatio, nearZ, farZ);
 	this->viewI = glm::inverse(this->view);
 	this->projI = glm::inverse(this->proj);
 	}

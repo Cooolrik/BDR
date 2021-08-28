@@ -46,6 +46,9 @@
     <ClCompile Include="..\..\Tools\Common\Tool_Vertex.cpp">
       <Filter>Source Files\Common\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\ImGuiWidgets.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="shaders\fragShader.frag">
@@ -98,6 +101,9 @@
       <Filter>Source Files\Common\Tools</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\ZeptoMesh.h">
+      <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ImGuiWidgets.h">
       <Filter>Source Files\Common</Filter>
     </ClInclude>
   </ItemGroup>

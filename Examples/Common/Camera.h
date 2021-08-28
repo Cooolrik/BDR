@@ -24,6 +24,8 @@ class Camera
 		float nearZ = 0.1f;
 		float farZ = 10000.f;
 
+		float fovY = 45.f;
+
 		double lastxpos = 0;
 		double lastypos = 0;
 
@@ -43,6 +45,9 @@ class Camera
 		float debug_float_value1 = 0.f;
 		float debug_float_value2 = 0.f;
 		float debug_float_value3 = 0.f;
+
+		glm::vec3 debug_selection_target = {};
+		float debug_selection_dist = 50.f;
 
 		static void framebufferResizeCallback( GLFWwindow* window, int width, int height );
 		static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

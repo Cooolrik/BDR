@@ -97,7 +97,7 @@ inline uint16_t floatToUint16( float& val )
 	return uint16_t(rval);
 	}
 
-Tools::Compressed16Vertex Tools::Vertex::Compress( glm::vec3& scale, glm::vec3& translate )
+Tools::Compressed16Vertex Tools::Vertex::Compress( float scale, glm::vec3& translate )
 	{
 	Compressed16Vertex ret;
 

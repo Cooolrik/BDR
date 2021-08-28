@@ -26,7 +26,7 @@ namespace Tools
 			glm::vec3 AABB[2] = {};
 			
 			// apply this transform to all compressed vertices
-			glm::vec3 CompressedVertexScale;
+			float CompressedVertexScale;
 			glm::vec3 CompressedVertexTranslate;
 
 			// calculate bounding volumes and rejection cones for all 

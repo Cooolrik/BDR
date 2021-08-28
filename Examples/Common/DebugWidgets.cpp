@@ -175,15 +175,21 @@ static MeshSource GenerateAxies( vec3 center, float length, const vec3 axiscolor
         vec3 direction = vec3( 0 );
         direction[i] = length;
 
-        axis.Vertices.resize( 2 );
+        axis.Vertices.resize( 4 );
         axis.Vertices[0].Coords = center;
         axis.Vertices[0].Color = color;
         axis.Vertices[1].Coords = center + direction;
         axis.Vertices[1].Color = color;
+        axis.Vertices[2].Coords = center;
+        axis.Vertices[2].Color = vec3(0.02,0.02,0.02);
+        axis.Vertices[3].Coords = center - direction;
+        axis.Vertices[3].Color = vec3(0);
 
-        axis.Indices.resize( 2 );
+        axis.Indices.resize( 4 );
         axis.Indices[0] = 0;
         axis.Indices[1] = 1;
+        axis.Indices[2] = 2;
+        axis.Indices[3] = 3;
 
         ret.AppendMesh( axis );
         }
@@ -235,11 +241,11 @@ static MeshSource GeneratePlane( uint axis, glm::vec3 minv, glm::vec3 maxv, uint
 
     MeshSource ret;
 
-    ret.Vertices.resize( (tesselation + 1) * 4 );
-    ret.Indices.resize( (tesselation + 1) * 4 );
+    ret.Vertices.resize( ((size_t)tesselation + 1) * 4 );
+    ret.Indices.resize( ((size_t)tesselation + 1) * 4 );
 
     // generate the vertices
-    for( size_t a = 0; a < (tesselation+1); ++a )
+    for( size_t a = 0; a < ((size_t)tesselation+1); ++a )
         {
         float alpha = float( a ) / float( tesselation );
     
@@ -410,12 +416,13 @@ void DebugWidgets::EndFrame()
     {
     }
 
-void DebugWidgets::RenderWidget( WidgetTypes type, glm::mat4 transform )
+void DebugWidgets::RenderWidget( WidgetTypes type, mat4 transform, vec3 color )
     {
     RenderItem item;
 
     item.MeshID = (uint)type;
     item.Transform = transform;
+    item.Color = color;
 
     this->ItemQueue.emplace_back( item );
     }
@@ -461,7 +468,7 @@ glm::mat4 TargetTransform( vec3 origin, vec3 target, vec3 world_up )
     }
 
 
-void DebugWidgets::RenderCone( glm::vec3 world_pos, glm::vec3 direction , float radiusA, float radiusB, float length )
+void DebugWidgets::RenderCone( glm::vec3 world_pos, glm::vec3 direction , float radiusA, float radiusB, float length , glm::vec3 color )
     {
     mat4 trans = TargetTransform(world_pos, world_pos+direction, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -469,16 +476,16 @@ void DebugWidgets::RenderCone( glm::vec3 world_pos, glm::vec3 direction , float 
     trans[1] *= radiusB;
     trans[2] *= length;
 
-    this->RenderWidget( DebugWidgets::UnitCone , trans );
+    this->RenderWidget( DebugWidgets::UnitCone , trans , color );
     }
 
-void DebugWidgets::RenderConeWithAngle( glm::vec3 world_pos, glm::vec3 world_target, float angle_rads )
+void DebugWidgets::RenderConeWithAngle( glm::vec3 world_pos, glm::vec3 world_target, float angle_rads , glm::vec3 color )
     {
     glm::vec3 direction = world_target - world_pos;
     float length = glm::length( direction );
     direction = glm::normalize( direction );
     float radius = tanf( angle_rads )*length;
-    this->RenderCone( world_pos, direction, radius, radius, length );
+    this->RenderCone( world_pos, direction, radius, radius, length , color );
     }
 
 void DebugWidgets::RenderAABB( glm::vec3 minv, glm::vec3 maxv )
@@ -507,6 +514,7 @@ void DebugWidgets::Draw( Vlk::CommandPool* pool )
         MeshData &mesh = this->Meshes[item.MeshID];
 
         pc.Transform = item.Transform;
+        pc.Color = item.Color;
         pool->PushConstants( this->RenderPipeline.get(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pc ), &pc );
         pool->DrawIndexed(
             mesh.IndexCount,

@@ -20,6 +20,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+
 #include <Vlk_Renderer.h>
 #include <Vlk_ShaderModule.h>
 #include <Vlk_GraphicsPipeline.h>
@@ -38,10 +39,11 @@
 
 //#include "debugging.h"
 
-#ifdef NDEBUG
-const bool useValidationLayers = false;
-#else
+#ifdef _DEBUG
 const bool useValidationLayers = true;
+#define DEBUG_TOOLS
+#else
+const bool useValidationLayers = false;
 #endif
 
 // makes sure the return value is VK_SUCCESS or throws an exception
@@ -111,7 +113,10 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	pool->BindPipeline( renderData->renderPipeline );
 	pool->BindDescriptorSet( renderData->renderPipeline, currentFrame->renderDescriptorSet );
 	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
-	//debugDrawGraphicsPipeline( pool );
+	// render the gui
+#ifdef DEBUG_TOOLS
+	renderData->guiwidgets->Draw( buffer );
+#endif
 	pool->EndRenderPass();
 
 	// prepare depth target for reading from compute shader
@@ -197,6 +202,32 @@ static bool DrawFrame()
 	// update view 
 	renderData->camera.UpdateFrame();
 
+	// draw gui stuff
+#ifdef DEBUG_TOOLS
+	renderData->guiwidgets->NewFrame();
+
+
+	if( renderData->previousFrame )
+		{
+		DebugData *debugout = (DebugData*)renderData->previousFrame->debugOutputBuffer->MapMemory();
+
+		ImGui::Text( "center %f %f %f", debugout->center.x, debugout->center.y , debugout->center.z );
+		ImGui::Text( "rejectiondot %f", debugout->rejectiondot);
+		ImGui::Text( "object_rejection_cutoff %f", debugout->object_rejection_cutoff);
+		ImGui::Text( "quantization_level %d", debugout->quantization_level);
+		ImGui::Text( "isvisible %d", debugout->isvisible);
+
+		for( uint i = 0; i < 10; ++i )
+			{
+			ImGui::Text( "temp[%d] = %f", i, debugout->temp[i]);
+			}
+
+		renderData->previousFrame->debugOutputBuffer->UnmapMemory();
+		}
+
+	renderData->guiwidgets->EndFrameAndRender();
+#endif
+
 	//debugDrawPreFrame( renderData->currentFrame, renderData->previousFrame );
 
 	PerFrameData* currentFrame = renderData->currentFrame;
@@ -226,6 +257,7 @@ static bool DrawFrame()
 		currentFrame->descriptorPool->SetImage( 5, previousFrame->depthPyramidImage->GetImageView(), renderData->depthSampler->GetSampler(), VK_IMAGE_LAYOUT_GENERAL );
 	else
 		currentFrame->descriptorPool->SetImage( 5, currentFrame->depthPyramidImage->GetImageView(), renderData->depthSampler->GetSampler(), VK_IMAGE_LAYOUT_GENERAL ); // so we have something, but it wont cull
+	currentFrame->descriptorPool->SetBuffer( 6, currentFrame->debugOutputBuffer );
 	currentFrame->descriptorPool->EndDescriptorSet();
 
 	currentFrame->depthReduceDescriptorSets.resize( renderData->DepthPyramidMipMapLevels );
@@ -267,11 +299,12 @@ static bool DrawFrame()
 	cubo->frustumYz = frustumY.z;
 	cubo->nearZ = renderData->camera.nearZ;
 	cubo->farZ = renderData->camera.farZ;
+
+	const float fovy = renderData->camera.fovY / 2.f * 3.14159f / 180.0f;
+	const float screenHeight = (float)renderData->camera.ScreenH;
+	cubo->screenHeightOverTanFovY = screenHeight / tanf( fovy );
+
 	cubo->pyramidCull = renderData->camera.pyramid_cull;
-	cubo->Proj00 = renderData->camera.proj[0][0]; // projection[0][0]
-	cubo->Proj11 = renderData->camera.proj[1][1]; // projection[1][1]
-	cubo->pyramidWidth = (float)renderData->DepthPyramidImageW; // width of the largest mip in the depth pyramid
-	cubo->pyramidHeight = (float)renderData->DepthPyramidImageH; // height of the largest mip in the depth pyramid
 	cubo->objectCount = renderData->scene_objects;
 	cubo->debug_float_value1 = renderData->camera.debug_float_value1;
 	cubo->debug_float_value2 = renderData->camera.debug_float_value2;
@@ -422,6 +455,16 @@ void createPerFrameData()
 			VLK_CALL( vkCreateImageView( renderData->renderer->GetDevice(), &imageViewCreateInfo, 0, &frame.depthPyramidImageMipViews[m] ) );
 			}
 	
+		// create the debug output buffer
+		frame.debugOutputBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+				VMA_MEMORY_USAGE_GPU_TO_CPU,
+				VkDeviceSize( 10000 ),
+				renderData->renderObjects.data()
+				)
+			);
+		
 		}
 
 	}
@@ -502,7 +545,7 @@ void SetupScene()
 				
 #ifdef _DEBUG
 	const uint unique_meshes_count = 1;
-	const uint megamesh_max_objects_cnt = 1; // number of megamesh objects in scene (not same as scene_objects)
+	const uint megamesh_max_objects_cnt = 4; // number of megamesh objects in scene (not same as scene_objects)
 #else
 	const uint unique_meshes_count = 80;
 	const uint megamesh_max_objects_cnt = 20; // number of megamesh objects in scene (not same as scene_objects)
@@ -575,7 +618,7 @@ void SetupScene()
 		uint materialID = mm;
 
 		// set up the mesh data
-		meshes[mm].CompressedVertexScale = mesh.CompressedVertexScale;
+		meshes[mm].CompressedVertexScale = glm::vec3(mesh.CompressedVertexScale);
 		meshes[mm].CompressedVertexTranslate = mesh.CompressedVertexTranslate;
 		
 		// do the objects, and each instance in each batch
@@ -583,12 +626,12 @@ void SetupScene()
 			{
 			glm::mat4 transform( 1 );
 			float scale = 1;
-#ifndef _DEBUG
+
 			scale = ( ( frand() * 2.7f ) + 1.3f ) * 3.f; // 0.3 -> 3.0
 			transform = glm::translate( transform, vrand( glm::vec3(-1,-1,-1), glm::vec3( 1,1, 1 )) * 1000.f ); // random pos
 			transform = glm::rotate( transform, frand_radian(), vrand_unit() ); // random rotation
 			transform = glm::scale( transform, glm::vec3( scale, scale, scale ) );
-#endif
+
 			for( uint sm = 0; sm < mm_submesh_count; ++sm )
 				{
 				const ZeptoSubMesh& submesh = mesh.SubMeshes[sm];
@@ -607,7 +650,7 @@ void SetupScene()
 				objects[object_index].boundingSphere[3] = bsphereradius;
 
 				glm::vec3 rejectionconecenter = transform * glm::vec4( submesh.RejectionConeCenter, 1.f );
-				glm::vec3 rejectionconedirection = glm::normalize(renderData->objects[object_index].transformIT * glm::vec4( submesh.RejectionConeDirection, 0.f ));
+				glm::vec3 rejectionconedirection = glm::normalize( glm::vec3(renderData->objects[object_index].transformIT * glm::vec4( submesh.RejectionConeDirection, 0.f )) );
 				objects[object_index].rejectionConeCenter = rejectionconecenter;
 				objects[object_index].rejectionConeDirectionAndCutoff = glm::vec4( rejectionconedirection, submesh.RejectionConeCutoff );
 
@@ -622,6 +665,8 @@ void SetupScene()
 				objects[object_index].LODQuantizations[1] = submesh.LODQuantizeBits[1];
 				objects[object_index].LODQuantizations[2] = submesh.LODQuantizeBits[2];
 				objects[object_index].LODQuantizations[3] = submesh.LODQuantizeBits[3];
+
+				objects[object_index].bSphereRadiusCompressedScale = submesh.BoundingSphereRadius / mesh.CompressedVertexScale;
 
 				renderObjects[object_index] = object_index;
 							
@@ -741,6 +786,7 @@ void SetupScene()
 	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 3 - FilteredDrawBuffer
 	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 4 - InstanceToObjectBuffer
 	cdlt.AddSamplerBinding( VK_SHADER_STAGE_COMPUTE_BIT );		 // 5 - depthPyramid texture
+	cdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 6 - debugOutputBuffer
 	renderData->cullingDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( cdlt );
 
 	std::unique_ptr<Vlk::ComputePipelineTemplate> cullt = u_ptr( new Vlk::ComputePipelineTemplate() );
@@ -782,6 +828,9 @@ void SetupScene()
 void run()
 	{
 	renderData = new RenderData();
+
+	renderData->camera.ScreenW = 1600;
+	renderData->camera.ScreenH = 800;
 
 	glfwInit();
 	glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
@@ -832,7 +881,11 @@ void run()
 	glfwGetFramebufferSize( renderData->window, &width, &height );
 	Vlk::Renderer::CreateSwapChainParameters createSwapChainParameters;
 	createSwapChainParameters.SurfaceFormat = renderData->renderer->GetSurfaceFormat();
+#ifdef _DEBUG
+	createSwapChainParameters.PresentMode = VK_PRESENT_MODE_MAILBOX_KHR; // wait for vblank 
+#else
 	createSwapChainParameters.PresentMode = renderData->renderer->GetPresentMode();
+#endif
 	createSwapChainParameters.RenderExtent = { static_cast<uint32_t>( width ), static_cast<uint32_t>( height ) };
 	renderData->renderer->CreateSwapChainAndFramebuffers( createSwapChainParameters );
 
@@ -847,7 +900,15 @@ void run()
 	renderData->depthSampler = renderData->renderer->CreateSampler( Vlk::SamplerTemplate::DepthReduce() );
 	renderData->TexturesSampler = renderData->renderer->CreateSampler( Vlk::SamplerTemplate::Linear() );
 
+#ifdef DEBUG_TOOLS
+	renderData->guiwidgets = new ImGuiWidgets( renderData->renderer, renderData->window );
+#endif
+
 	SetupScene();
+
+	// target the camera at the first mesh 
+	renderData->camera.cameraTarget = renderData->objects[0].boundingSphere;
+	renderData->camera.debug_selection_target = renderData->objects[0].boundingSphere;
 
 	createPerFrameData();
 
@@ -879,13 +940,13 @@ void run()
 		//	Sleep( 1000 );
 		//	}
 
-#ifdef _DEBUG
-		if (!renderData->camera.render_dirty)
-			{
-			Sleep(10);
-			continue;
-			}
-#endif
+//#ifdef _DEBUG
+//		if (!renderData->camera.render_dirty)
+//			{
+//			Sleep(10);
+//			continue;
+//			}
+//#endif
 
 		// draw the new frame
 		if( !DrawFrame() )

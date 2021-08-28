@@ -83,4 +83,7 @@ class MeshViewer
 		void SetupPerFrameData();
 		void UpdateScene();
 		VkCommandBuffer DrawScene();
+
+		uint CalcSubmeshQuantization( const ZeptoMesh &zmesh, uint submeshIndex );
+		uint GetLODOfQuantization( const ZeptoMesh &zmesh, uint submeshIndex, uint quantization );
 	};

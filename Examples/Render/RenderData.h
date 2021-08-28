@@ -14,6 +14,9 @@
 #include "Vlk_Buffer.h"
 #include "Vlk_Sampler.h"
 
+
+#include <ImGuiWidgets.h>
+
 #include <Camera.h>
 #include <ZeptoMesh.h>
 #include <Texture.h>
@@ -35,7 +38,7 @@ struct ObjectData
 	glm::uint batchID{};
 	glm::uint vertexCutoffIndex = 0; // only quantize vertices after this index, the ones before are locked, to avoid gaps.
 	glm::uint LODQuantizations[4];
-	glm::uint _b[1];
+	float bSphereRadiusCompressedScale; // bsphere radius in compressed vertex scale ( = radius / zmesh.CompressedVertexScale ) 
 	};
 
 struct BatchData
@@ -68,11 +71,11 @@ struct CullingSettingsUBO
 	float frustumYz; // frustum culling data Y.z
 	float nearZ; // near depth
 	float farZ; // far depth
+
+	// quantization and zbuffer culling info
+	float screenHeightOverTanFovY;
 	bool pyramidCull; // is set, use depth pyramid to cull
-	float Proj00; // projection[0][0]
-	float Proj11; // projection[1][1]
-	float pyramidWidth; // width of the largest mip in the depth pyramid
-	float pyramidHeight; // height of the largest mip in the depth pyramid
+
 	uint32_t objectCount; // number of objects in scene to consider
 
 	// debug values, only for debugging purposes
@@ -89,6 +92,21 @@ class UniformBufferObject
 		glm::mat4 viewI;
 		glm::mat4 projI;
 		glm::vec3 viewPosition;
+	};
+
+using glm::vec3;
+using glm::vec4;
+
+
+struct DebugData
+	{	
+	vec3 center;
+	float rejectiondot;
+	float object_rejection_cutoff;
+	uint quantization_level;
+	int isvisible;
+
+	float temp[10];
 	};
 
 struct DepthReducePushConstants
@@ -136,12 +154,15 @@ class PerFrameData
 		Vlk::Buffer* filteredDrawBuffer = nullptr; // buffer with all batches filled in with non-culled instances 
 		Vlk::Buffer* instanceToObjectBuffer = nullptr; // mapping from instance to objectID, created in the culling
 
+		Vlk::Buffer *debugOutputBuffer = nullptr;
+
 		~PerFrameData()
 			{
 			delete commandPool;
 			delete uniformBuffer;
 			delete cullingUBO;
 			delete descriptorPool;
+			delete debugOutputBuffer;
 
 			for(auto p : depthPyramidImageMipViews)
 				{
@@ -161,6 +182,7 @@ class RenderData
 	public:
 		GLFWwindow* window = nullptr;
 		VkSurfaceKHR surface = nullptr;
+		ImGuiWidgets* guiwidgets = nullptr;
 
 		Vlk::Renderer* renderer{};
 		
@@ -256,6 +278,11 @@ class RenderData
 			delete renderPipeline;
 			delete cullingPipeline;
 			delete depthReducePipeline;
+
+			if( guiwidgets )
+				{
+				delete guiwidgets;
+				}
 
 			delete vertexRenderShader;
 			delete fragmentRenderShader;
