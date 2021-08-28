@@ -72,6 +72,9 @@
     <CustomBuild Include="shaders\debugVertShader.vert">
       <Filter>Source Files\debugging\shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="shaders\batchCompacting.comp">
+      <Filter>Source Files\shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\common.glsl">

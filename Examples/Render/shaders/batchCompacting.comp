@@ -1,0 +1,189 @@
+#version 450
+#extension GL_GOOGLE_include_directive : enable
+
+#include "common.glsl"
+
+layout (local_size_x = 256) in;
+
+// constants for the culling process
+layout(set = 0, binding = 0) uniform CullingSettingsUBO
+	{   
+	mat4 viewTransform; // view transform
+	vec3 viewPosition; // origin of the view in world space
+	float frustumXx; // frustum culling data X.x
+	float frustumXz; // frustum culling data X.z
+	float frustumYy; // frustum culling data Y.y
+	float frustumYz; // frustum culling data Y.z
+	float nearZ; // near depth
+	float farZ; // far depth
+
+	// quantization and zbuffer pyramid culling info
+	float screenHeightOverTanFovY;
+	bool pyramidCull; // is set, use depth pyramid to cull
+
+	// number of objects to consider in the renderObjectBuffer buffer
+	uint objectsCount; 
+
+	// values that are only for debugging purposes
+	float debug_float_value1; 
+	float debug_float_value2; 
+	float debug_float_value3; 
+	} cullingSettings;
+
+// the input buffer of objects to consider for rendering. the size is defined in the "objectsCount" constant. Indexed with renderIndex.
+layout(set = 0, binding = 1) readonly buffer RenderObjectsBuffer
+	{   
+	uint objectIDs[];
+	} renderObjectsBuffer;
+
+// buffer containing information on all objects in the scene. Indexed with objectID.
+layout(set = 0, binding = 2) readonly buffer SceneObjectsBuffer 
+	{ 
+	SceneObject objects[]; 
+	} sceneObjectsBuffer;
+
+// the DrawCommand buffer, one command for every possible batch. Indexed with batchID
+layout(set = 0, binding = 3)  buffer FilteredDrawBuffer
+	{   
+	DrawCommand commands[];
+	} filteredDrawBuffer;
+
+// per-instance information
+layout(set = 0, binding = 4)  buffer InstanceBuffer
+	{   
+	Instance instances[];
+	} instanceBuffer;
+
+// depth pyramid to read depth from 
+layout(set = 0, binding = 5) uniform sampler2D depthPyramidSampler;
+
+layout(set = 0, binding = 6) writeonly buffer DebugOut
+	{
+	DebugData data;
+	} debugOutput;
+
+void main() 
+	{		
+	// get the index in the renderObjectBuffer
+	uint renderIndex = gl_GlobalInvocationID.x;
+	if( renderIndex < cullingSettings.objectsCount )
+		{
+		// get the object, check if it is visible
+		uint objectID = renderObjectsBuffer.objectIDs[renderIndex];
+
+		// grab sphere cull data from the object buffer
+		vec4 boundingSphere = sceneObjectsBuffer.objects[objectID].boundingSphere;
+
+		// transform the bounds into view space
+		vec3 center = boundingSphere.xyz;
+		center = (cullingSettings.viewTransform * vec4(center,1.f)).xyz;
+		float radius = boundingSphere.w;
+	
+		// get the direction in world space to the object
+		vec3 object_direction = normalize(cullingSettings.viewPosition - sceneObjectsBuffer.objects[objectID].rejectionConeCenter);
+		vec3 object_rejection_direction = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.xyz;
+		float object_rejection_cutoff = sceneObjectsBuffer.objects[objectID].rejectionConeDirectionAndCutoff.w;
+
+		// assume visible
+		bool isVisible = true;
+	
+		// frustrum culling using frustum data and depth values
+		// use mirror symmetry of x&y to test both sides at the same time by using abs value 
+		isVisible = isVisible && ((center.z * cullingSettings.frustumXz) - (abs(center.x) * cullingSettings.frustumXx) > -radius); // +-x planes
+		isVisible = isVisible && ((center.z * cullingSettings.frustumYz) - (abs(center.y) * cullingSettings.frustumYy) > -radius); // +-y planes
+		isVisible = isVisible && ((center.z - radius) < -cullingSettings.nearZ) && ((center.z + radius) > -cullingSettings.farZ); // depth
+		isVisible = isVisible && dot(object_direction,object_rejection_direction) < object_rejection_cutoff;
+
+		// calculate the quantization of the object 
+		uint quantization_level = 0;
+		if( isVisible )
+			{
+			float distanceSquared = dot(center,center);
+			float distanceSquared_minus_radiusSquared = distanceSquared - (radius * radius);
+			
+			// only quantizise and do occulsion culling if outside of bounding sphere
+			if( distanceSquared_minus_radiusSquared > 0 )
+				{
+				// calculate the radius of the sphere on-screen
+				float projected_radius = (cullingSettings.screenHeightOverTanFovY * radius) / sqrt(distanceSquared_minus_radiusSquared);
+
+				// calculate the size of one compressed unit on-screen
+				float unit_pixel_size = sceneObjectsBuffer.objects[objectID].bSphereRadiusCompressedScale / projected_radius;
+
+				// calculate the quantization that is still less than the allowed error (1 pixel)
+				quantization_level = clamp( uint(log2(unit_pixel_size)) , 0 , 16 );
+
+				// do occlusion culling
+				if( cullingSettings.pyramidCull ) 
+					{
+					// the culling pyramid level
+					float pyramid_level = floor(log2(projected_radius));
+
+					float centerScreenX = (((center.x * cullingSettings.frustumXx) / (center.z * cullingSettings.frustumXz)) + 1) / 2;
+					float centerScreenY = 1 - ((((center.y * cullingSettings.frustumYy) / (center.z * cullingSettings.frustumYz)) + 1) / 2);
+
+					float sampleDepth = textureLod(depthPyramidSampler, vec2(centerScreenX,centerScreenY), pyramid_level).x;
+		
+					// calc the depths to compare
+					float near = cullingSettings.nearZ;
+					float far = cullingSettings.farZ;
+					sampleDepth = -(2.0 * near * far) / (far + near - sampleDepth * (far - near));
+					float sphereDepth = center.z + radius;
+		
+					isVisible = sphereDepth > sampleDepth;
+					}
+				}
+			}
+
+		// if the object is still considered visible, add it to the render batch, and retrieve an instanceID 
+		if( isVisible )
+			{
+			// find the lod level
+			uint lodlevel = 0;
+			while( lodlevel < 3 )
+				{
+				if( sceneObjectsBuffer.objects[objectID].LODQuantizations[lodlevel+1] > quantization_level )
+					{
+					break;
+					}
+				++lodlevel;
+				}
+
+			// retrieve the batchID from the scene object
+			uint batchID = sceneObjectsBuffer.objects[objectID].batchID + lodlevel;
+
+			// increase instance count and retrieve instanceID
+			uint instanceIndex = atomicAdd(filteredDrawBuffer.commands[batchID].instanceCount,1);
+			instanceIndex += filteredDrawBuffer.commands[batchID].firstInstance;
+
+			// fill in the instance information
+			instanceBuffer.instances[instanceIndex].objectID = objectID;
+			instanceBuffer.instances[instanceIndex].quantizationMask = 0xffffffff << quantization_level; 
+			instanceBuffer.instances[instanceIndex].quantizationRound = (1 << quantization_level) >> 1; 
+			}
+
+		// debug output
+		//if( renderIndex == 0 )
+		//	{
+		//	debugOutput.data.center = center;
+		//	debugOutput.data.rejectiondot = dot(object_direction,object_rejection_direction);
+		//	debugOutput.data.object_rejection_cutoff = object_rejection_cutoff;
+		//	debugOutput.data.quantization_level = quantization_level;	
+		//	debugOutput.data.isvisible = (isVisible)?1:0;
+		//				
+		//	debugOutput.data.temp[0] = centerScreenX;
+		//	debugOutput.data.temp[1] = centerScreenY;
+		//	debugOutput.data.temp[2] = pyramid_level;
+		//	debugOutput.data.temp[3] = sampleDepth;
+		//	debugOutput.data.temp[4] = sphereDepth;
+		//	}
+		//else
+		//	{
+		//	//isVisible = false;
+		//	}
+
+		}
+
+
+
+	}
