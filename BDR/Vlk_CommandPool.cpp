@@ -194,6 +194,13 @@ void Vlk::CommandPool::DrawIndexedIndirect( const Buffer *buffer, VkDeviceSize o
 	vkCmdDrawIndexedIndirect( this->Buffers[this->CurrentBufferIndex], buffer->GetBuffer(), offset, drawCount, stride );
 	}
 
+void Vlk::CommandPool::DrawIndexedIndirectCount( const Buffer *buffer, VkDeviceSize offset, const Buffer *countBuffer, VkDeviceSize countOffset, uint maxDrawCount, uint stride )
+	{
+	ASSERT_RECORDING();
+
+	vkCmdDrawIndexedIndirectCount( this->Buffers[this->CurrentBufferIndex], buffer->GetBuffer(), offset, countBuffer->GetBuffer(), countOffset, maxDrawCount, stride );
+	}
+
 void Vlk::CommandPool::QueueUpBufferMemoryBarrier( VkBuffer buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkDeviceSize offset, VkDeviceSize size )
 	{
 	VkBufferMemoryBarrier bufferMemoryBarrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };

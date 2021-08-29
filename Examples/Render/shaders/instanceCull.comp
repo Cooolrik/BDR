@@ -45,6 +45,7 @@ layout(set = 0, binding = 2) readonly buffer SceneObjectsBuffer
 // the DrawCommand buffer, one command for every possible batch. Indexed with batchID
 layout(set = 0, binding = 3)  buffer FilteredDrawBuffer
 	{   
+	uint commandsCount;
 	DrawCommand commands[];
 	} filteredDrawBuffer;
 

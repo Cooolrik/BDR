@@ -87,7 +87,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 		// set up batch buffer
 		VkBufferCopy batchDataTransfer;
 		batchDataTransfer.dstOffset = 0;
-		batchDataTransfer.size = renderData->scene_batches * sizeof( BatchData );
+		batchDataTransfer.size = renderData->scene_batches * sizeof( BatchData ) + sizeof(uint);
 		batchDataTransfer.srcOffset = 0;
 		vkCmdCopyBuffer( buffer, currentFrame->initialDrawBuffer->GetBuffer(), currentFrame->filteredDrawBuffer->GetBuffer(), 1, &batchDataTransfer );
 
@@ -100,10 +100,25 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 		pool->DispatchCompute( (renderData->scene_objects / 256) + 1 );
 
 		// make sure the buffer is update by culling shader before using in vertex shader
-		pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT );
-		pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT );
+		//pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT );
+		//pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT );
 		pool->QueueUpBufferMemoryBarrier( currentFrame->instanceToObjectBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT );
 		pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT );
+
+		pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT );
+		pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
+
+		CompactingPushConstants cpc;
+		cpc.commandsCount = renderData->scene_batches;
+		pool->BindPipeline( renderData->compactingPipeline );
+		pool->BindDescriptorSet( renderData->compactingPipeline, currentFrame->compactingDescriptorSet );
+		pool->PushConstants( renderData->compactingPipeline, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof( CompactingPushConstants ), &cpc);
+		pool->DispatchCompute( (renderData->scene_batches / 256) + 1 );
+		
+		pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT );
+		pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT );
+		pool->QueueUpBufferMemoryBarrier( currentFrame->compactedDrawBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT );
+		pool->PipelineBarrier( VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT );
 		}
 
 	// render
@@ -112,7 +127,8 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 	pool->BindIndexBuffer( renderData->MeshAlloc->GetIndexBuffer() );
 	pool->BindPipeline( renderData->renderPipeline );
 	pool->BindDescriptorSet( renderData->renderPipeline, currentFrame->renderDescriptorSet );
-	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
+	pool->DrawIndexedIndirect( currentFrame->filteredDrawBuffer, sizeof( uint ), renderData->scene_batches, sizeof( BatchData ) );
+	//pool->DrawIndexedIndirectCount( currentFrame->compactedDrawBuffer, sizeof(uint), currentFrame->compactedDrawBuffer, 0, renderData->scene_batches, sizeof( BatchData ) );
 	// render the gui
 #ifdef DEBUG_TOOLS
 	renderData->guiwidgets->Draw( buffer );
@@ -260,6 +276,11 @@ static bool DrawFrame()
 	currentFrame->descriptorPool->SetBuffer( 6, currentFrame->debugOutputBuffer );
 	currentFrame->descriptorPool->EndDescriptorSet();
 
+	currentFrame->compactingDescriptorSet = currentFrame->descriptorPool->BeginDescriptorSet( renderData->compactingDescriptorLayout );
+	currentFrame->descriptorPool->SetBuffer( 0, currentFrame->filteredDrawBuffer );
+	currentFrame->descriptorPool->SetBuffer( 1, currentFrame->compactedDrawBuffer );
+	currentFrame->descriptorPool->EndDescriptorSet();
+
 	currentFrame->depthReduceDescriptorSets.resize( renderData->DepthPyramidMipMapLevels );
 	for(uint i = 0; i < renderData->DepthPyramidMipMapLevels; ++i)
 		{
@@ -391,21 +412,34 @@ void createPerFrameData()
 		frame.cullingUBO = renderer->CreateBuffer( Vlk::BufferTemplate::UniformBuffer( sizeof( CullingSettingsUBO ) ) );
 
 		// create the original batch indirect render array, upload data
+		uint *pmem = (uint*)malloc( renderData->scene_batches * sizeof( BatchData ) + sizeof( uint ) );
+		pmem[0] = 0; // renderData->scene_batches;
+		memcpy( &pmem[1], renderData->batches.data(), renderData->scene_batches * sizeof( BatchData ) );
 		frame.initialDrawBuffer = renderer->CreateBuffer(
 			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 				VMA_MEMORY_USAGE_CPU_TO_GPU,
-				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) ),
-				renderData->batches.data()
+				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) + sizeof(uint)),
+				pmem
 				)
 			);
+		free( pmem );
 
 		// create the filtered array, this will be initialized from the orignal array each frame
 		frame.filteredDrawBuffer = renderer->CreateBuffer(
 			Vlk::BufferTemplate::ManualBuffer(
 				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 				VMA_MEMORY_USAGE_GPU_ONLY,
-				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) )
+				VkDeviceSize( renderData->scene_batches * sizeof( BatchData ) + sizeof(uint) )
+				)
+			);
+
+		// create the compacted array, this will be created from the filtered array each frame
+		frame.compactedDrawBuffer = renderer->CreateBuffer(
+			Vlk::BufferTemplate::ManualBuffer(
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				VkDeviceSize( (renderData->scene_batches * sizeof( BatchData )) + sizeof(uint) )
 				)
 			);
 
@@ -548,7 +582,7 @@ void SetupScene()
 	const uint megamesh_max_objects_cnt = 4; // number of megamesh objects in scene (not same as scene_objects)
 #else
 	const uint unique_meshes_count = 80;
-	const uint megamesh_max_objects_cnt = 20; // number of megamesh objects in scene (not same as scene_objects)
+	const uint megamesh_max_objects_cnt = 80; // number of megamesh objects in scene (not same as scene_objects)
 #endif
 
 	// for now, the objects are: megameshes * batches_per_mm * objects_per_mm
@@ -794,6 +828,18 @@ void SetupScene()
 	cullt->AddDescriptorSetLayout( renderData->cullingDescriptorLayout );
 	renderData->cullingPipeline = renderData->renderer->CreateComputePipeline( *cullt );
 
+	// compacting compute pipeline
+	Vlk::DescriptorSetLayoutTemplate cmdlt;
+	cmdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 1 - Input buffer
+	cmdlt.AddStorageBufferBinding( VK_SHADER_STAGE_COMPUTE_BIT ); // 2 - Output buffer
+	renderData->compactingDescriptorLayout = renderData->renderer->CreateDescriptorSetLayout( cmdlt );
+
+	std::unique_ptr<Vlk::ComputePipelineTemplate> cmpt = u_ptr( new Vlk::ComputePipelineTemplate() );
+	cmpt->SetShaderModule( renderData->compactingShader );
+	cmpt->AddDescriptorSetLayout( renderData->compactingDescriptorLayout );
+	cmpt->AddPushConstantRange( VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof( CompactingPushConstants ) );
+	renderData->compactingPipeline = renderData->renderer->CreateComputePipeline( *cmpt );
+
 	// render pipeline
 	Vlk::DescriptorSetLayoutTemplate rdlt;
 	rdlt.AddUniformBufferBinding( VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT );	// 0 - buffer object
@@ -894,8 +940,7 @@ void run()
 	renderData->fragmentRenderShader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/fragShader.frag.spv" );
 	renderData->cullingShader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_COMPUTE_BIT, "shaders/instanceCull.comp.spv" );
 	renderData->depthReduceShader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_COMPUTE_BIT, "shaders/depthReduce.comp.spv" );
-
-	//SetupDepthSampler();
+	renderData->compactingShader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_COMPUTE_BIT, "shaders/batchCompacting.comp.spv" );
 
 	renderData->depthSampler = renderData->renderer->CreateSampler( Vlk::SamplerTemplate::DepthReduce() );
 	renderData->TexturesSampler = renderData->renderer->CreateSampler( Vlk::SamplerTemplate::Linear() );
@@ -940,13 +985,13 @@ void run()
 		//	Sleep( 1000 );
 		//	}
 
-//#ifdef _DEBUG
-//		if (!renderData->camera.render_dirty)
-//			{
-//			Sleep(10);
-//			continue;
-//			}
-//#endif
+#ifdef _DEBUG
+		if (!renderData->camera.render_dirty)
+			{
+			Sleep(10);
+			continue;
+			}
+#endif
 
 		// draw the new frame
 		if( !DrawFrame() )

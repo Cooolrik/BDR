@@ -70,6 +70,15 @@ namespace Vlk
                 uint stride
                 );
 
+            void DrawIndexedIndirectCount(
+                const Buffer *buffer,
+                VkDeviceSize offset,
+                const Buffer *countBuffer,
+                VkDeviceSize countOffset,
+                uint maxDrawCount, 
+                uint stride
+                );
+
             void QueueUpBufferMemoryBarrier( 
                 VkBuffer      buffer,
                 VkAccessFlags srcAccessMask,

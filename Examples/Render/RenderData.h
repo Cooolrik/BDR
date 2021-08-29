@@ -114,6 +114,11 @@ struct DepthReducePushConstants
 	glm::vec2 destDimensions;
 	};
 
+struct CompactingPushConstants
+	{
+	uint commandsCount;
+	};
+
 inline glm::vec4 normalizePlane(glm::vec4 p)
 	{
 	return p / glm::length(glm::vec3(p));
@@ -147,11 +152,13 @@ class PerFrameData
 		
 		VkDescriptorSet renderDescriptorSet = nullptr; // render descriptor set
 		VkDescriptorSet cullingDescriptorSet = nullptr; // culling shader descriptor set
+		VkDescriptorSet compactingDescriptorSet = nullptr; // culling shader descriptor set
 		std::vector<VkDescriptorSet> depthReduceDescriptorSets; // depth reduce shader for depth pyramid descriptor set 
 
 		Vlk::Buffer* initialDrawBuffer = nullptr; // buffer with all initial but empty batches 
 		Vlk::Buffer* renderObjectsBuffer = nullptr; // list of all objects to consider for culling, along with their batches
 		Vlk::Buffer* filteredDrawBuffer = nullptr; // buffer with all batches filled in with non-culled instances 
+		Vlk::Buffer* compactedDrawBuffer = nullptr; // buffer with all batches filled in with non-culled instances 
 		Vlk::Buffer* instanceToObjectBuffer = nullptr; // mapping from instance to objectID, created in the culling
 
 		Vlk::Buffer *debugOutputBuffer = nullptr;
@@ -174,6 +181,7 @@ class PerFrameData
 			delete instanceToObjectBuffer;
 			delete initialDrawBuffer;
 			delete filteredDrawBuffer;
+			delete compactedDrawBuffer;
 			}
 	};
 
@@ -191,6 +199,9 @@ class RenderData
 
 		Vlk::Pipeline* cullingPipeline = nullptr;
 		Vlk::DescriptorSetLayout* cullingDescriptorLayout = nullptr;
+
+		Vlk::Pipeline* compactingPipeline = nullptr;
+		Vlk::DescriptorSetLayout* compactingDescriptorLayout = nullptr;
 
 		Vlk::Pipeline* depthReducePipeline = nullptr;
 		Vlk::DescriptorSetLayout* depthReduceDescriptorLayout = nullptr;
@@ -218,7 +229,8 @@ class RenderData
 		Vlk::ShaderModule* fragmentRenderShader = nullptr;
 		Vlk::ShaderModule* cullingShader = nullptr;
 		Vlk::ShaderModule* depthReduceShader = nullptr;
-
+		Vlk::ShaderModule* compactingShader = nullptr;
+		
 		// scene data
 		std::vector<ObjectData> objects;
 		std::vector<BatchData> batches;
@@ -267,6 +279,7 @@ class RenderData
 			delete renderDescriptorLayout;
 			delete cullingDescriptorLayout;
 			delete depthReduceDescriptorLayout;
+			delete compactingDescriptorLayout;
 
 			delete MeshAlloc;
 
@@ -277,6 +290,7 @@ class RenderData
 
 			delete renderPipeline;
 			delete cullingPipeline;
+			delete compactingPipeline;
 			delete depthReducePipeline;
 
 			if( guiwidgets )
@@ -284,6 +298,7 @@ class RenderData
 				delete guiwidgets;
 				}
 
+			delete compactingShader;
 			delete vertexRenderShader;
 			delete fragmentRenderShader;
 			delete renderer;
