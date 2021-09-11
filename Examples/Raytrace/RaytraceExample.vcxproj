@@ -120,8 +120,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
@@ -129,8 +129,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
@@ -138,8 +138,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
@@ -147,8 +147,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
@@ -156,8 +156,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
@@ -165,8 +165,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"C:/VulkanSDK/1.2.182.0/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(VULKAN_SDK)/bin/glslangValidator.exe" -g --target-env vulkan1.2 -o %(FullPath).spv %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>

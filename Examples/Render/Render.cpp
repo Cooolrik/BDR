@@ -534,7 +534,6 @@ void SetupScene()
 
 	std::vector<const char*> source_tex_names =
 		{
-		"../Assets/image7.dds",
 		"../Assets/image1.dds",
 		"../Assets/image2.dds",
 		"../Assets/image3.dds",

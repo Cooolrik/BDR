@@ -271,7 +271,7 @@ class VulkanRenderTest
 		Vlk::DescriptorPool* QRDescriptorPool = nullptr;
 		std::vector<VkDescriptorSet> QRDescriptorSets{};
 
-		Vlk::Pipeline* graphics_pipeline{};
+		//Vlk::Pipeline* graphics_pipeline{};
 		Vlk::Pipeline* quadrender_pipeline{};
 
 		Vlk::VertexBuffer* quadBuffer{};
@@ -646,16 +646,16 @@ class VulkanRenderTest
 				}
 			swapChainImages = renderer->GetSwapChainImages();
 
-			delete graphics_pipeline;
-			std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
-			gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
-			gpt->AddShaderModule( vertex_shader );
-			gpt->AddShaderModule( fragment_shader );
-			gpt->AddDescriptorSetLayout( descriptorLayout );
-			gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
-			gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
-			gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
-			graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
+			//delete graphics_pipeline;
+			//std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			//gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+			//gpt->AddShaderModule( vertex_shader );
+			//gpt->AddShaderModule( fragment_shader );
+			//gpt->AddDescriptorSetLayout( descriptorLayout );
+			//gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
+			//gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			//gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			//graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
 
 			delete quadrender_pipeline;
 			std::unique_ptr<Vlk::GraphicsPipelineTemplate> qpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
@@ -783,15 +783,15 @@ class VulkanRenderTest
 			dslt.AddSamplerBinding( VK_SHADER_STAGE_FRAGMENT_BIT ); // 1 - texture
 			descriptorLayout = renderer->CreateDescriptorSetLayout( dslt );
 
-			std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
-			gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
-			gpt->AddShaderModule( vertex_shader );
-			gpt->AddShaderModule( fragment_shader );
-			gpt->AddDescriptorSetLayout( descriptorLayout );
-			gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
-			gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
-			gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
-			graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
+			//std::unique_ptr<Vlk::GraphicsPipelineTemplate> gpt = std::unique_ptr<Vlk::GraphicsPipelineTemplate>( new Vlk::GraphicsPipelineTemplate() );
+			//gpt->SetVertexDataTemplateFromVertexBufferDescription( Vertex::GetVertexBufferDescription() );
+			//gpt->AddShaderModule( vertex_shader );
+			//gpt->AddShaderModule( fragment_shader );
+			//gpt->AddDescriptorSetLayout( descriptorLayout );
+			//gpt->AddPushConstantRange( VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ) );
+			//gpt->SetStaticViewport( 0, 0, (float)this->ScreenW, (float)this->ScreenH );
+			//gpt->SetStaticScissorRectangle( 0, 0, this->ScreenW, this->ScreenH );
+			//graphics_pipeline = renderer->CreateGraphicsPipeline( *gpt );
 
 			Vlk::DescriptorSetLayoutTemplate rtdslt;
 			rtdslt.AddAccelerationStructureBinding( VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR ); // 0 - TLAS
@@ -917,8 +917,8 @@ class VulkanRenderTest
 			this->shadowmiss_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_MISS_BIT_KHR, "shaders/rtShadowMiss.rmiss.spv" );
 			this->chit_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, "shaders/rtHit.rchit.spv" );
 
-			this->vertex_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_VERTEX_BIT, "shaders/vertShader.vert.spv" );
-			this->fragment_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/fragShader.frag.spv" );
+			//this->vertex_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_VERTEX_BIT, "shaders/vertShader.vert.spv" );
+			//this->fragment_shader = Vlk::ShaderModule::CreateFromFile( VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/fragShader.frag.spv" );
 
 			this->SetupScene();
 
@@ -976,7 +976,7 @@ class VulkanRenderTest
 			delete quadBuffer;
 			clearFramePools();
 			delete raytracing_pipeline;
-			delete graphics_pipeline;
+			//delete graphics_pipeline;
 			delete raygen_shader;
 			delete miss_shader;
 			delete chit_shader;
