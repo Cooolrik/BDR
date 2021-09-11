@@ -116,7 +116,11 @@ namespace Vlk
                 uint32_t groupCountZ = 1 
                 );
 
+            // Ray tracing extension
             void TraceRays( RayTracingShaderBindingTable* sbt , uint width, uint height );
+
+            // Mesh shader extension
+            void DrawMeshTasks( uint taskCount, uint firstTask );
 
             BDGetMacro( int, CurrentBufferIndex );
             BDGetMacro( bool, IsRecordingBuffer );

@@ -26,6 +26,8 @@ class ObjectRender
 		glm::vec3 Color;
 		glm::uint materialID;
 		glm::uint vertexCutoffIndex;
+		glm::uint borderQuantizationMask;
+		glm::uint borderQuantizationRound;
 	};
 
 struct PerFrameData

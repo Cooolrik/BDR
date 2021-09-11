@@ -194,6 +194,8 @@ VkCommandBuffer MeshViewer::DrawScene()
 	pool->BindPipeline( this->RenderPipeline.get() );
 	pool->BindDescriptorSet( this->RenderPipeline.get(), currentFrame.RenderDescriptorSet );
 
+	uint total_frame_triangles = 0;
+
 	// update and render each submesh
 	ObjectRender pc;
 	pc.CompressedVertexTranslate = zmesh.CompressedVertexTranslate;
@@ -201,12 +203,17 @@ VkCommandBuffer MeshViewer::DrawScene()
 	for( size_t sm = 0; sm < zmesh.SubMeshes.size(); ++sm )
 		{
 		const ZeptoSubMesh& submesh = zmesh.SubMeshes[sm];
-	
-		// calc quantization of the submesh
-		//uint quantization = uint( this->Camera.debug_float_value1 );
-		//quantization = ( quantization > 0 ) ? quantization : 0;
-		//quantization = ( quantization < 16 ) ? quantization : 16;
+
 		uint quantization = CalcSubmeshQuantization( zmesh, (uint)sm );
+		uint borderQuantization = 0;
+
+		// calc quantization of the submesh
+		if( this->ui.OverrideQuantization )
+			{
+			quantization = this->ui.InnerQuantization;
+			borderQuantization = this->ui.BorderQuantization;
+			}
+
 		uint lod = GetLODOfQuantization( zmesh, (uint)sm, quantization );
 								
 		pc.Color = glm::vec3(1); 
@@ -217,10 +224,16 @@ VkCommandBuffer MeshViewer::DrawScene()
 		pc.vertexCutoffIndex = submesh.VertexOffset + submesh.LockedVertexCount;
 		pc.quantizationMask = 0xffffffff << quantization;
 		pc.quantizationRound = ( 0x1 << quantization ) >> 1;
+		pc.borderQuantizationMask = 0xffffffff << borderQuantization;
+		pc.borderQuantizationRound = ( 0x1 << borderQuantization ) >> 1;
 	
 		pool->PushConstants( this->RenderPipeline.get(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( ObjectRender ), &pc );
 		pool->DrawIndexed( submesh.LODIndexCounts[lod], 1, submesh.IndexOffset, submesh.VertexOffset, 0 );
+
+		total_frame_triangles += submesh.LODIndexCounts[lod]/3;
 		}
+
+	this->ui.RenderedTriangles = total_frame_triangles;
 
 	// selection widgets
 	if( this->ui.SelectSubmesh )

@@ -51,6 +51,7 @@ class ApplicationBase
 		// application settings
 		std::string WindowTitle = "Example";
 		bool RequireRaytracing = false;
+		bool RequireMeshShader = false;
 		bool EnableValidation = false;
 		bool EnableVerboseOutput = false;
 		uint InitialWindowDimensions[2] = { 800, 600 };

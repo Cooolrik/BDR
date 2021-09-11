@@ -12,6 +12,7 @@
 #include "Vlk_Image.h"
 #include "Vlk_Sampler.h"
 #include "Vlk_RayTracingExtension.h"
+#include "Vlk_MeshShaderExtension.h"
 #include "Vlk_BufferDeviceAddressExtension.h"
 #include "Vlk_DescriptorIndexingExtension.h"
 #include "Vlk_Helpers.h"
@@ -262,11 +263,18 @@ Vlk::Renderer* Vlk::Renderer::Create( const CreateParameters& createParameters )
 	pThis->DescriptorIndexingEXT = new DescriptorIndexingExtension( pThis );
 	pThis->EnabledExtensions.push_back( pThis->DescriptorIndexingEXT );
 
-	if( createParameters.EnableRayTracingExtension )
+	if( createParameters.RequireRayTracingExtension )
 		{
 		pThis->RayTracingEXT = new RayTracingExtension( pThis );
 		pThis->EnabledExtensions.push_back( pThis->RayTracingEXT );
 		}
+
+	if( createParameters.RequireMeshShaderExtension )
+		{
+		pThis->MeshShaderEXT = new MeshShaderExtension( pThis );
+		pThis->EnabledExtensions.push_back( pThis->MeshShaderEXT );
+		}
+
 
 	// call all enabled extensions pre-create instance
 	for( auto ext : pThis->EnabledExtensions )

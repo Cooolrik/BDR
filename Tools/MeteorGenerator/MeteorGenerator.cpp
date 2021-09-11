@@ -31,8 +31,8 @@ using std::unordered_multimap;
 using Tools::Vertex;
 using Tools::Compressed16Vertex;
 
-const uint PlaneQuadTesselation = 32; // 16*16*2 = 512 tris
-const uint MeshTesselation = 8;
+const uint PlaneQuadTesselation = 63; // x*x*2 = number of tris per quad
+const uint MeshTesselation = 4;
 const uint NumberOfMeshesToGenerate = 6;
 const bool LockBorderVertices = true;
 const bool SaveUncompressedVertices = true;
@@ -91,7 +91,7 @@ class Submesh
 		void FindLockedVertices();
 
 		// quantize mesh and return the remaining valid triangles
-		vector<uint> QuantizeMesh( uint quantize_bits , uint tris_to_consider = UINT_MAX );
+		vector<uint> QuantizeMesh( uint border_quantize_bits, uint quantize_bits , uint tris_to_consider = UINT_MAX );
 
 		void CalculateQuantizedLODs();
 	};
@@ -329,7 +329,7 @@ void Submesh::ReorderTriangles( vector<uint> new_triangle_location )
 		}
 	}
 
-vector<uint> Submesh::QuantizeMesh( uint quantize_bits, uint tris_to_consider )
+vector<uint> Submesh::QuantizeMesh( uint border_quantize_bits, uint quantize_bits, uint tris_to_consider )
 	{
 	vector<glm::u16vec3> Coords( this->CompressedVertices.size() );
 	vector<uint> ret;
@@ -367,6 +367,28 @@ vector<uint> Submesh::QuantizeMesh( uint quantize_bits, uint tris_to_consider )
 			{
 			continue;
 			}
+
+		//// check if this triangle (with these vertices) already exist in the list 
+		//// of valid tris. it this case, this tri is redundant
+		//bool found_match = false;
+		//for( size_t q = 0; q < ret.size(); ++q )
+		//	{
+		//	glm::u16vec3 qv0 = Coords[this->Triangles[ret[q]].VertexIds[0]];
+		//	glm::u16vec3 qv1 = Coords[this->Triangles[ret[q]].VertexIds[1]];
+		//	glm::u16vec3 qv2 = Coords[this->Triangles[ret[q]].VertexIds[2]];		
+		//
+		//	if( (qv0 == v0 && qv1 == v1 && qv2 == v2) ||
+		//		(qv0 == v1 && qv1 == v2 && qv2 == v0) ||
+		//		(qv0 == v2 && qv1 == v0 && qv2 == v1) )
+		//		{
+		//		found_match = true;
+		//		break;
+		//		}
+		//	}
+		//if( found_match )
+		//	{
+		//	continue;
+		//	}
 
 		// this triangle still has some size, keep it in the list
 		ret.emplace_back( uint(t) );
@@ -435,6 +457,7 @@ void Submesh::CalculateQuantizedLODs()
 	// for the lod levels [1 -> 3], do quantization, to reduce tris by 50% each step (so 100%, 50%, 25%, 12.5%)
 	uint tri_count = LODTriangleCounts[0];
 	uint quant_shift = 0;
+	uint border_quant_shift = 0;
 	uint tris_to_consider = LODTriangleCounts[0];
 	for( uint lod = 1 ; lod < 4 ; ++lod )
 		{
@@ -447,7 +470,7 @@ void Submesh::CalculateQuantizedLODs()
 		vector<uint> valid_tris;
 		while( quant_shift < 15 )
 			{
-			valid_tris = this->QuantizeMesh( quant_shift, tris_to_consider );
+			valid_tris = this->QuantizeMesh( border_quant_shift , quant_shift, tris_to_consider );
 			++quant_shift;
 			if( uint( valid_tris.size() ) <= tri_count )
 				{

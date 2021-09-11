@@ -24,6 +24,8 @@ layout( push_constant ) uniform constants
 	vec3 Color;
 	uint materialID;
 	uint vertexCutoffIndex;
+	uint borderQuantizationMask;
+	uint borderQuantizationRound;
 	} Object;
 
 layout(location = 0) in uvec4 inCoords;
@@ -47,6 +49,11 @@ void main()
 		{
 		quantPos &= Object.quantizationMask;
 		quantPos |= Object.quantizationRound;
+		}
+	else
+		{
+		quantPos &= Object.borderQuantizationMask;
+		quantPos |= Object.borderQuantizationRound;
 		}
 	vec3 vertexPos = ( vec3(quantPos) * Object.CompressedVertexScale) + Object.CompressedVertexTranslate;
 			

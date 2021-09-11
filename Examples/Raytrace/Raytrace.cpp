@@ -855,7 +855,7 @@ class VulkanRenderTest
 			// create the renderer, list needed extensions
 			Vlk::Renderer::CreateParameters createParameters{};
 			createParameters.EnableVulkanValidation = useValidationLayers;
-			createParameters.EnableRayTracingExtension = true;
+			createParameters.RequireRayTracingExtension = true;
 			createParameters.NeededExtensionsCount = glfwExtensionCount;
 			createParameters.NeededExtensions = glfwExtensions;
 			createParameters.DebugMessageCallback = &debugCallback;

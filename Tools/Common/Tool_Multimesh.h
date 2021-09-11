@@ -9,6 +9,7 @@ namespace Tools
 		{
 		public:
 			class Submesh;
+			class Meshlet;
 
 			// full vertex and index list of the multimesh. 
 			// note that not both Vertices and CompressedVertices
@@ -61,6 +62,15 @@ namespace Tools
 
 			unsigned int LODIndexCounts[4] = {}; // number of triangles to use for the lod
 			unsigned int LODQuantizeBits[4] = {}; // number of lower bits to remove for the lod (0: full res)
+		};
+
+	class Multimesh::Meshlet
+		{
+		public:
+
+
+
+
 		};
 
 	};

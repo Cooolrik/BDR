@@ -91,6 +91,9 @@
     <ClCompile Include="Vlk_Pipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Vlk_MeshShaderExtension.cpp">
+      <Filter>Source Files\Extensions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vlk_CommandPool.h">
@@ -161,6 +164,9 @@
     </ClInclude>
     <ClInclude Include="Vlk_Pipeline.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vlk_MeshShaderExtension.h">
+      <Filter>Source Files\Extensions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

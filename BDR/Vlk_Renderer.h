@@ -82,6 +82,7 @@ namespace Vlk
 	class Texture;
 	class Extension;
 	class RayTracingExtension;
+	class MeshShaderExtension;
 	class BufferDeviceAddressExtension;
 	class DescriptorIndexingExtension;
 	class Sampler;
@@ -158,6 +159,7 @@ namespace Vlk
 			DescriptorIndexingExtension* DescriptorIndexingEXT = nullptr;
 			BufferDeviceAddressExtension* BufferDeviceAddressEXT = nullptr;
 			RayTracingExtension* RayTracingEXT = nullptr;
+			MeshShaderExtension *MeshShaderEXT = nullptr;
 
 			bool LookupPhysicalDeviceQueueFamilies();
 			bool ValidatePhysicalDeviceRequiredExtensionsSupported();
@@ -182,7 +184,10 @@ namespace Vlk
 				bool EnableVulkanValidation;
 				
 				// true to enable ray tracing extension. if not supported, the create will fail
-				bool EnableRayTracingExtension;
+				bool RequireRayTracingExtension;
+
+				// true to enable ray tracing extension. if not supported, the create will fail
+				bool RequireMeshShaderExtension;
 
 				// list of needed extensions for eg windowing system
 				uint NeededExtensionsCount;

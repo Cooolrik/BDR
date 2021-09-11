@@ -5,6 +5,8 @@ int main( int argc, char argv[] )
 	{
 	Application<MeshViewer> app;
 
+	app.RequireMeshShader = true;
+
 #ifdef _DEBUG
 	app.ShowConsole = true;
 	app.EnableValidation = true;

@@ -97,7 +97,7 @@ VkCommandBuffer createTransientCommandBuffer( uint frame )
 
 		pool->BindPipeline( renderData->cullingPipeline );
 		pool->BindDescriptorSet( renderData->cullingPipeline, currentFrame->cullingDescriptorSet );
-		pool->DispatchCompute( (renderData->scene_objects / 256) + 1 );
+		pool->DispatchCompute( ((renderData->scene_objects+255) / 256) ); // round up
 
 		// make sure the buffer is update by culling shader before using in vertex shader
 		pool->QueueUpBufferMemoryBarrier( currentFrame->filteredDrawBuffer, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_INDIRECT_COMMAND_READ_BIT );
@@ -853,7 +853,6 @@ void run()
 	// create the renderer, list needed extensions
 	Vlk::Renderer::CreateParameters createParameters{};
 	createParameters.EnableVulkanValidation = useValidationLayers;
-	createParameters.EnableRayTracingExtension = true;
 	createParameters.NeededExtensionsCount = glfwExtensionCount;
 	createParameters.NeededExtensions = glfwExtensions;
 	createParameters.DebugMessageCallback = &debugCallback;

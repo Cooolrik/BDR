@@ -44,7 +44,8 @@ void ApplicationBase::Init()
 	// create the renderer, list needed extensions
 	Vlk::Renderer::CreateParameters createParameters{};
 	createParameters.EnableVulkanValidation = this->EnableValidation;
-	createParameters.EnableRayTracingExtension = this->RequireRaytracing;
+	createParameters.RequireRayTracingExtension = this->RequireRaytracing;
+	createParameters.RequireMeshShaderExtension = this->RequireMeshShader;
 	createParameters.NeededExtensionsCount = glfwExtensionCount;
 	createParameters.NeededExtensions = glfwExtensions;
 	createParameters.DebugMessageCallback = &debugCallback;

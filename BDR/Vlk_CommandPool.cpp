@@ -9,6 +9,8 @@
 #include "Vlk_RayTracingPipeline.h"
 #include "Vlk_RayTracingShaderBindingTable.h"
 
+#include "Vlk_MeshShaderExtension.h"
+
 #include <stdexcept>
 #include <algorithm>
 
@@ -289,6 +291,13 @@ void Vlk::CommandPool::TraceRays( RayTracingShaderBindingTable* sbt , uint width
 		width,
 		height,
 		1 );
+	}
+
+void Vlk::CommandPool::DrawMeshTasks( uint taskCount, uint firstTask )
+	{
+	ASSERT_RECORDING();
+
+	MeshShaderExtension::vkCmdDrawMeshTasksNV( this->Buffers[this->CurrentBufferIndex], taskCount, firstTask );
 	}
 
 void Vlk::CommandPool::EndCommandBuffer()

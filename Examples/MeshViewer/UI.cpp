@@ -103,6 +103,17 @@ void UI::Update()
 		ImGui::Indent( -10 );
 		}
 
+	ImGui::Checkbox( "Override quantization", &this->OverrideQuantization );
+	if( this->OverrideQuantization )
+		{
+		ImGui::Indent( 10 );
+		ImGui::SliderInt( "Border", &this->BorderQuantization, 0, 16 );
+		ImGui::SliderInt( "Inner", &this->InnerQuantization, 0, 16 );
+		ImGui::Indent( -10 );
+		}
+
+	ImGui::TextDisabled( "Tris Count: %d", RenderedTriangles );
+	
 	ImVec2 window_pos = ImGui::GetWindowPos();
 	window_width = main_viewport->WorkPos.x + main_viewport->WorkSize.x - 5 - window_pos.x;
 
